@@ -18,7 +18,7 @@ namespace UnityMcpBridge.Editor.Windows
         private Color pythonServerInstallationStatusColor = Color.red;
         private const int unityPort = 6400; // Hardcoded Unity port
         private const int mcpPort = 6500; // Hardcoded MCP port
-        private readonly McpClients mcpClients = new();
+        private readonly McpClients mcpClients = new McpClients();
 
         [MenuItem("Window/Unity MCP")]
         public static void ShowWindow()
@@ -40,16 +40,25 @@ namespace UnityMcpBridge.Editor.Windows
         private Color GetStatusColor(McpStatus status)
         {
             // Return appropriate color based on the status enum
-            return status switch
+            Color result;
+            // 使用传统 switch 语句替代 switch 表达式
+            switch (status)
             {
-                McpStatus.Configured => Color.green,
-                McpStatus.Running => Color.green,
-                McpStatus.Connected => Color.green,
-                McpStatus.IncorrectPath => Color.yellow,
-                McpStatus.CommunicationError => Color.yellow,
-                McpStatus.NoResponse => Color.yellow,
-                _ => Color.red, // Default to red for error states or not configured
-            };
+                case McpStatus.Configured:
+                case McpStatus.Running:
+                case McpStatus.Connected:
+                    result = Color.green;
+                    break;
+                case McpStatus.IncorrectPath:
+                case McpStatus.CommunicationError:
+                case McpStatus.NoResponse:
+                    result = Color.yellow;
+                    break;
+                default:
+                    result = Color.red; // Default to red for error states or not configured
+                    break;
+            }
+            return result;
         }
 
         private void UpdatePythonServerInstallationStatus()
@@ -96,7 +105,7 @@ namespace UnityMcpBridge.Editor.Windows
             EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Width(sectionWidth));
 
             // Header with improved styling
-            EditorGUILayout.Space(5);
+            EditorGUILayout.Space();
             Rect headerRect = EditorGUILayout.GetControlRect(false, 24);
             GUI.Label(
                 new Rect(
@@ -108,7 +117,7 @@ namespace UnityMcpBridge.Editor.Windows
                 mcpClient.name + " Configuration",
                 EditorStyles.boldLabel
             );
-            EditorGUILayout.Space(5);
+            EditorGUILayout.Space();
 
             // Status indicator with colored dot
             Rect statusRect = EditorGUILayout.BeginHorizontal(GUILayout.Height(20));
@@ -125,17 +134,17 @@ namespace UnityMcpBridge.Editor.Windows
             );
             EditorGUILayout.EndHorizontal();
 
-            EditorGUILayout.Space(8);
+            EditorGUILayout.Space();
 
             // Configure button with improved styling
-            GUIStyle buttonStyle = new(GUI.skin.button)
+            GUIStyle buttonStyle = new GUIStyle(GUI.skin.button)
             {
                 padding = new RectOffset(15, 15, 5, 5),
                 margin = new RectOffset(10, 10, 5, 5),
             };
 
             // Create muted button style for Manual Setup
-            GUIStyle mutedButtonStyle = new(buttonStyle);
+            GUIStyle mutedButtonStyle = new GUIStyle(buttonStyle);
 
             if (
                 GUILayout.Button(
@@ -156,7 +165,7 @@ namespace UnityMcpBridge.Editor.Windows
                     : mcpClient.linuxConfigPath;
                 ShowManualInstructionsWindow(configPath, mcpClient);
             }
-            EditorGUILayout.Space(5);
+            EditorGUILayout.Space();
 
             EditorGUILayout.EndVertical();
 
@@ -164,7 +173,7 @@ namespace UnityMcpBridge.Editor.Windows
             if (useHalfWidth && mcpClients.clients.IndexOf(mcpClient) % 2 == 1)
             {
                 EditorGUILayout.EndHorizontal();
-                EditorGUILayout.Space(5);
+                EditorGUILayout.Space();
             }
             // Add space and end the horizontal layout if last item is odd
             else if (
@@ -173,14 +182,14 @@ namespace UnityMcpBridge.Editor.Windows
             )
             {
                 EditorGUILayout.EndHorizontal();
-                EditorGUILayout.Space(5);
+                EditorGUILayout.Space();
             }
         }
 
         private void DrawStatusDot(Rect statusRect, Color statusColor)
         {
-            Rect dotRect = new(statusRect.x + 6, statusRect.y + 4, 12, 12);
-            Vector3 center = new(
+            Rect dotRect = new Rect(statusRect.x + 6, statusRect.y + 4, 12, 12);
+            Vector3 center = new Vector3(
                 dotRect.x + (dotRect.width / 2),
                 dotRect.y + (dotRect.height / 2),
                 0
@@ -192,7 +201,7 @@ namespace UnityMcpBridge.Editor.Windows
             Handles.DrawSolidDisc(center, Vector3.forward, radius);
 
             // Draw the border
-            Color borderColor = new(
+            Color borderColor = new Color(
                 statusColor.r * 0.7f,
                 statusColor.g * 0.7f,
                 statusColor.b * 0.7f
@@ -205,7 +214,7 @@ namespace UnityMcpBridge.Editor.Windows
         {
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
-            EditorGUILayout.Space(10);
+            EditorGUILayout.Space();
             // Title with improved styling
             Rect titleRect = EditorGUILayout.GetControlRect(false, 30);
             EditorGUI.DrawRect(
@@ -217,7 +226,7 @@ namespace UnityMcpBridge.Editor.Windows
                 "MCP Editor",
                 EditorStyles.boldLabel
             );
-            EditorGUILayout.Space(10);
+            EditorGUILayout.Space();
 
             // Python Server Installation Status Section
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
@@ -237,7 +246,7 @@ namespace UnityMcpBridge.Editor.Windows
             );
             EditorGUILayout.EndVertical();
 
-            EditorGUILayout.Space(10);
+            EditorGUILayout.Space();
 
             // Unity Bridge Section
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
@@ -253,7 +262,7 @@ namespace UnityMcpBridge.Editor.Windows
 
             foreach (McpClient mcpClient in mcpClients.clients)
             {
-                EditorGUILayout.Space(10);
+                EditorGUILayout.Space();
                 ConfigurationSection(mcpClient);
             }
 
@@ -277,13 +286,13 @@ namespace UnityMcpBridge.Editor.Windows
         private string WriteToConfig(string pythonDir, string configPath)
         {
             // Create configuration object for unityMCP
-            McpConfigServer unityMCPConfig = new()
+            McpConfigServer unityMCPConfig = new McpConfigServer()
             {
                 command = "uv",
                 args = new[] { "--directory", pythonDir, "run", "server.py" },
             };
 
-            JsonSerializerSettings jsonSettings = new() { Formatting = Formatting.Indented };
+            JsonSerializerSettings jsonSettings = new JsonSerializerSettings() { Formatting = Formatting.Indented };
 
             // Read existing config if it exists
             string existingJson = "{}";
@@ -301,7 +310,11 @@ namespace UnityMcpBridge.Editor.Windows
 
             // Parse the existing JSON while preserving all properties
             dynamic existingConfig = JsonConvert.DeserializeObject(existingJson);
-            existingConfig ??= new Newtonsoft.Json.Linq.JObject();
+            // existingConfig ??= new Newtonsoft.Json.Linq.JObject();
+            if (existingConfig == null)
+            {
+                existingConfig = new Newtonsoft.Json.Linq.JObject();
+            }
 
             // Ensure mcpServers object exists
             if (existingConfig.mcpServers == null)
@@ -336,7 +349,7 @@ namespace UnityMcpBridge.Editor.Windows
             string pythonDir = FindPackagePythonDirectory();
 
             // Create the manual configuration message
-            McpConfig jsonConfig = new()
+            McpConfig jsonConfig = new McpConfig()
             {
                 mcpServers = new McpConfigServers
                 {
@@ -348,7 +361,7 @@ namespace UnityMcpBridge.Editor.Windows
                 },
             };
 
-            JsonSerializerSettings jsonSettings = new() { Formatting = Formatting.Indented };
+            JsonSerializerSettings jsonSettings = new JsonSerializerSettings() { Formatting = Formatting.Indented };
             string manualConfigJson = JsonConvert.SerializeObject(jsonConfig, jsonSettings);
 
             ManualConfigEditorWindow.ShowWindow(configPath, manualConfigJson, mcpClient);
@@ -495,7 +508,7 @@ namespace UnityMcpBridge.Editor.Windows
             string pythonDir = FindPackagePythonDirectory();
 
             // Create the manual configuration message
-            McpConfig jsonConfig = new()
+            McpConfig jsonConfig = new McpConfig()
             {
                 mcpServers = new McpConfigServers
                 {
@@ -507,7 +520,7 @@ namespace UnityMcpBridge.Editor.Windows
                 },
             };
 
-            JsonSerializerSettings jsonSettings = new() { Formatting = Formatting.Indented };
+            JsonSerializerSettings jsonSettings = new JsonSerializerSettings() { Formatting = Formatting.Indented };
             string manualConfigJson = JsonConvert.SerializeObject(jsonConfig, jsonSettings);
 
             ManualConfigEditorWindow.ShowWindow(configPath, manualConfigJson, mcpClient);
@@ -551,7 +564,9 @@ namespace UnityMcpBridge.Editor.Windows
                         pythonDir != null
                         && Array.Exists(
                             config.mcpServers.unityMCP.args,
-                            arg => arg.Contains(pythonDir, StringComparison.Ordinal)
+                            // arg => arg.Contains(pythonDir, StringComparison.Ordinal)
+                        arg => arg.IndexOf(pythonDir, StringComparison.Ordinal) >= 0
+
                         )
                     )
                     {

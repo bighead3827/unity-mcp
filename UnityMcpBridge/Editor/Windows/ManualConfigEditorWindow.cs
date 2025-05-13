@@ -31,7 +31,7 @@ namespace UnityMcpBridge.Editor.Windows
             scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
 
             // Header with improved styling
-            EditorGUILayout.Space(10);
+            EditorGUILayout.Space();
             Rect titleRect = EditorGUILayout.GetControlRect(false, 30);
             EditorGUI.DrawRect(
                 new Rect(titleRect.x, titleRect.y, titleRect.width, titleRect.height),
@@ -42,7 +42,7 @@ namespace UnityMcpBridge.Editor.Windows
                 mcpClient.name + " Manual Configuration",
                 EditorStyles.boldLabel
             );
-            EditorGUILayout.Space(10);
+            EditorGUILayout.Space();
 
             // Instructions with improved styling
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
@@ -62,9 +62,9 @@ namespace UnityMcpBridge.Editor.Windows
                 "The automatic configuration failed. Please follow these steps:",
                 EditorStyles.boldLabel
             );
-            EditorGUILayout.Space(10);
+            EditorGUILayout.Space();
 
-            GUIStyle instructionStyle = new(EditorStyles.wordWrappedLabel)
+            GUIStyle instructionStyle = new GUIStyle(EditorStyles.wordWrappedLabel)
             {
                 margin = new RectOffset(10, 10, 5, 5),
             };
@@ -84,6 +84,13 @@ namespace UnityMcpBridge.Editor.Windows
             {
                 EditorGUILayout.LabelField(
                     "    a) Going to File > Preferences > Cursor Settings > MCP > Add new global MCP server",
+                    instructionStyle
+                );
+            }
+            else if (mcpClient.mcpType == McpTypes.Trae)
+            {
+                EditorGUILayout.LabelField(
+                    "   AI功能管理 > MCP >  添加",
                     instructionStyle
                 );
             }
@@ -113,7 +120,7 @@ namespace UnityMcpBridge.Editor.Windows
             }
 
             // Prevent text overflow by allowing the text field to wrap
-            GUIStyle pathStyle = new(EditorStyles.textField) { wordWrap = true };
+            GUIStyle pathStyle = new GUIStyle(EditorStyles.textField) { wordWrap = true };
 
             EditorGUILayout.TextField(
                 displayPath,
@@ -124,7 +131,7 @@ namespace UnityMcpBridge.Editor.Windows
             // Copy button with improved styling
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUIStyle copyButtonStyle = new(GUI.skin.button)
+            GUIStyle copyButtonStyle = new GUIStyle(GUI.skin.button)
             {
                 padding = new RectOffset(15, 15, 5, 5),
                 margin = new RectOffset(10, 10, 5, 5),
@@ -165,7 +172,7 @@ namespace UnityMcpBridge.Editor.Windows
 
             if (pathCopied)
             {
-                GUIStyle feedbackStyle = new(EditorStyles.label);
+                GUIStyle feedbackStyle = new GUIStyle(EditorStyles.label);
                 feedbackStyle.normal.textColor = Color.green;
                 EditorGUILayout.LabelField("Copied!", feedbackStyle, GUILayout.Width(60));
             }
@@ -173,7 +180,7 @@ namespace UnityMcpBridge.Editor.Windows
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.EndVertical();
 
-            EditorGUILayout.Space(10);
+            EditorGUILayout.Space();
 
             EditorGUILayout.LabelField(
                 "2. Paste the following JSON configuration:",
@@ -184,7 +191,7 @@ namespace UnityMcpBridge.Editor.Windows
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
             // Improved text area for JSON with syntax highlighting colors
-            GUIStyle jsonStyle = new(EditorStyles.textArea)
+            GUIStyle jsonStyle = new GUIStyle(EditorStyles.textArea)
             {
                 font = EditorStyles.boldFont,
                 wordWrap = true,
@@ -214,7 +221,7 @@ namespace UnityMcpBridge.Editor.Windows
 
             if (jsonCopied)
             {
-                GUIStyle feedbackStyle = new(EditorStyles.label);
+                GUIStyle feedbackStyle = new GUIStyle(EditorStyles.label);
                 feedbackStyle.normal.textColor = Color.green;
                 EditorGUILayout.LabelField("Copied!", feedbackStyle, GUILayout.Width(60));
             }
@@ -222,7 +229,7 @@ namespace UnityMcpBridge.Editor.Windows
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.EndVertical();
 
-            EditorGUILayout.Space(10);
+            EditorGUILayout.Space();
             EditorGUILayout.LabelField(
                 "3. Save the file and restart " + mcpClient.name,
                 instructionStyle
@@ -230,7 +237,7 @@ namespace UnityMcpBridge.Editor.Windows
 
             EditorGUILayout.EndVertical();
 
-            EditorGUILayout.Space(10);
+            EditorGUILayout.Space();
 
             // Close button at the bottom
             EditorGUILayout.BeginHorizontal();

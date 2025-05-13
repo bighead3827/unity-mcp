@@ -11,7 +11,7 @@ namespace UnityMcpBridge.Editor.Tools
     {
         // Maps command names (matching those called from Python via ctx.bridge.unity_editor.HandlerName)
         // to the corresponding static HandleCommand method in the appropriate tool class.
-        private static readonly Dictionary<string, Func<JObject, object>> _handlers = new()
+        private static readonly Dictionary<string, Func<JObject, object>> _handlers = new Dictionary<string, Func<JObject, object>>()
         {
             { "HandleManageScript", ManageScript.HandleCommand },
             { "HandleManageScene", ManageScene.HandleCommand },

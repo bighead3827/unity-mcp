@@ -12,17 +12,19 @@ namespace UnityMcpBridge.Editor.Helpers
         private const string RootFolder = "UnityMCP";
         private const string ServerFolder = "UnityMcpServer";
         private const string BranchName = "master";
-        private const string GitUrl = "https://github.com/justinpbarnett/unity-mcp.git";
+        private const string GitUrl = "https://github.com/bighead3827/unity-mcp.git";
         private const string PyprojectUrl =
-            "https://raw.githubusercontent.com/justinpbarnett/unity-mcp/refs/heads/"
+            "https://github.com/bighead3827/unity-mcp/tree/"
             + BranchName
-            + "/UnityMcpServer/src/pyproject.toml";
+            + "/UnityMcpServer/src/pyproject.toml";//todo 换地址
 
         /// <summary>
         /// Ensures the unity-mcp-server is installed and up to date.
         /// </summary>
         public static void EnsureServerInstalled()
         {
+            // todo 使用本地开发环境
+            return;
             try
             {
                 string saveLocation = GetSaveLocation();
@@ -59,6 +61,8 @@ namespace UnityMcpBridge.Editor.Helpers
         /// </summary>
         private static string GetSaveLocation()
         {
+            // todo 使用本地开发环境
+            return "C:\\workspace\\unity-mcp";
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 return Path.Combine(
@@ -159,9 +163,12 @@ namespace UnityMcpBridge.Editor.Helpers
         /// </summary>
         public static string GetLatestVersion()
         {
-            using WebClient webClient = new();
-            string pyprojectContent = webClient.DownloadString(PyprojectUrl);
-            return ParseVersionFromPyproject(pyprojectContent);
+            // 使用传统的 using 语句
+            using (WebClient webClient = new WebClient())
+            {
+                string pyprojectContent = webClient.DownloadString(PyprojectUrl);
+                return ParseVersionFromPyproject(pyprojectContent);
+            }
         }
 
         /// <summary>
@@ -187,6 +194,11 @@ namespace UnityMcpBridge.Editor.Helpers
                         return parts[1].Trim().Trim('"');
                     }
                 }
+            }
+
+            if (string.IsNullOrEmpty(content))
+            {
+                return "0.0.0";//todo 不更新
             }
             throw new Exception("Version not found in pyproject.toml");
         }
@@ -222,7 +234,7 @@ namespace UnityMcpBridge.Editor.Helpers
             string workingDirectory = null
         )
         {
-            System.Diagnostics.Process process = new()
+            System.Diagnostics.Process process = new System.Diagnostics.Process
             {
                 StartInfo = new System.Diagnostics.ProcessStartInfo
                 {

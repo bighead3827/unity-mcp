@@ -20,11 +20,11 @@ namespace UnityMcpBridge.Editor
     {
         private static TcpListener listener;
         private static bool isRunning = false;
-        private static readonly object lockObj = new();
+        private static readonly object lockObj = new object();
         private static Dictionary<
             string,
             (string commandJson, TaskCompletionSource<string> tcs)
-        > commandQueue = new();
+        > commandQueue = new Dictionary<string, (string, TaskCompletionSource<string>)>();
         private static readonly int unityPort = 6400; // Hardcoded port
 
         public static bool IsRunning => isRunning;
@@ -43,7 +43,7 @@ namespace UnityMcpBridge.Editor
 
             string fullPath = Path.Combine(
                 Application.dataPath,
-                path.StartsWith("Assets/") ? path[7..] : path
+                path.StartsWith("Assets/") ? path.Substring(7)  : path
             );
             return Directory.Exists(fullPath);
         }
@@ -170,7 +170,7 @@ namespace UnityMcpBridge.Editor
                             bytesRead
                         );
                         string commandId = Guid.NewGuid().ToString();
-                        TaskCompletionSource<string> tcs = new();
+                        TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
 
                         // Special handling for ping command to avoid JSON parsing
                         if (commandText.Trim() == "ping")
@@ -204,7 +204,7 @@ namespace UnityMcpBridge.Editor
 
         private static void ProcessCommands()
         {
-            List<string> processedIds = new();
+            List<string> processedIds = new List<string>();
             lock (lockObj)
             {
                 foreach (
@@ -257,7 +257,7 @@ namespace UnityMcpBridge.Editor
                                 status = "error",
                                 error = "Invalid JSON format",
                                 receivedText = commandText.Length > 50
-                                    ? commandText[..50] + "..."
+                                    ? commandText.Substring(0, 50) + "..."
                                     : commandText,
                             };
                             tcs.SetResult(JsonConvert.SerializeObject(invalidJsonResponse));
@@ -293,7 +293,7 @@ namespace UnityMcpBridge.Editor
                             error = ex.Message,
                             commandType = "Unknown (error during processing)",
                             receivedText = commandText?.Length > 50
-                                ? commandText[..50] + "..."
+                                ? commandText.Substring(0, 50) + "..."
                                 : commandText,
                         };
                         string responseJson = JsonConvert.SerializeObject(response);
@@ -368,23 +368,33 @@ namespace UnityMcpBridge.Editor
                 // Use JObject for parameters as the new handlers likely expect this
                 JObject paramsObject = command.@params ?? new JObject();
 
-                // Route command based on the new tool structure from the refactor plan
-                object result = command.type switch
+                object result;
+                switch (command.type)
                 {
-                    // Maps the command type (tool name) to the corresponding handler's static HandleCommand method
-                    // Assumes each handler class has a static method named 'HandleCommand' that takes JObject parameters
-                    "manage_script" => ManageScript.HandleCommand(paramsObject),
-                    "manage_scene" => ManageScene.HandleCommand(paramsObject),
-                    "manage_editor" => ManageEditor.HandleCommand(paramsObject),
-                    "manage_gameobject" => ManageGameObject.HandleCommand(paramsObject),
-                    "manage_asset" => ManageAsset.HandleCommand(paramsObject),
-                    "read_console" => ReadConsole.HandleCommand(paramsObject),
-                    "execute_menu_item" => ExecuteMenuItem.HandleCommand(paramsObject),
-                    _ => throw new ArgumentException(
-                        $"Unknown or unsupported command type: {command.type}"
-                    ),
-                };
-
+                    case "manage_script":
+                        result = ManageScript.HandleCommand(paramsObject);
+                        break;
+                    case "manage_scene":
+                        result = ManageScene.HandleCommand(paramsObject);
+                        break;
+                    case "manage_editor":
+                        result = ManageEditor.HandleCommand(paramsObject);
+                        break;
+                    case "manage_gameobject":
+                        result = ManageGameObject.HandleCommand(paramsObject);
+                        break;
+                    case "manage_asset":
+                        result = ManageAsset.HandleCommand(paramsObject);
+                        break;
+                    case "read_console":
+                        result = ReadConsole.HandleCommand(paramsObject);
+                        break;
+                    case "execute_menu_item":
+                        result = ExecuteMenuItem.HandleCommand(paramsObject);
+                        break;
+                    default:
+                        throw new ArgumentException($"Unknown or unsupported command type: {command.type}");
+                }
                 // Standard success response format
                 var response = new { status = "success", result };
                 return JsonConvert.SerializeObject(response);
@@ -422,9 +432,15 @@ namespace UnityMcpBridge.Editor
                         ", ",
                         @params
                             .Properties()
-                            .Select(static p =>
-                                $"{p.Name}: {p.Value?.ToString()?[..Math.Min(20, p.Value?.ToString()?.Length ?? 0)]}"
-                            )
+                            .Select(p =>
+                            {
+                                var valueStr = p.Value?.ToString();
+                                if (string.IsNullOrEmpty(valueStr))
+                                {
+                                    return $"{p.Name}: ";
+                                }
+                                return $"{p.Name}: {valueStr.Substring(0, Math.Min(20, valueStr.Length))}";
+                            })
                     );
             }
             catch

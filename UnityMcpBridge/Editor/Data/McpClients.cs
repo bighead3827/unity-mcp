@@ -7,9 +7,9 @@ namespace UnityMcpBridge.Editor.Data
 {
     public class McpClients
     {
-        public List<McpClient> clients = new()
+        public List<McpClient> clients = new List<McpClient>()
         {
-            new()
+            new McpClient()
             {
                 name = "Claude Desktop",
                 windowsConfigPath = Path.Combine(
@@ -27,7 +27,7 @@ namespace UnityMcpBridge.Editor.Data
                 mcpType = McpTypes.ClaudeDesktop,
                 configStatus = "Not Configured",
             },
-            new()
+            new McpClient()
             {
                 name = "Cursor",
                 windowsConfigPath = Path.Combine(
@@ -42,7 +42,29 @@ namespace UnityMcpBridge.Editor.Data
                 ),
                 mcpType = McpTypes.Cursor,
                 configStatus = "Not Configured",
-            },
+            },  
+            new McpClient()
+            {
+                name = "Trae",
+                windowsConfigPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    "AppData",
+                    "Roaming",
+                    "Trae CN",
+                    "user",
+                    "mcp.json"
+                ),
+                linuxConfigPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    "AppData",
+                    "Roaming",
+                    "Trae CN",
+                    "user",
+                    "mcp.json"
+                ),
+                mcpType = McpTypes.Trae,
+                configStatus = "Not Configured",
+            },  
         };
 
         // Initialize status enums after construction

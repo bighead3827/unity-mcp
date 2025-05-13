@@ -1172,23 +1172,31 @@ namespace UnityMcpBridge.Editor.Tools
                     Type componentType = FindType(searchTerm);
                     if (componentType != null)
                     {
-                        // Determine FindObjectsInactive based on the searchInactive flag
-                        FindObjectsInactive findInactive = searchInactive
-                            ? FindObjectsInactive.Include
-                            : FindObjectsInactive.Exclude;
-                        // Replace FindObjectsOfType with FindObjectsByType, specifying the sorting mode and inactive state
-                        var searchPoolComp = rootSearchObject
-                            ? rootSearchObject
-                                .GetComponentsInChildren(componentType, searchInactive)
-                                .Select(c => (c as Component).gameObject)
-                            : UnityEngine
-                                .Object.FindObjectsByType(
-                                    componentType,
-                                    findInactive,
-                                    FindObjectsSortMode.None
-                                )
-                                .Select(c => (c as Component).gameObject);
-                        results.AddRange(searchPoolComp.Where(go => go != null)); // Ensure GO is valid
+                        IEnumerable<Component> searchPoolComp;
+                        if (rootSearchObject)
+                        {
+                            // 在子对象中查找组件
+                            searchPoolComp = rootSearchObject.GetComponentsInChildren(componentType, searchInactive)
+                                .Cast<Component>();
+                        }
+                        else
+                        {
+                            if (searchInactive)
+                            {
+                                // 查找所有激活和未激活的对象
+                                searchPoolComp = Resources.FindObjectsOfTypeAll(componentType)
+                                    .Cast<Component>()
+                                    .Where(c => c.gameObject.scene == SceneManager.GetActiveScene());
+                            }
+                            else
+                            {
+                                // 仅查找激活的对象
+                                searchPoolComp = UnityEngine.Object.FindObjectsOfType(componentType)
+                                    .Cast<Component>();
+                            }
+                        }
+                        results.AddRange(searchPoolComp.Select(c => c.gameObject).Where(go => go != null));
+                        
                     }
                     else
                     {

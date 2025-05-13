@@ -224,26 +224,33 @@ namespace UnityMcpBridge.Editor.Tools
 
         private static object GetActiveTool()
         {
+            // 这里需要根据实际项目中自定义工具的实现方式来获取名称
+            // 示例：假设存在一个自定义工具管理类 MyCustomToolManager
+            // if (MyCustomToolManager.IsActive) return MyCustomToolManager.ActiveToolName;
+            Debug.LogError("未实现 GetActiveToolName 方法");
+            return "Unknown Custom Tool";
+
+
             try
             {
-                Tool currentTool = UnityEditor.Tools.current;
-                string toolName = currentTool.ToString(); // Enum to string
-                bool customToolActive = UnityEditor.Tools.current == Tool.Custom; // Check if a custom tool is active
-                string activeToolName = customToolActive
-                    ? EditorTools.GetActiveToolName()
-                    : toolName; // Get custom name if needed
+                // Tool currentTool = UnityEditor.Tools.current;
+                // string toolName = currentTool.ToString(); // Enum to string
+                // bool customToolActive = UnityEditor.Tools.current == Tool.Custom; // Check if a custom tool is active
+                // string activeToolName = customToolActive
+                //     ? EditorTools.GetActiveToolName()
+                //     : toolName; // Get custom name if needed
 
-                var toolInfo = new
-                {
-                    activeTool = activeToolName,
-                    isCustom = customToolActive,
-                    pivotMode = UnityEditor.Tools.pivotMode.ToString(),
-                    pivotRotation = UnityEditor.Tools.pivotRotation.ToString(),
-                    handleRotation = UnityEditor.Tools.handleRotation.eulerAngles, // Euler for simplicity
-                    handlePosition = UnityEditor.Tools.handlePosition,
-                };
+                // var toolInfo = new
+                // {
+                //     activeTool = activeToolName,
+                //     isCustom = customToolActive,
+                //     pivotMode = UnityEditor.Tools.pivotMode.ToString(),
+                //     pivotRotation = UnityEditor.Tools.pivotRotation.ToString(),
+                //     handleRotation = UnityEditor.Tools.handleRotation.eulerAngles, // Euler for simplicity
+                //     handlePosition = UnityEditor.Tools.handlePosition,
+                // };
 
-                return Response.Success("Retrieved active tool information.", toolInfo);
+                // return Response.Success("Retrieved active tool information.", toolInfo);
             }
             catch (Exception e)
             {
@@ -253,23 +260,30 @@ namespace UnityMcpBridge.Editor.Tools
 
         private static object SetActiveTool(string toolName)
         {
+            // 这里需要根据实际项目中自定义工具的实现方式来获取名称
+            // 示例：假设存在一个自定义工具管理类 MyCustomToolManager
+            // if (MyCustomToolManager.IsActive) return MyCustomToolManager.ActiveToolName;
+            Debug.LogError("未实现 GetActiveToolName 方法");
+            return "Unknown Custom Tool";
+
+
             try
             {
                 Tool targetTool;
                 if (Enum.TryParse<Tool>(toolName, true, out targetTool)) // Case-insensitive parse
                 {
                     // Check if it's a valid built-in tool
-                    if (targetTool != Tool.None && targetTool <= Tool.Custom) // Tool.Custom is the last standard tool
-                    {
-                        UnityEditor.Tools.current = targetTool;
-                        return Response.Success($"Set active tool to '{targetTool}'.");
-                    }
-                    else
-                    {
-                        return Response.Error(
-                            $"Cannot directly set tool to '{toolName}'. It might be None, Custom, or invalid."
-                        );
-                    }
+                    // if (targetTool != Tool.None && targetTool <= Tool.Custom) // Tool.Custom is the last standard tool
+                    // {
+                    //     UnityEditor.Tools.current = targetTool;
+                    //     return Response.Success($"Set active tool to '{targetTool}'.");
+                    // }
+                    // else
+                    // {
+                    //     return Response.Error(
+                    //         $"Cannot directly set tool to '{toolName}'. It might be None, Custom, or invalid."
+                    //     );
+                    // }
                 }
                 else
                 {
@@ -296,7 +310,7 @@ namespace UnityMcpBridge.Editor.Tools
                     activeGameObject = Selection.activeGameObject?.name,
                     activeTransform = Selection.activeTransform?.name,
                     activeInstanceID = Selection.activeInstanceID,
-                    count = Selection.count,
+                    // count = Selection.count,
                     objects = Selection
                         .objects.Select(obj => new
                         {
@@ -575,16 +589,24 @@ namespace UnityMcpBridge.Editor.Tools
     {
         public static string GetActiveToolName()
         {
+            // 这里需要根据实际项目中自定义工具的实现方式来获取名称
+            // 示例：假设存在一个自定义工具管理类 MyCustomToolManager
+            // if (MyCustomToolManager.IsActive) return MyCustomToolManager.ActiveToolName;
+            Debug.LogError("未实现 GetActiveToolName 方法");
+            return "Unknown Custom Tool";
+            
+            
             // This is a placeholder. Real implementation depends on how custom tools
             // are registered and tracked in the specific Unity project setup.
             // It might involve checking static variables, calling methods on specific tool managers, etc.
-            if (UnityEditor.Tools.current == Tool.Custom)
-            {
-                // Example: Check a known custom tool manager
-                // if (MyCustomToolManager.IsActive) return MyCustomToolManager.ActiveToolName;
-                return "Unknown Custom Tool";
-            }
-            return UnityEditor.Tools.current.ToString();
+            
+            // if (UnityEditor.Tools.current == Tool.Custom)
+            // {
+            //     // Example: Check a known custom tool manager
+            //     // if (MyCustomToolManager.IsActive) return MyCustomToolManager.ActiveToolName;
+            //     return "Unknown Custom Tool";
+            // }
+            // return UnityEditor.Tools.current.ToString();
         }
     }
 }

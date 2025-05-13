@@ -11,21 +11,44 @@ namespace UnityMcpBridge.Editor.Models
 
         // Helper method to convert the enum to a display string
         public string GetStatusDisplayString()
-        {
-            return status switch
+        {string result;
+            switch (status)
             {
-                McpStatus.NotConfigured => "Not Configured",
-                McpStatus.Configured => "Configured",
-                McpStatus.Running => "Running",
-                McpStatus.Connected => "Connected",
-                McpStatus.IncorrectPath => "Incorrect Path",
-                McpStatus.CommunicationError => "Communication Error",
-                McpStatus.NoResponse => "No Response",
-                McpStatus.UnsupportedOS => "Unsupported OS",
-                McpStatus.MissingConfig => "Missing UnityMCP Config",
-                McpStatus.Error => configStatus.StartsWith("Error:") ? configStatus : "Error",
-                _ => "Unknown",
-            };
+                case McpStatus.NotConfigured:
+                    result = "Not Configured";
+                    break;
+                case McpStatus.Configured:
+                    result = "Configured";
+                    break;
+                case McpStatus.Running:
+                    result = "Running";
+                    break;
+                case McpStatus.Connected:
+                    result = "Connected";
+                    break;
+                case McpStatus.IncorrectPath:
+                    result = "Incorrect Path";
+                    break;
+                case McpStatus.CommunicationError:
+                    result = "Communication Error";
+                    break;
+                case McpStatus.NoResponse:
+                    result = "No Response";
+                    break;
+                case McpStatus.UnsupportedOS:
+                    result = "Unsupported OS";
+                    break;
+                case McpStatus.MissingConfig:
+                    result = "Missing UnityMCP Config";
+                    break;
+                case McpStatus.Error:
+                    result = configStatus.StartsWith("Error:") ? configStatus : "Error";
+                    break;
+                default:
+                    result = "Unknown";
+                    break;
+            }
+            return result;
         }
 
         // Helper method to set both status enum and string for backward compatibility
