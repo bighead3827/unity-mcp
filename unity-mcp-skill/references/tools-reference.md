@@ -12,8 +12,40 @@ Complete reference for all MCP tools. Each tool includes parameters, types, and 
 - [Script Tools](#script-tools)
 - [Asset Tools](#asset-tools)
 - [Material & Shader Tools](#material--shader-tools)
+- [UI Tools](#ui-tools)
 - [Editor Control Tools](#editor-control-tools)
 - [Testing Tools](#testing-tools)
+- [ProBuilder Tools](#probuilder-tools)
+
+---
+
+## Project Info Resource
+
+Read `mcpforunity://project/info` to detect project capabilities before making assumptions about UI, input, or rendering setup.
+
+**Returned fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `projectRoot` | string | Absolute path to project root |
+| `projectName` | string | Project folder name |
+| `unityVersion` | string | e.g. `"2022.3.20f1"` |
+| `platform` | string | Active build target e.g. `"StandaloneWindows64"` |
+| `assetsPath` | string | Absolute path to Assets folder |
+| `renderPipeline` | string | `"BuiltIn"`, `"Universal"`, `"HighDefinition"`, or `"Custom"` |
+| `activeInputHandler` | string | `"Old"`, `"New"`, or `"Both"` |
+| `packages.ugui` | bool | `com.unity.ugui` installed (Canvas, Image, Button, etc.) |
+| `packages.textmeshpro` | bool | `com.unity.textmeshpro` installed (TMP_Text, TMP_InputField) |
+| `packages.inputsystem` | bool | `com.unity.inputsystem` installed (InputAction, PlayerInput) |
+| `packages.uiToolkit` | bool | Always `true` for Unity 2021.3+ (UIDocument, VisualElement, UXML/USS) |
+| `packages.screenCapture` | bool | `com.unity.modules.screencapture` enabled (ScreenCapture API for screenshots) |
+
+**Key decision points:**
+
+- **UI system**: If `packages.uiToolkit` is true (always for Unity 2021+), use `manage_ui` for UI Toolkit workflows (UXML/USS). If `packages.ugui` is true, use Canvas + uGUI components via `batch_execute`. UI Toolkit is preferred for new UI — it uses a frontend-like workflow (UXML for structure, USS for styling).
+- **Text**: If `packages.textmeshpro` is true, use `TextMeshProUGUI` instead of legacy `Text`.
+- **Input**: Use `activeInputHandler` to decide EventSystem module — `StandaloneInputModule` (Old) vs `InputSystemUIInputModule` (New). See [workflows.md — Input System](workflows.md#input-system-old-vs-new).
+- **Shaders**: Use `renderPipeline` to pick correct shader names — `Standard` (BuiltIn) vs `Universal Render Pipeline/Lit` (URP) vs `HDRP/Lit` (HDRP).
 
 ---
 
@@ -66,7 +98,7 @@ refresh_unity(
 
 ### manage_scene
 
-Scene CRUD operations and hierarchy queries.
+Scene CRUD operations, hierarchy queries, screenshots, and scene view control.
 
 ```python
 # Get hierarchy (paginated)
@@ -78,8 +110,60 @@ manage_scene(
     include_transform=False      # bool - include local transforms
 )
 
-# Screenshot
-manage_scene(action="screenshot")  # Returns base64 PNG
+# Screenshot (file only — saves to Assets/Screenshots/)
+manage_scene(action="screenshot")
+
+# Screenshot with inline image (base64 PNG returned to AI)
+manage_scene(
+    action="screenshot",
+    camera="MainCamera",         # str, optional - camera name, path, or instance ID
+    include_image=True,          # bool, default False - return base64 PNG inline
+    max_resolution=512           # int, optional - downscale cap (default 640)
+)
+
+# Batch surround — contact sheet of 6 fixed angles (front/back/left/right/top/bird_eye)
+manage_scene(
+    action="screenshot",
+    batch="surround",            # str - "surround" for 6-angle contact sheet
+    max_resolution=256           # int - per-tile resolution cap
+)
+# Returns: single composite contact sheet image with labeled tiles
+
+# Batch surround centered on a specific target
+manage_scene(
+    action="screenshot",
+    batch="surround",
+    look_at="Player",            # str|int|list[float] - center surround on this target
+    max_resolution=256
+)
+
+# Batch orbit — configurable multi-angle grid around a target
+manage_scene(
+    action="screenshot",
+    batch="orbit",               # str - "orbit" for configurable angle grid
+    look_at="Player",            # str|int|list[float] - target to orbit around
+    orbit_angles=8,              # int, default 8 - number of azimuth steps
+    orbit_elevations=[0, 30],    # list[float], default [0, 30, -15] - vertical angles in degrees
+    orbit_distance=10,           # float, optional - camera distance (auto-fit if omitted)
+    orbit_fov=60,                # float, default 60 - camera FOV in degrees
+    max_resolution=256           # int - per-tile resolution cap
+)
+# Returns: single composite contact sheet (angles × elevations tiles in a grid)
+
+# Positioned screenshot (temp camera at viewpoint, no file saved)
+manage_scene(
+    action="screenshot",
+    look_at="Enemy",             # str|int|list[float] - target to aim at
+    view_position=[0, 10, -10],  # list[float], optional - camera position
+    view_rotation=[45, 0, 0],    # list[float], optional - euler angles (overrides look_at aim)
+    max_resolution=512
+)
+
+# Frame scene view on target
+manage_scene(
+    action="scene_view_frame",
+    scene_view_target="Player"   # str|int - GO name, path, or instance ID to frame
+)
 
 # Other actions
 manage_scene(action="get_active")        # Current scene info
@@ -166,6 +250,14 @@ manage_gameobject(
     distance=5.0,
     world_space=True
 )
+
+# Look at target (rotates GO to face a point or another GO)
+manage_gameobject(
+    action="look_at",
+    target="MainCamera",         # the GO to rotate
+    look_at_target="Player",     # str (GO name/path) or list[float] world position
+    look_at_up=[0, 1, 0]        # optional up vector, default [0,1,0]
+)
 ```
 
 ### manage_components
@@ -207,6 +299,24 @@ manage_components(
         "localScale": [2, 2, 2]
     }
 )
+
+# Set object reference property (reference another GameObject by name)
+manage_components(
+    action="set_property",
+    target="GameManager",
+    component_type="GameManagerScript",
+    property="targetObjects",
+    value=[{"name": "Flower_1"}, {"name": "Flower_2"}, {"name": "Bee_1"}]
+)
+
+# Object reference formats supported:
+# - {"name": "ObjectName"}     → Find GameObject in scene by name
+# - {"instanceID": 12345}      → Direct instance ID reference
+# - {"guid": "abc123..."}      → Asset GUID reference
+# - {"path": "Assets/..."}     → Asset path reference
+# - "Assets/Prefabs/My.prefab" → String shorthand for asset paths
+# - "ObjectName"               → String shorthand for scene name lookup
+# - 12345                      → Integer shorthand for instanceID
 ```
 
 ---
@@ -449,7 +559,10 @@ manage_material(
     action="set_renderer_color",
     target="MyCube",
     color=[1, 0, 0, 1],
-    mode="instance"              # "shared"|"instance"|"property_block"
+    mode="create_unique"          # Creates a unique .mat asset per object (persistent)
+    # Other modes: "property_block" (default, not persistent),
+    #              "shared" (mutates shared material — avoid for primitives),
+    #              "instance" (runtime only, not persistent)
 )
 ```
 
@@ -484,6 +597,76 @@ manage_texture(
     palette=[[255,0,0,255], [0,0,255,255]]
 )
 ```
+
+---
+
+## UI Tools
+
+### manage_ui
+
+Manage Unity UI Toolkit elements: UXML documents, USS stylesheets, UIDocument components, and visual tree inspection.
+
+```python
+# Create a UXML file
+manage_ui(
+    action="create",
+    path="Assets/UI/MainMenu.uxml",
+    contents='<ui:UXML xmlns:ui="UnityEngine.UIElements"><ui:Label text="Hello" /></ui:UXML>'
+)
+
+# Create a USS stylesheet
+manage_ui(
+    action="create",
+    path="Assets/UI/Styles.uss",
+    contents=".title { font-size: 32px; color: white; }"
+)
+
+# Read a UXML/USS file
+manage_ui(
+    action="read",
+    path="Assets/UI/MainMenu.uxml"
+)
+# Returns: {"success": true, "data": {"contents": "...", "path": "..."}}
+
+# Update an existing file
+manage_ui(
+    action="update",
+    path="Assets/UI/Styles.uss",
+    contents=".title { font-size: 48px; color: yellow; -unity-font-style: bold; }"
+)
+
+# Attach UIDocument to a GameObject
+manage_ui(
+    action="attach_ui_document",
+    target="UICanvas",                    # GameObject name or path
+    source_asset="Assets/UI/MainMenu.uxml",
+    panel_settings="Assets/UI/Panel.asset",  # optional, auto-creates if omitted
+    sort_order=0                          # optional, default 0
+)
+
+# Create PanelSettings asset
+manage_ui(
+    action="create_panel_settings",
+    path="Assets/UI/Panel.asset",
+    scale_mode="ScaleWithScreenSize",     # optional: "ConstantPixelSize"|"ConstantPhysicalSize"|"ScaleWithScreenSize"
+    reference_resolution={"width": 1920, "height": 1080}  # optional, for ScaleWithScreenSize
+)
+
+# Inspect the visual tree of a UIDocument
+manage_ui(
+    action="get_visual_tree",
+    target="UICanvas",                    # GameObject with UIDocument
+    max_depth=10                          # optional, default 10
+)
+# Returns: hierarchy of VisualElements with type, name, classes, styles, text, children
+```
+
+**UI Toolkit workflow:**
+
+1. Create UXML (structure, like HTML) and USS (styling, like CSS) files
+2. Create a PanelSettings asset (or let `attach_ui_document` auto-create one)
+3. Create an empty GameObject and attach UIDocument with the UXML source
+4. Use `get_visual_tree` to inspect the result
 
 ---
 
@@ -607,3 +790,118 @@ execute_custom_tool(
 ```
 
 Discover available custom tools via `mcpforunity://custom-tools` resource.
+
+---
+
+## ProBuilder Tools
+
+### manage_probuilder
+
+Unified tool for ProBuilder mesh operations. Requires `com.unity.probuilder` package. When available, **prefer ProBuilder over primitive GameObjects** for editable geometry, multi-material faces, or complex shapes.
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `action` | string | Yes | Action to perform (see categories below) |
+| `target` | string | Sometimes | Target GameObject name/path/id |
+| `search_method` | string | No | How to find target: `by_id`, `by_name`, `by_path`, `by_tag`, `by_layer` |
+| `properties` | dict \| string | No | Action-specific parameters (dict or JSON string) |
+
+**Actions by category:**
+
+**Shape Creation:**
+- `create_shape` — Create ProBuilder primitive (shape_type, size, position, rotation, name). 12 types: Cube, Cylinder, Sphere, Plane, Cone, Torus, Pipe, Arch, Stair, CurvedStair, Door, Prism
+- `create_poly_shape` — Create from 2D polygon footprint (points, extrudeHeight, flipNormals)
+
+**Mesh Editing:**
+- `extrude_faces` — Extrude faces (faceIndices, distance, method: FaceNormal/VertexNormal/IndividualFaces)
+- `extrude_edges` — Extrude edges (edgeIndices or edges [{a,b},...], distance, asGroup)
+- `bevel_edges` — Bevel edges (edgeIndices or edges [{a,b},...], amount 0-1)
+- `subdivide` — Subdivide faces via ConnectElements (faceIndices optional)
+- `delete_faces` — Delete faces (faceIndices)
+- `bridge_edges` — Bridge two open edges (edgeA, edgeB as {a,b} pairs, allowNonManifold)
+- `connect_elements` — Connect edges/faces (edgeIndices or faceIndices)
+- `detach_faces` — Detach faces to new object (faceIndices, deleteSourceFaces)
+- `flip_normals` — Flip face normals (faceIndices)
+- `merge_faces` — Merge faces into one (faceIndices)
+- `combine_meshes` — Combine ProBuilder objects (targets list)
+- `merge_objects` — Merge objects with auto-convert (targets, name)
+- `duplicate_and_flip` — Create double-sided geometry (faceIndices)
+- `create_polygon` — Connect existing vertices into a new face (vertexIndices, unordered)
+
+**Vertex Operations:**
+- `merge_vertices` — Collapse vertices to single point (vertexIndices, collapseToFirst)
+- `weld_vertices` — Weld vertices within proximity radius (vertexIndices, radius)
+- `split_vertices` — Split shared vertices (vertexIndices)
+- `move_vertices` — Translate vertices (vertexIndices, offset [x,y,z])
+- `insert_vertex` — Insert vertex on edge or face (edge {a,b} or faceIndex + point [x,y,z])
+- `append_vertices_to_edge` — Insert evenly-spaced points on edges (edgeIndices or edges, count)
+
+**Selection:**
+- `select_faces` — Select faces by criteria (direction + tolerance, growFrom + growAngle)
+
+**UV & Materials:**
+- `set_face_material` — Assign material to faces (faceIndices, materialPath)
+- `set_face_color` — Set vertex color on faces (faceIndices, color [r,g,b,a])
+- `set_face_uvs` — Set UV params (faceIndices, scale, offset, rotation, flipU, flipV)
+
+**Query:**
+- `get_mesh_info` — Get mesh details with `include` parameter:
+  - `"summary"` (default): counts, bounds, materials
+  - `"faces"`: + face normals, centers, and direction labels (capped at 100)
+  - `"edges"`: + edge vertex pairs with world positions (capped at 200, deduplicated)
+  - `"all"`: everything
+- `ping` — Check if ProBuilder is available
+
+**Smoothing:**
+- `set_smoothing` — Set smoothing group on faces (faceIndices, smoothingGroup: 0=hard, 1+=smooth)
+- `auto_smooth` — Auto-assign smoothing groups by angle (angleThreshold: default 30)
+
+**Mesh Utilities:**
+- `center_pivot` — Move pivot to mesh bounds center
+- `freeze_transform` — Bake transform into vertices, reset transform
+- `validate_mesh` — Check mesh health (read-only diagnostics)
+- `repair_mesh` — Auto-fix degenerate triangles
+
+**Not Yet Working (known bugs):**
+- `set_pivot` — Vertex positions don't persist through mesh rebuild. Use `center_pivot` or Transform positioning instead.
+- `convert_to_probuilder` — MeshImporter throws internally. Create shapes natively instead.
+
+**Examples:**
+
+```python
+# Check availability
+manage_probuilder(action="ping")
+
+# Create a cube
+manage_probuilder(action="create_shape", properties={"shape_type": "Cube", "name": "MyCube"})
+
+# Get face info with directions
+manage_probuilder(action="get_mesh_info", target="MyCube", properties={"include": "faces"})
+
+# Extrude the top face (find it via direction="top" in get_mesh_info results)
+manage_probuilder(action="extrude_faces", target="MyCube",
+    properties={"faceIndices": [2], "distance": 1.5})
+
+# Select all upward-facing faces
+manage_probuilder(action="select_faces", target="MyCube",
+    properties={"direction": "up", "tolerance": 0.7})
+
+# Create double-sided geometry (for room interiors)
+manage_probuilder(action="duplicate_and_flip", target="Room",
+    properties={"faceIndices": [0, 1, 2, 3, 4, 5]})
+
+# Weld nearby vertices
+manage_probuilder(action="weld_vertices", target="MyCube",
+    properties={"vertexIndices": [0, 1, 2, 3], "radius": 0.1})
+
+# Auto-smooth
+manage_probuilder(action="auto_smooth", target="MyCube", properties={"angleThreshold": 30})
+
+# Cleanup workflow
+manage_probuilder(action="center_pivot", target="MyCube")
+manage_probuilder(action="validate_mesh", target="MyCube")
+```
+
+See also: [ProBuilder Workflow Guide](probuilder-guide.md) for detailed patterns and complex object examples.
