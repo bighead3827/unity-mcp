@@ -1,7 +1,7 @@
 {
   "manifest_version": "0.3",
   "name": "Unity MCP",
-  "version": "9.5.2",
+  "version": "9.5.4",
   "description": "AI-powered Unity Editor automation via MCP - manage GameObjects, scripts, materials, scenes, prefabs, VFX, and run tests",
   "author": {
     "name": "Coplay",
@@ -98,8 +98,16 @@
       "description": "Manage cameras (Unity Camera + Cinemachine) with presets, pipelines, and blending"
     },
     {
+      "name": "manage_graphics",
+      "description": "Manage rendering graphics: volumes, post-processing, light baking, rendering stats, pipeline settings, and URP renderer features"
+    },
+    {
       "name": "manage_material",
       "description": "Create and modify Unity materials and shaders"
+    },
+    {
+      "name": "manage_packages",
+      "description": "Modify Unity packages: install, remove, embed, and configure registries"
     },
     {
       "name": "manage_prefabs",
