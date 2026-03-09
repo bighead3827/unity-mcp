@@ -17,6 +17,7 @@ Complete reference for all MCP tools. Each tool includes parameters, types, and 
 - [Testing Tools](#testing-tools)
 - [Camera Tools](#camera-tools)
 - [Graphics Tools](#graphics-tools)
+- [Package Tools](#package-tools)
 - [ProBuilder Tools](#probuilder-tools)
 
 ---
@@ -1068,6 +1069,79 @@ manage_graphics(action="feature_reorder", order=[2, 0, 1])
 - `mcpforunity://scene/volumes` — Lists all Volume components in the scene with their profiles and effects
 - `mcpforunity://rendering/stats` — Current rendering performance counters
 - `mcpforunity://pipeline/renderer-features` — URP renderer features on the active renderer
+
+---
+
+## Package Tools
+
+### manage_packages
+
+Manage Unity packages: query, install, remove, embed, and configure registries. Install/remove trigger domain reload.
+
+**Query Actions (read-only):**
+
+| Action | Parameters | Description |
+|--------|-----------|-------------|
+| `list_packages` | — | List all installed packages (async, returns job_id) |
+| `search_packages` | `query` | Search Unity registry by keyword (async, returns job_id) |
+| `get_package_info` | `package` | Get details about a specific installed package |
+| `list_registries` | — | List all scoped registries (names, URLs, scopes); immediate result |
+| `ping` | — | Check package manager availability, Unity version, package count |
+| `status` | `job_id` (required for list/search; optional for add/remove/embed) | Poll async job status; omit job_id to poll latest add/remove/embed job |
+
+**Mutating Actions:**
+
+| Action | Parameters | Description |
+|--------|-----------|-------------|
+| `add_package` | `package` | Install a package (name, name@version, git URL, or file: path) |
+| `remove_package` | `package`, `force` (optional) | Remove a package; blocked if dependents exist unless `force=true` |
+| `embed_package` | `package` | Copy package to local Packages/ for editing |
+| `resolve_packages` | — | Force re-resolution of all packages |
+| `add_registry` | `name`, `url`, `scopes` | Add a scoped registry (e.g., OpenUPM) |
+| `remove_registry` | `name` or `url` | Remove a scoped registry |
+
+**Input validation:**
+- Valid package IDs: `com.unity.inputsystem`, `com.unity.cinemachine@3.1.6`
+- Git URLs: allowed with warning ("ensure this is a trusted source")
+- `file:` paths: allowed with warning
+- Invalid names (uppercase, missing dots): rejected
+
+**Example — List installed packages:**
+```python
+manage_packages(action="list_packages")
+# Returns job_id, then poll:
+manage_packages(action="status", job_id="<job_id>")
+```
+
+**Example — Search for a package:**
+```python
+manage_packages(action="search_packages", query="input system")
+```
+
+**Example — Install a package:**
+```python
+manage_packages(action="add_package", package="com.unity.inputsystem")
+# Poll until complete:
+manage_packages(action="status", job_id="<job_id>")
+```
+
+**Example — Remove with dependency check:**
+```python
+manage_packages(action="remove_package", package="com.unity.modules.ui")
+# Error: "Cannot remove: 3 package(s) depend on it: ..."
+manage_packages(action="remove_package", package="com.unity.modules.ui", force=True)
+# Proceeds anyway
+```
+
+**Example — Add OpenUPM registry:**
+```python
+manage_packages(
+    action="add_registry",
+    name="OpenUPM",
+    url="https://package.openupm.com",
+    scopes=["com.cysharp", "com.neuecc"]
+)
+```
 
 ---
 
