@@ -319,5 +319,25 @@ public class Foo : MonoBehaviour
             Assert.IsFalse(HasDuplicateMethodError(errors),
                 "C# keywords (if, for, while, etc.) should not be matched as duplicate methods");
         }
+
+        [Test]
+        public void HandleCommand_PathWithCsExtension_StripsFilename()
+        {
+            // When path ends with .cs (full file path instead of directory),
+            // HandleCommand should strip the filename to avoid doubled paths
+            // like "Assets/Scripts/Foo.cs/Foo.cs".
+            var paramsObj = new JObject
+            {
+                ["action"] = "read",
+                ["name"] = "TestScript",
+                ["path"] = "Assets/Scripts/TestScript.cs"
+            };
+
+            var result = ManageScript.HandleCommand(paramsObj);
+            // The script won't exist, but the error path should NOT contain doubled filename
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject(result);
+            Assert.IsFalse(json.Contains("TestScript.cs/TestScript.cs"),
+                "Path ending in .cs should be treated as directory, not produce doubled filename");
+        }
     }
 }
