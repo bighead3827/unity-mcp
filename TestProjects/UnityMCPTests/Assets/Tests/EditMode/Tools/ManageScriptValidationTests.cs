@@ -139,16 +139,25 @@ namespace MCPForUnityTests.Editor.Tools
         }
 
         /// <summary>
-        /// Calls ValidateScriptSyntaxUnity via reflection and returns the error list.
+        /// Calls ValidateScriptSyntax via reflection and returns the error list.
+        /// This exercises CheckDuplicateMethodSignatures (called from ValidateScriptSyntax).
         /// </summary>
         private List<string> CallValidateScriptSyntaxUnity(string contents)
         {
-            var errors = new List<string>();
-            var method = typeof(ManageScript).GetMethod("ValidateScriptSyntaxUnity",
-                BindingFlags.NonPublic | BindingFlags.Static);
-            Assert.IsNotNull(method, "ValidateScriptSyntaxUnity method must exist");
-            method.Invoke(null, new object[] { contents, errors });
-            return errors;
+            var validationLevelType = typeof(ManageScript).GetNestedType("ValidationLevel",
+                BindingFlags.NonPublic);
+            Assert.IsNotNull(validationLevelType, "ValidationLevel enum must exist");
+            var basicLevel = Enum.ToObject(validationLevelType, 0); // ValidationLevel.Basic
+
+            var method = typeof(ManageScript).GetMethod("ValidateScriptSyntax",
+                BindingFlags.NonPublic | BindingFlags.Static, null,
+                new[] { typeof(string), validationLevelType, typeof(string[]).MakeByRefType() }, null);
+            Assert.IsNotNull(method, "ValidateScriptSyntax method must exist");
+
+            var args = new object[] { contents, basicLevel, null };
+            method.Invoke(null, args);
+            var errArray = (string[])args[2];
+            return errArray != null ? errArray.ToList() : new List<string>();
         }
 
         private bool HasDuplicateMethodError(List<string> errors)

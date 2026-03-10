@@ -2662,21 +2662,79 @@ namespace MCPForUnity.Editor.Tools
             }
             var codeOnly = new string(codeChars);
 
-            // Step 2: Compute brace depth at each position (no strings/comments to confuse)
-            var depthArr = new int[codeOnly.Length];
+            // Step 2: Build containing type name at each position via single pass
+            var typePattern = new Regex(
+                @"\b(?:class|struct|interface|record)\s+(\w+)",
+                RegexOptions.CultureInvariant, TimeSpan.FromSeconds(2));
+            // Map opening-brace position -> fully qualified type name
+            var typeBraceMap = new System.Collections.Generic.Dictionary<int, string>();
             {
-                int bd = 0;
+                var typeMatches = typePattern.Matches(codeOnly);
+                // Pre-scan: for each type declaration, find its opening brace and record full name
+                // We need to process in order and track nesting, so do a single forward pass
+                var preStack = new System.Collections.Generic.List<(string name, int openDepth)>();
+                int preBd = 0;
+                int nextTm = 0;
                 for (int i = 0; i < codeOnly.Length; i++)
                 {
-                    if (codeOnly[i] == '{') bd++;
-                    else if (codeOnly[i] == '}') bd = Math.Max(0, bd - 1);
-                    depthArr[i] = bd;
+                    while (nextTm < typeMatches.Count && typeMatches[nextTm].Index == i)
+                    {
+                        int bp = codeOnly.IndexOf('{', typeMatches[nextTm].Index + typeMatches[nextTm].Length);
+                        if (bp >= 0)
+                        {
+                            string tn = typeMatches[nextTm].Groups[1].Value;
+                            string fn = preStack.Count > 0 ? preStack[preStack.Count - 1].name + "." + tn : tn;
+                            typeBraceMap[bp] = fn;
+                        }
+                        nextTm++;
+                    }
+                    if (codeOnly[i] == '{')
+                    {
+                        if (typeBraceMap.TryGetValue(i, out string mappedType))
+                            preStack.Add((mappedType, preBd));
+                        preBd++;
+                    }
+                    else if (codeOnly[i] == '}')
+                    {
+                        preBd = Math.Max(0, preBd - 1);
+                        if (preStack.Count > 0 && preStack[preStack.Count - 1].openDepth == preBd)
+                            preStack.RemoveAt(preStack.Count - 1);
+                    }
+                }
+            }
+            // Second pass: build per-position containing type array
+            var containingTypeArr = new string[codeOnly.Length];
+            {
+                var stack = new System.Collections.Generic.List<(string name, int openDepth)>();
+                int bd2 = 0;
+                string current = "";
+                for (int i = 0; i < codeOnly.Length; i++)
+                {
+                    if (codeOnly[i] == '{')
+                    {
+                        if (typeBraceMap.TryGetValue(i, out string tn))
+                        {
+                            stack.Add((tn, bd2));
+                            current = tn;
+                        }
+                        bd2++;
+                    }
+                    else if (codeOnly[i] == '}')
+                    {
+                        bd2 = Math.Max(0, bd2 - 1);
+                        if (stack.Count > 0 && stack[stack.Count - 1].openDepth == bd2)
+                        {
+                            stack.RemoveAt(stack.Count - 1);
+                            current = stack.Count > 0 ? stack[stack.Count - 1].name : "";
+                        }
+                    }
+                    containingTypeArr[i] = current;
                 }
             }
 
             // Step 3: Match method signatures on code-only text (includes => for expression-bodied)
             var methodSigPattern = new Regex(
-                @"(?:public|private|protected|internal)(?:\s+(?:static|virtual|override|abstract|sealed|async|new))*\s+\S+\s+(\w+)\s*\(([^)]*)\)\s*(?:where\s+\S+\s*:\s*\S+\s*)?(?:[{;]|=>)",
+                @"(?:(?:public|private|protected|internal)\s+)?(?:(?:static|virtual|override|abstract|sealed|async|new)\s+)*\S+\s+(\w+)\s*\(([^)]*)\)\s*(?:where\s+\S+\s*:\s*\S+\s*)?(?:[{;]|=>)",
                 RegexOptions.Multiline | RegexOptions.CultureInvariant, TimeSpan.FromSeconds(2));
             var sigMatches = methodSigPattern.Matches(codeOnly);
             var seen = new System.Collections.Generic.Dictionary<string, int>(System.StringComparer.Ordinal);
@@ -2685,8 +2743,8 @@ namespace MCPForUnity.Editor.Tools
                 string methodName = sm.Groups[1].Value;
                 int paramCount = CountTopLevelParams(sm.Groups[2].Value);
                 string paramTypes = ExtractParamTypes(sm.Groups[2].Value);
-                int depth = depthArr[sm.Index];
-                string key = $"{methodName}/{paramCount}/{paramTypes}@{depth}";
+                string containingType = containingTypeArr[sm.Index];
+                string key = $"{containingType}/{methodName}/{paramCount}/{paramTypes}";
                 if (seen.TryGetValue(key, out _))
                     errors.Add($"ERROR: Duplicate method signature detected: '{methodName}' with {paramCount} parameter(s). This may indicate a corrupted edit.");
                 else
