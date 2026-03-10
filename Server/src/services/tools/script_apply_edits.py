@@ -678,7 +678,7 @@ def _err(code: str, message: str, *, expected: dict[str, Any] | None = None, rew
     - Use replace_method/delete_method for whole-method changes (keeps signatures balanced)
     - Avoid whole-file regex deletes; validators will guard unbalanced braces
     - For tail insertions, prefer anchor/regex_replace on final brace (class closing)
-    - Pass options.validate='standard' for structural checks; 'relaxed' for interior-only edits
+    - Pass options.validate='standard' for structural checks; 'basic' for interior-only edits
     Canonical fields (use these exact keys):
     - op: replace_method | insert_method | delete_method | anchor_insert | anchor_delete | anchor_replace
     - className: string (defaults to 'name' if omitted on method/class ops)
