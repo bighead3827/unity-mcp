@@ -437,16 +437,24 @@ class PluginHub(WebSocketEndpoint):
                 if old_ping and not old_ping.done():
                     old_ping.cancel()
                 cls._last_pong.pop(evicted_session_id, None)
+                cancelled_commands = []
                 for command_id, entry in list(cls._pending.items()):
                     if entry.get("session_id") == evicted_session_id:
-                        future = entry.get("future") if isinstance(entry, dict) else None
+                        future = entry.get("future")
                         if future and not future.done():
                             future.set_exception(
                                 PluginDisconnectedError(
                                     f"Unity plugin session {evicted_session_id} superseded by {session_id}"
                                 )
                             )
+                            cancelled_commands.append(command_id)
                         cls._pending.pop(command_id, None)
+                if cancelled_commands:
+                    logger.info(
+                        "Evicted session %s: cancelled pending commands %s",
+                        evicted_session_id,
+                        cancelled_commands,
+                    )
                 logger.info(f"Evicted previous session {evicted_session_id} for same instance")
 
             cls._connections[session.session_id] = websocket
@@ -465,7 +473,11 @@ class PluginHub(WebSocketEndpoint):
             try:
                 await evicted_ws.close(code=1001)
             except Exception:
-                pass
+                logger.debug(
+                    "Failed to close evicted WebSocket for session %s",
+                    evicted_session_id,
+                    exc_info=True,
+                )
 
         if user_id:
             logger.info(f"Plugin registered: {project_name} ({project_hash}) for user {user_id}")

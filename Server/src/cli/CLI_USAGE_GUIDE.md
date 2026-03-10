@@ -816,8 +816,8 @@ unity-mcp raw manage_gameobject '{"action": "create", "name": "Test"}'
 unity-mcp raw manage_components '{"action": "add", "target": "Test", "componentType": "Rigidbody"}'
 unity-mcp raw manage_editor '{"action": "play"}'
 unity-mcp raw manage_camera '{"action": "screenshot", "include_image": true}'
-unity-mcp raw manage_graphics '{"action": "volume_info", "target": "PostProcess"}'
-unity-mcp raw manage_packages '{"action": "list"}'
+unity-mcp raw manage_graphics '{"action": "volume_get_info", "target": "PostProcessing"}'
+unity-mcp raw manage_packages '{"action": "list_packages"}'
 ```
 
 ---

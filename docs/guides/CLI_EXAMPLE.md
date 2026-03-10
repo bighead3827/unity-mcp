@@ -230,8 +230,8 @@ unity-mcp batch template > commands.json
 unity-mcp raw tool_name 'JSON_params'
 unity-mcp raw manage_scene '{"action":"get_active"}'
 unity-mcp raw manage_camera '{"action":"screenshot","include_image":true}'
-unity-mcp raw manage_graphics '{"action":"volume_info","target":"PostFX"}'
-unity-mcp raw manage_packages '{"action":"list"}'
+unity-mcp raw manage_graphics '{"action":"volume_get_info","target":"PostProcessing"}'
+unity-mcp raw manage_packages '{"action":"list_packages"}'
 ```
 
 ### Note on MCP Server

@@ -185,7 +185,7 @@ unity-mcp custom_tool list
 |--------|------|-------------|
 | `--filename, -f` | string | Output filename (default: timestamp-based) |
 | `--supersize, -s` | int | Resolution multiplier 1–4 for file-saved screenshots |
-| `--camera, -c` | string | Camera name/path/ID (default: Camera.main) |
+| `--camera-ref` | string | Camera name/path/ID (default: Camera.main) |
 | `--include-image` | flag | Return base64 PNG inline in the response |
 | `--max-resolution, -r` | int | Max longest-edge pixels (default 640) |
 | `--batch, -b` | string | `surround` (6 angles) or `orbit` (configurable grid) |
@@ -465,8 +465,8 @@ For any MCP tool not covered by dedicated commands:
 unity-mcp raw manage_scene '{"action": "get_hierarchy", "max_nodes": 100}'
 unity-mcp raw read_console '{"count": 20}'
 unity-mcp raw manage_camera '{"action": "screenshot", "include_image": true}'
-unity-mcp raw manage_graphics '{"action": "volume_info", "target": "PostFX"}'
-unity-mcp raw manage_packages '{"action": "list"}'
+unity-mcp raw manage_graphics '{"action": "volume_get_info", "target": "PostProcessing"}'
+unity-mcp raw manage_packages '{"action": "list_packages"}'
 ```
 
 ---
