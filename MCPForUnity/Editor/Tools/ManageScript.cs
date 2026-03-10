@@ -2276,6 +2276,9 @@ namespace MCPForUnity.Editor.Tools
                 return false;
             }
 
+            // Basic structural validation: check for duplicate method signatures
+            CheckDuplicateMethodSignatures(contents, errorList);
+
 #if USE_ROSLYN
             // Advanced Roslyn-based validation: only run for Standard+; fail on Roslyn errors
             if (level >= ValidationLevel.Standard)
@@ -2518,6 +2521,57 @@ namespace MCPForUnity.Editor.Tools
         }
 #endif
 
+        private static int CountTopLevelParams(string paramStr)
+        {
+            if (string.IsNullOrWhiteSpace(paramStr)) return 0;
+            int depth = 0, count = 1;
+            foreach (char c in paramStr)
+            {
+                if (c == '<' || c == '(' || c == '[') depth++;
+                else if (c == '>' || c == ')' || c == ']') depth--;
+                else if (c == ',' && depth == 0) count++;
+            }
+            return count;
+        }
+
+        /// <summary>
+        /// Extracts only the type portions from a parameter list, dropping parameter names.
+        /// e.g. "Dictionary&lt;string, int&gt; data, List&lt;Vector3&gt; points" → "Dictionary&lt;string, int&gt;, List&lt;Vector3&gt;"
+        /// </summary>
+        private static string ExtractParamTypes(string paramStr)
+        {
+            if (string.IsNullOrWhiteSpace(paramStr)) return "";
+            var types = new System.Text.StringBuilder();
+            // Split at top-level commas (respecting <> depth)
+            int depth = 0, start = 0;
+            for (int i = 0; i <= paramStr.Length; i++)
+            {
+                char c = i < paramStr.Length ? paramStr[i] : ','; // sentinel
+                if (c == '<' || c == '(' || c == '[') depth++;
+                else if (c == '>' || c == ')' || c == ']') depth--;
+                else if (c == ',' && depth == 0)
+                {
+                    string param = paramStr.Substring(start, i - start).Trim();
+                    if (types.Length > 0) types.Append(", ");
+                    // The type is everything except the last token (the name).
+                    // But if the last token ends with '>' or ']', it's all type (e.g. "List<int>").
+                    // Find the last whitespace that is NOT inside <> brackets.
+                    int lastSplit = -1;
+                    int d2 = 0;
+                    for (int j = 0; j < param.Length; j++)
+                    {
+                        char pc = param[j];
+                        if (pc == '<' || pc == '(' || pc == '[') d2++;
+                        else if (pc == '>' || pc == ')' || pc == ']') d2--;
+                        else if (d2 == 0 && char.IsWhiteSpace(pc)) lastSplit = j;
+                    }
+                    types.Append(lastSplit > 0 ? param.Substring(0, lastSplit).Trim() : param);
+                    start = i + 1;
+                }
+            }
+            return Regex.Replace(types.ToString(), @"\s+", " ");
+        }
+
         /// <summary>
         /// Validates Unity-specific coding rules and best practices
         /// //TODO: Naive Unity Checks and not really yield any results, need to be improved
@@ -2580,6 +2634,63 @@ namespace MCPForUnity.Editor.Tools
             if (contents.Contains("Update()") && contents.Contains("\"") && contents.Contains("+"))
             {
                 errors.Add("WARNING: String concatenation in Update() can cause garbage collection issues");
+            }
+
+        }
+
+        /// <summary>
+        /// Checks for duplicate method signatures (same name + param types + scope).
+        /// Catches corruption from anchor_replace overshoot and similar edit mistakes.
+        /// Runs at Basic level since duplicates are structural errors, not style warnings.
+        /// </summary>
+        private static void CheckDuplicateMethodSignatures(string contents, System.Collections.Generic.List<string> errors)
+        {
+            // Step 1: Build a code-only view (comments/strings replaced with spaces)
+            var codeChars = contents.ToCharArray();
+            {
+                var lexer = new CSharpLexer(contents);
+                while (true)
+                {
+                    int startPos = lexer.Position;
+                    if (!lexer.Advance(out _)) break;
+                    if (lexer.InNonCode)
+                    {
+                        for (int i = startPos; i < lexer.Position && i < codeChars.Length; i++)
+                            if (codeChars[i] != '\n') codeChars[i] = ' ';
+                    }
+                }
+            }
+            var codeOnly = new string(codeChars);
+
+            // Step 2: Compute brace depth at each position (no strings/comments to confuse)
+            var depthArr = new int[codeOnly.Length];
+            {
+                int bd = 0;
+                for (int i = 0; i < codeOnly.Length; i++)
+                {
+                    if (codeOnly[i] == '{') bd++;
+                    else if (codeOnly[i] == '}') bd = Math.Max(0, bd - 1);
+                    depthArr[i] = bd;
+                }
+            }
+
+            // Step 3: Match method signatures on code-only text (includes => for expression-bodied)
+            var methodSigPattern = new Regex(
+                @"(?:public|private|protected|internal)(?:\s+(?:static|virtual|override|abstract|sealed|async|new))*\s+\S+\s+(\w+)\s*\(([^)]*)\)\s*(?:where\s+\S+\s*:\s*\S+\s*)?(?:[{;]|=>)",
+                RegexOptions.Multiline | RegexOptions.CultureInvariant, TimeSpan.FromSeconds(2));
+            var sigMatches = methodSigPattern.Matches(codeOnly);
+            var seen = new System.Collections.Generic.Dictionary<string, int>(System.StringComparer.Ordinal);
+            foreach (Match sm in sigMatches)
+            {
+                string methodName = sm.Groups[1].Value;
+                int paramCount = CountTopLevelParams(sm.Groups[2].Value);
+                string paramTypes = ExtractParamTypes(sm.Groups[2].Value);
+                int depth = depthArr[sm.Index];
+                string key = $"{methodName}/{paramCount}/{paramTypes}@{depth}";
+                if (seen.TryGetValue(key, out _))
+                    errors.Add($"ERROR: Duplicate method signature detected: '{methodName}' with {paramCount} parameter(s). This may indicate a corrupted edit.");
+                else
+                    seen[key] = 1;
             }
         }
 
