@@ -148,6 +148,12 @@ namespace MCPForUnity.Editor.Tools
 
             // Optional parameters
             string path = p.Get("path"); // Relative to Assets/
+            // If the caller passed a full file path (e.g. "Assets/Scripts/Foo.cs"),
+            // strip the filename so path is treated as a directory.
+            if (path != null && path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+            {
+                path = Path.GetDirectoryName(path)?.Replace('\\', '/');
+            }
             string contents = null;
 
             // Check if we have base64 encoded contents
