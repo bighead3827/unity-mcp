@@ -10,7 +10,7 @@ class TestRegistryUserIsolation:
     @pytest.mark.asyncio
     async def test_register_with_user_id_stores_composite_key(self):
         registry = PluginRegistry()
-        session = await registry.register(
+        session, _ = await registry.register(
             "sess-1", "MyProject", "hash1", "2022.3", user_id="user-A"
         )
         assert session.user_id == "user-A"
@@ -33,8 +33,8 @@ class TestRegistryUserIsolation:
     async def test_cross_user_isolation_same_hash(self):
         """Two users registering with the same project_hash get independent sessions."""
         registry = PluginRegistry()
-        sess_a = await registry.register("sA", "Proj", "hash1", "2022", user_id="userA")
-        sess_b = await registry.register("sB", "Proj", "hash1", "2022", user_id="userB")
+        sess_a, _ = await registry.register("sA", "Proj", "hash1", "2022", user_id="userA")
+        sess_b, _ = await registry.register("sB", "Proj", "hash1", "2022", user_id="userB")
 
         assert sess_a.session_id == "sA"
         assert sess_b.session_id == "sB"

@@ -10,6 +10,22 @@ namespace MCPForUnity.Editor.Tools.Graphics
 {
     internal static class SkyboxOps
     {
+        static Texture CustomReflectionTexture
+        {
+            get =>
+#if UNITY_2022_1_OR_NEWER
+                RenderSettings.customReflectionTexture;
+#else
+                RenderSettings.customReflection;
+#endif
+            set {
+#if UNITY_2022_1_OR_NEWER
+                RenderSettings.customReflectionTexture = value;
+#else
+                RenderSettings.customReflection = value;
+#endif
+            }
+        }
         // ---------------------------------------------------------------
         // skybox_get — read all environment settings
         // ---------------------------------------------------------------
@@ -70,8 +86,8 @@ namespace MCPForUnity.Editor.Tools.Graphics
                         bounces = RenderSettings.reflectionBounces,
                         mode = RenderSettings.defaultReflectionMode.ToString(),
                         resolution = RenderSettings.defaultReflectionResolution,
-                        customCubemap = RenderSettings.customReflectionTexture != null
-                            ? AssetDatabase.GetAssetPath(RenderSettings.customReflectionTexture)
+                        customCubemap = CustomReflectionTexture != null
+                            ? AssetDatabase.GetAssetPath(CustomReflectionTexture)
                             : null
                     },
                     sun = sun != null
@@ -301,7 +317,7 @@ namespace MCPForUnity.Editor.Tools.Graphics
             {
                 var cubemap = AssetDatabase.LoadAssetAtPath<Texture>(cubemapPath);
                 if (cubemap != null)
-                    RenderSettings.customReflectionTexture = cubemap;
+                    CustomReflectionTexture = cubemap;
                 else
                     return new ErrorResponse($"Cubemap not found at '{cubemapPath}'.");
             }
@@ -318,8 +334,8 @@ namespace MCPForUnity.Editor.Tools.Graphics
                     bounces = RenderSettings.reflectionBounces,
                     mode = RenderSettings.defaultReflectionMode.ToString(),
                     resolution = RenderSettings.defaultReflectionResolution,
-                    customCubemap = RenderSettings.customReflectionTexture != null
-                        ? AssetDatabase.GetAssetPath(RenderSettings.customReflectionTexture)
+                    customCubemap = CustomReflectionTexture != null
+                        ? AssetDatabase.GetAssetPath(CustomReflectionTexture)
                         : null
                 }
             };
