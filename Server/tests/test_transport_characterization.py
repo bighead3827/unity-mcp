@@ -816,7 +816,7 @@ class TestPluginRegistryFunctionality:
         Current behavior: register() creates a new PluginSession and stores
         it by session_id and project_hash.
         """
-        session = await plugin_registry.register(
+        session, _ = await plugin_registry.register(
             session_id="sess-abc",
             project_name="TestProject",
             project_hash="hash123",
@@ -904,7 +904,7 @@ class TestPluginRegistryFunctionality:
         """
         Current behavior: touch() updates the connected_at timestamp on heartbeat.
         """
-        session = await plugin_registry.register(
+        session, _ = await plugin_registry.register(
             session_id="sess-y",
             project_name="Project",
             project_hash="hash-y",

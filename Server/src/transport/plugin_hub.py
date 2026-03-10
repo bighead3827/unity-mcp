@@ -426,8 +426,37 @@ class PluginHub(WebSocketEndpoint):
         response = RegisteredMessage(session_id=session_id)
         await websocket.send_json(response.model_dump())
 
-        session = await registry.register(session_id, project_name, project_hash, unity_version, project_path, user_id=user_id)
+        session, evicted_session_id = await registry.register(session_id, project_name, project_hash, unity_version, project_path, user_id=user_id)
+        evicted_ws = None
         async with lock:
+            # Clean up the evicted session's connection, ping loop, and pending commands
+            # so they don't linger as orphans after a domain-reload reconnection race.
+            if evicted_session_id:
+                evicted_ws = cls._connections.pop(evicted_session_id, None)
+                old_ping = cls._ping_tasks.pop(evicted_session_id, None)
+                if old_ping and not old_ping.done():
+                    old_ping.cancel()
+                cls._last_pong.pop(evicted_session_id, None)
+                cancelled_commands = []
+                for command_id, entry in list(cls._pending.items()):
+                    if entry.get("session_id") == evicted_session_id:
+                        future = entry.get("future")
+                        if future and not future.done():
+                            future.set_exception(
+                                PluginDisconnectedError(
+                                    f"Unity plugin session {evicted_session_id} superseded by {session_id}"
+                                )
+                            )
+                            cancelled_commands.append(command_id)
+                        cls._pending.pop(command_id, None)
+                if cancelled_commands:
+                    logger.info(
+                        "Evicted session %s: cancelled pending commands %s",
+                        evicted_session_id,
+                        cancelled_commands,
+                    )
+                logger.info(f"Evicted previous session {evicted_session_id} for same instance")
+
             cls._connections[session.session_id] = websocket
             # Initialize last pong time and start ping loop for this session
             cls._last_pong[session_id] = time.monotonic()
@@ -438,6 +467,17 @@ class PluginHub(WebSocketEndpoint):
             # Start the server-side ping loop
             ping_task = asyncio.create_task(cls._ping_loop(session_id, websocket))
             cls._ping_tasks[session_id] = ping_task
+
+        # Close evicted WebSocket outside the lock to avoid blocking
+        if evicted_ws is not None:
+            try:
+                await evicted_ws.close(code=1001)
+            except Exception:
+                logger.debug(
+                    "Failed to close evicted WebSocket for session %s",
+                    evicted_session_id,
+                    exc_info=True,
+                )
 
         if user_id:
             logger.info(f"Plugin registered: {project_name} ({project_hash}) for user {user_id}")

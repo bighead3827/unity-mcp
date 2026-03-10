@@ -406,7 +406,7 @@ def extract_screenshot_images(response: dict[str, Any]) -> "ToolResult | None":
     """If a Unity response contains inline base64 images, return a ToolResult
     with TextContent + ImageContent blocks. Returns None for normal text-only responses.
 
-    Shared by manage_scene and manage_camera screenshot handling.
+    Shared screenshot handling (used by manage_camera).
     """
     from fastmcp.server.server import ToolResult
     from mcp.types import TextContent, ImageContent
@@ -476,7 +476,7 @@ def build_screenshot_params(
     """Populate screenshot-related keys in *params* dict. Returns an error dict
     if validation fails, or None on success.
 
-    Shared by manage_scene and manage_camera screenshot handling.
+    Shared screenshot handling (used by manage_camera).
     """
     if screenshot_file_name:
         params["fileName"] = screenshot_file_name

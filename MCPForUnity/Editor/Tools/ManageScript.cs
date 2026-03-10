@@ -2741,6 +2741,7 @@ namespace MCPForUnity.Editor.Tools
             foreach (Match sm in sigMatches)
             {
                 string methodName = sm.Groups[1].Value;
+                if (IsCSharpKeyword(methodName)) continue;
                 int paramCount = CountTopLevelParams(sm.Groups[2].Value);
                 string paramTypes = ExtractParamTypes(sm.Groups[2].Value);
                 string containingType = containingTypeArr[sm.Index];
@@ -2751,6 +2752,21 @@ namespace MCPForUnity.Editor.Tools
                     seen[key] = 1;
             }
         }
+
+        private static readonly System.Collections.Generic.HashSet<string> CSharpKeywords =
+            new System.Collections.Generic.HashSet<string>(System.StringComparer.Ordinal)
+            {
+                "if", "else", "for", "foreach", "while", "do", "switch", "case",
+                "try", "catch", "finally", "throw", "return", "yield", "await",
+                "lock", "using", "fixed", "checked", "unchecked", "typeof", "sizeof",
+                "nameof", "default", "new", "stackalloc", "when", "in", "is", "as",
+                "ref", "out", "params", "this", "base", "null", "true", "false",
+                "get", "set", "var", "dynamic", "where", "from", "select", "group",
+                "into", "orderby", "join", "let", "on", "equals", "by", "ascending",
+                "descending"
+            };
+
+        private static bool IsCSharpKeyword(string name) => CSharpKeywords.Contains(name);
 
         /// <summary>
         /// Validates semantic rules and common coding issues

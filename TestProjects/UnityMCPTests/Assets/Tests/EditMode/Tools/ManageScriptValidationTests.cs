@@ -286,5 +286,38 @@ public class Foo : MonoBehaviour
             Assert.IsTrue(HasDuplicateMethodError(errors),
                 "Generic param duplicates with different names should be flagged");
         }
+
+        // --- Keyword false positive tests ---
+
+        [Test]
+        public void DuplicateDetection_CSharpKeywords_NotMatchedAsMethods()
+        {
+            string code = @"using UnityEngine;
+public class Foo : MonoBehaviour
+{
+    public void Update()
+    {
+        if (true) { }
+        if (true) { }
+        for (int i = 0; i < 10; i++) { }
+        for (int j = 0; j < 5; j++) { }
+        while (true) { break; }
+        while (false) { break; }
+        foreach (var x in new int[0]) { }
+        foreach (var y in new int[0]) { }
+        switch (0) { default: break; }
+        switch (1) { default: break; }
+        lock (this) { }
+        lock (this) { }
+        using (var d = new System.IO.MemoryStream()) { }
+        using (var e = new System.IO.MemoryStream()) { }
+        typeof(int);
+        typeof(string);
+    }
+}";
+            var errors = CallValidateScriptSyntaxUnity(code);
+            Assert.IsFalse(HasDuplicateMethodError(errors),
+                "C# keywords (if, for, while, etc.) should not be matched as duplicate methods");
+        }
     }
 }

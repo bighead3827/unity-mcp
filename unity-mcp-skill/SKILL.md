@@ -24,7 +24,7 @@ Before applying a template:
 2. Understand the scene   → mcpforunity://scene/gameobject-api
 3. Find what you need     → find_gameobjects or resources
 4. Take action            → tools (manage_gameobject, create_script, script_apply_edits, apply_text_edits, validate_script, delete_script, get_sha, etc.)
-5. Verify results         → read_console, capture_screenshot (in manage_scene), resources
+5. Verify results         → read_console, manage_camera(action="screenshot"), resources
 ```
 
 ## Critical Best Practices
@@ -90,7 +90,7 @@ manage_gameobject(action="look_at", target="MainCamera", look_at_target="Player"
 manage_camera(action="screenshot", camera="MainCamera", include_image=True, max_resolution=512)
 # → Analyze image, decide next action
 
-# Alternative: use manage_camera for screenshot (same underlying infrastructure)
+# Screenshot from a different camera
 manage_camera(action="screenshot", camera="FollowCam", include_image=True, max_resolution=512)
 manage_camera(action="screenshot_multiview", max_resolution=480)  # 6-angle contact sheet
 ```
