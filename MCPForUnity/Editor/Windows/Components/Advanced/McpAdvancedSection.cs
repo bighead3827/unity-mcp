@@ -24,6 +24,7 @@ namespace MCPForUnity.Editor.Windows.Components.Advanced
         private TextField gitUrlOverride;
         private Button browseGitUrlButton;
         private Button clearGitUrlButton;
+        private Toggle autoStartOnLoadToggle;
         private Toggle debugLogsToggle;
         private Toggle logRecordToggle;
         private Toggle devModeForceRefreshToggle;
@@ -66,6 +67,7 @@ namespace MCPForUnity.Editor.Windows.Components.Advanced
             gitUrlOverride = Root.Q<TextField>("git-url-override");
             browseGitUrlButton = Root.Q<Button>("browse-git-url-button");
             clearGitUrlButton = Root.Q<Button>("clear-git-url-button");
+            autoStartOnLoadToggle = Root.Q<Toggle>("auto-start-on-load-toggle");
             debugLogsToggle = Root.Q<Toggle>("debug-logs-toggle");
             logRecordToggle = Root.Q<Toggle>("log-record-toggle");
             devModeForceRefreshToggle = Root.Q<Toggle>("dev-mode-force-refresh-toggle");
@@ -149,6 +151,15 @@ namespace MCPForUnity.Editor.Windows.Components.Advanced
             if (deployRestoreButton != null)
                 deployRestoreButton.tooltip = "Restore the last backup before deployment";
 
+            if (autoStartOnLoadToggle != null)
+            {
+                autoStartOnLoadToggle.tooltip = "Automatically start the local HTTP server and connect the MCP bridge when the Unity Editor opens. Only applies to HTTP transport (stdio always auto-starts).";
+                var autoStartLabel = autoStartOnLoadToggle.parent?.Q<Label>();
+                if (autoStartLabel != null)
+                    autoStartLabel.tooltip = autoStartOnLoadToggle.tooltip;
+                autoStartOnLoadToggle.SetValueWithoutNotify(EditorPrefs.GetBool(EditorPrefKeys.AutoStartOnLoad, false));
+            }
+
             gitUrlOverride.value = EditorPrefs.GetString(EditorPrefKeys.GitUrlOverride, "");
 
             bool debugEnabled = EditorPrefs.GetBool(EditorPrefKeys.DebugLogs, false);
@@ -216,6 +227,14 @@ namespace MCPForUnity.Editor.Windows.Components.Advanced
                 logRecordToggle.RegisterValueChangedCallback(evt =>
                 {
                     McpLogRecord.IsEnabled = evt.newValue;
+                });
+            }
+
+            if (autoStartOnLoadToggle != null)
+            {
+                autoStartOnLoadToggle.RegisterValueChangedCallback(evt =>
+                {
+                    EditorPrefs.SetBool(EditorPrefKeys.AutoStartOnLoad, evt.newValue);
                 });
             }
 
@@ -343,6 +362,8 @@ namespace MCPForUnity.Editor.Windows.Components.Advanced
             }
 
             gitUrlOverride.value = EditorPrefs.GetString(EditorPrefKeys.GitUrlOverride, "");
+            if (autoStartOnLoadToggle != null)
+                autoStartOnLoadToggle.value = EditorPrefs.GetBool(EditorPrefKeys.AutoStartOnLoad, false);
             debugLogsToggle.value = EditorPrefs.GetBool(EditorPrefKeys.DebugLogs, false);
             if (logRecordToggle != null)
                 logRecordToggle.value = McpLogRecord.IsEnabled;
