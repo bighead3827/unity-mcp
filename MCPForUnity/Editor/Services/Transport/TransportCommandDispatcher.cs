@@ -402,7 +402,15 @@ namespace MCPForUnity.Editor.Services.Transport
                 }
 
                 sw?.Stop();
-                McpLogRecord.Log(command.type, parameters, logType, "SUCCESS", sw?.ElapsedMilliseconds ?? 0);
+
+                string syncLogStatus = "SUCCESS";
+                string syncLogError = null;
+                if (result is ErrorResponse errResp)
+                {
+                    syncLogStatus = "ERROR";
+                    syncLogError = errResp.Error;
+                }
+                McpLogRecord.Log(command.type, parameters, logType, syncLogStatus, sw?.ElapsedMilliseconds ?? 0, syncLogError);
 
                 var response = new { status = "success", result };
                 pending.TrySetResult(JsonConvert.SerializeObject(response));
