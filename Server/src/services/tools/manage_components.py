@@ -47,7 +47,7 @@ async def manage_components(
                      "Value to set (for set_property action)"] | None = None,
     # For add/set_property - multiple properties
     properties: Annotated[
-        dict[str, Any],
+        dict[str, Any] | str,
         "Dictionary of property names to values. Example: {\"mass\": 5.0, \"useGravity\": false}"
     ] | None = None,
 ) -> dict[str, Any]:

@@ -25,6 +25,7 @@ namespace MCPForUnity.Editor.Windows.Components.Advanced
         private Button browseGitUrlButton;
         private Button clearGitUrlButton;
         private Toggle debugLogsToggle;
+        private Toggle logRecordToggle;
         private Toggle devModeForceRefreshToggle;
         private Toggle allowLanHttpBindToggle;
         private Toggle allowInsecureRemoteHttpToggle;
@@ -66,6 +67,7 @@ namespace MCPForUnity.Editor.Windows.Components.Advanced
             browseGitUrlButton = Root.Q<Button>("browse-git-url-button");
             clearGitUrlButton = Root.Q<Button>("clear-git-url-button");
             debugLogsToggle = Root.Q<Toggle>("debug-logs-toggle");
+            logRecordToggle = Root.Q<Toggle>("log-record-toggle");
             devModeForceRefreshToggle = Root.Q<Toggle>("dev-mode-force-refresh-toggle");
             allowLanHttpBindToggle = Root.Q<Toggle>("allow-lan-http-bind-toggle");
             allowInsecureRemoteHttpToggle = Root.Q<Toggle>("allow-insecure-remote-http-toggle");
@@ -95,6 +97,13 @@ namespace MCPForUnity.Editor.Windows.Components.Advanced
                 var debugLabel = debugLogsToggle?.parent?.Q<Label>();
                 if (debugLabel != null)
                     debugLabel.tooltip = debugLogsToggle.tooltip;
+            }
+            if (logRecordToggle != null)
+            {
+                logRecordToggle.tooltip = "Log every MCP tool execution (tool, action, status, duration) to Assets/mcp.log.";
+                var logRecordLabel = logRecordToggle?.parent?.Q<Label>();
+                if (logRecordLabel != null)
+                    logRecordLabel.tooltip = logRecordToggle.tooltip;
             }
             if (devModeForceRefreshToggle != null)
             {
@@ -145,6 +154,9 @@ namespace MCPForUnity.Editor.Windows.Components.Advanced
             bool debugEnabled = EditorPrefs.GetBool(EditorPrefKeys.DebugLogs, false);
             debugLogsToggle.value = debugEnabled;
             McpLog.SetDebugLoggingEnabled(debugEnabled);
+
+            if (logRecordToggle != null)
+                logRecordToggle.value = McpLogRecord.IsEnabled;
 
             devModeForceRefreshToggle.value = EditorPrefs.GetBool(EditorPrefKeys.DevModeForceServerRefresh, false);
             if (allowLanHttpBindToggle != null)
@@ -198,6 +210,14 @@ namespace MCPForUnity.Editor.Windows.Components.Advanced
             {
                 McpLog.SetDebugLoggingEnabled(evt.newValue);
             });
+
+            if (logRecordToggle != null)
+            {
+                logRecordToggle.RegisterValueChangedCallback(evt =>
+                {
+                    McpLogRecord.IsEnabled = evt.newValue;
+                });
+            }
 
             devModeForceRefreshToggle.RegisterValueChangedCallback(evt =>
             {
@@ -324,6 +344,8 @@ namespace MCPForUnity.Editor.Windows.Components.Advanced
 
             gitUrlOverride.value = EditorPrefs.GetString(EditorPrefKeys.GitUrlOverride, "");
             debugLogsToggle.value = EditorPrefs.GetBool(EditorPrefKeys.DebugLogs, false);
+            if (logRecordToggle != null)
+                logRecordToggle.value = McpLogRecord.IsEnabled;
             devModeForceRefreshToggle.value = EditorPrefs.GetBool(EditorPrefKeys.DevModeForceServerRefresh, false);
             if (allowLanHttpBindToggle != null)
             {

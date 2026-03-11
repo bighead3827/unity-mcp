@@ -41,7 +41,7 @@ async def manage_material(
 
     # create
     shader: Annotated[str, "Shader name (default: Standard)"] | None = None,
-    properties: Annotated[dict[str, Any],
+    properties: Annotated[dict[str, Any] | str,
                           "Initial properties to set as {name: value} dict."] | None = None,
 
     # set_material_shader_property

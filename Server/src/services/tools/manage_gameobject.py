@@ -89,7 +89,7 @@ async def manage_gameobject(
     layer: Annotated[str, "Layer name"] | None = None,
     components_to_remove: Annotated[list[str] | str,
                                     "List of component names to remove"] | None = None,
-    component_properties: Annotated[dict[str, dict[str, Any]],
+    component_properties: Annotated[dict[str, dict[str, Any]] | str,
                                     """Dictionary of component names to their properties to set. For example:
                                     `{"MyScript": {"otherObject": {"find": "Player", "method": "by_name"}}}` assigns GameObject
                                     `{"MyScript": {"playerHealth": {"find": "Player", "component": "HealthComponent"}}}` assigns Component

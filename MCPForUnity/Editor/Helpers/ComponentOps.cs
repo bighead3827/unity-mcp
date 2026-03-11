@@ -592,12 +592,14 @@ namespace MCPForUnity.Editor.Helpers
                     error = $"No object found with instanceID {id}.";
                     return false;
                 }
-                prop.objectReferenceValue = resolved;
-                return true;
+                return AssignObjectReference(prop, resolved, null, out error);
             }
 
             if (value is JObject jObj)
             {
+                // Optional component type filter — e.g. {"instanceID": 123, "component": "Button"}
+                string componentFilter = jObj["component"]?.ToString();
+
                 var idToken = jObj["instanceID"];
                 if (idToken != null)
                 {
@@ -608,8 +610,7 @@ namespace MCPForUnity.Editor.Helpers
                         error = $"No object found with instanceID {id}.";
                         return false;
                     }
-                    prop.objectReferenceValue = resolved;
-                    return true;
+                    return AssignObjectReference(prop, resolved, componentFilter, out error);
                 }
 
                 var guidToken = jObj["guid"];
@@ -665,8 +666,8 @@ namespace MCPForUnity.Editor.Helpers
                         return false;
                     }
 
-                    prop.objectReferenceValue = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
-                    return true;
+                    var loaded = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
+                    return AssignObjectReference(prop, loaded, componentFilter, out error);
                 }
 
                 var pathToken = jObj["path"];
@@ -679,8 +680,7 @@ namespace MCPForUnity.Editor.Helpers
                         error = $"No asset found at path '{pathToken}'.";
                         return false;
                     }
-                    prop.objectReferenceValue = resolved;
-                    return true;
+                    return AssignObjectReference(prop, resolved, componentFilter, out error);
                 }
 
                 var nameToken = jObj["name"];
@@ -696,6 +696,16 @@ namespace MCPForUnity.Editor.Helpers
             if (value.Type == JTokenType.String)
             {
                 string strVal = value.ToString();
+
+                // Try as instanceID if the string is purely numeric
+                if (int.TryParse(strVal, out int parsedId))
+                {
+                    var resolved = GameObjectLookup.ResolveInstanceID(parsedId);
+                    if (resolved != null)
+                        return AssignObjectReference(prop, resolved, null, out error);
+                    // Not a valid instanceID — fall through to path/name resolution
+                }
+
                 if (strVal.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase) || strVal.Contains("/"))
                 {
                     string sanitized = AssetPathUtility.SanitizeAssetPath(strVal);
@@ -705,8 +715,7 @@ namespace MCPForUnity.Editor.Helpers
                         error = $"No asset found at path '{strVal}'.";
                         return false;
                     }
-                    prop.objectReferenceValue = resolved;
-                    return true;
+                    return AssignObjectReference(prop, resolved, null, out error);
                 }
 
                 // Fall back to scene hierarchy lookup by name.
@@ -714,6 +723,66 @@ namespace MCPForUnity.Editor.Helpers
             }
 
             error = $"Unsupported object reference format: {value.Type}.";
+            return false;
+        }
+
+        /// <summary>
+        /// Assigns a resolved object to a SerializedProperty, with automatic component fallback.
+        /// If the resolved object is a GameObject but the property expects a Component type,
+        /// searches the GameObject's components for a compatible one.
+        /// Optionally filters by component type name (e.g. "Button", "Rigidbody").
+        /// </summary>
+        private static bool AssignObjectReference(SerializedProperty prop, UnityEngine.Object resolved, string componentFilter, out string error)
+        {
+            error = null;
+            if (resolved == null)
+            {
+                error = "Resolved object is null.";
+                return false;
+            }
+
+            // If a component filter is specified and the resolved object is a GameObject,
+            // find the specific component by type name.
+            if (!string.IsNullOrEmpty(componentFilter) && resolved is GameObject filterGo)
+            {
+                var components = filterGo.GetComponents<Component>();
+                foreach (var comp in components)
+                {
+                    if (comp == null) continue;
+                    if (string.Equals(comp.GetType().Name, componentFilter, StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(comp.GetType().FullName, componentFilter, StringComparison.OrdinalIgnoreCase))
+                    {
+                        prop.objectReferenceValue = comp;
+                        if (prop.objectReferenceValue != null)
+                            return true;
+                    }
+                }
+                error = $"Component '{componentFilter}' not found on GameObject '{filterGo.name}'.";
+                return false;
+            }
+
+            // Try direct assignment first
+            prop.objectReferenceValue = resolved;
+            if (prop.objectReferenceValue != null)
+                return true;
+
+            // If the resolved object is a GameObject but the property expects a Component,
+            // try each component on the GameObject until one is accepted.
+            if (resolved is GameObject go)
+            {
+                var components = go.GetComponents<Component>();
+                foreach (var comp in components)
+                {
+                    if (comp == null) continue;
+                    prop.objectReferenceValue = comp;
+                    if (prop.objectReferenceValue != null)
+                        return true;
+                }
+                error = $"GameObject '{go.name}' found but no compatible component for the property type.";
+                return false;
+            }
+
+            error = $"Object '{resolved.name}' (type: {resolved.GetType().Name}) is not compatible with the property type.";
             return false;
         }
 
@@ -747,24 +816,7 @@ namespace MCPForUnity.Editor.Helpers
                 return false;
             }
 
-            // If the property accepts a GameObject directly, assign it.
-            prop.objectReferenceValue = go;
-            if (prop.objectReferenceValue != null)
-                return true;
-
-            // The field type may expect a specific Component (e.g. Transform, Rigidbody).
-            // Try each component on the GameObject until one is accepted.
-            var components = go.GetComponents<Component>();
-            foreach (var comp in components)
-            {
-                if (comp == null) continue;
-                prop.objectReferenceValue = comp;
-                if (prop.objectReferenceValue != null)
-                    return true;
-            }
-
-            error = $"GameObject '{name}' found but no compatible component for property type.";
-            return false;
+            return AssignObjectReference(prop, go, null, out error);
         }
 
         /// <summary>
