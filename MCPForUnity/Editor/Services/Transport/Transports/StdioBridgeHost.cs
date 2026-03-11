@@ -183,10 +183,7 @@ namespace MCPForUnity.Editor.Services.Transport.Transports
             try
             {
                 bool useHttpTransport = EditorConfigurationCache.Instance.UseHttpTransport;
-                if (useHttpTransport) return false;
-
-                bool autoStart = EditorPrefs.GetBool(EditorPrefKeys.AutoStartOnLoad, true);
-                return autoStart;
+                return !useHttpTransport;
             }
             catch
             {

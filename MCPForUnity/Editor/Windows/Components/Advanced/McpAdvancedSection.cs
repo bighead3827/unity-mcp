@@ -153,11 +153,11 @@ namespace MCPForUnity.Editor.Windows.Components.Advanced
 
             if (autoStartOnLoadToggle != null)
             {
-                autoStartOnLoadToggle.tooltip = "Automatically start the MCP bridge when the Unity Editor opens. Applies to both HTTP and stdio transports.";
+                autoStartOnLoadToggle.tooltip = "Automatically start the local HTTP server and connect the MCP bridge when the Unity Editor opens. Only applies to HTTP transport (stdio always auto-starts).";
                 var autoStartLabel = autoStartOnLoadToggle.parent?.Q<Label>();
                 if (autoStartLabel != null)
                     autoStartLabel.tooltip = autoStartOnLoadToggle.tooltip;
-                autoStartOnLoadToggle.SetValueWithoutNotify(EditorPrefs.GetBool(EditorPrefKeys.AutoStartOnLoad, true));
+                autoStartOnLoadToggle.SetValueWithoutNotify(EditorPrefs.GetBool(EditorPrefKeys.AutoStartOnLoad, false));
             }
 
             gitUrlOverride.value = EditorPrefs.GetString(EditorPrefKeys.GitUrlOverride, "");
@@ -363,7 +363,7 @@ namespace MCPForUnity.Editor.Windows.Components.Advanced
 
             gitUrlOverride.value = EditorPrefs.GetString(EditorPrefKeys.GitUrlOverride, "");
             if (autoStartOnLoadToggle != null)
-                autoStartOnLoadToggle.value = EditorPrefs.GetBool(EditorPrefKeys.AutoStartOnLoad, true);
+                autoStartOnLoadToggle.value = EditorPrefs.GetBool(EditorPrefKeys.AutoStartOnLoad, false);
             debugLogsToggle.value = EditorPrefs.GetBool(EditorPrefKeys.DebugLogs, false);
             if (logRecordToggle != null)
                 logRecordToggle.value = McpLogRecord.IsEnabled;
