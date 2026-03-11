@@ -319,7 +319,7 @@ namespace MCPForUnity.Editor.Windows.Components.Tools
                 row.Add(parametersLabel);
             }
 
-            if (IsManageSceneTool(tool))
+            if (IsManageCameraTool(tool))
             {
                 row.Add(CreateManageSceneActions());
             }
@@ -596,7 +596,7 @@ namespace MCPForUnity.Editor.Windows.Components.Tools
             };
             screenshotButton.AddToClassList("tool-action-button");
             screenshotButton.style.marginTop = 4;
-            screenshotButton.tooltip = "Capture a screenshot to Assets/Screenshots via manage_scene.";
+            screenshotButton.tooltip = "Capture a screenshot to Assets/Screenshots via manage_camera.";
 
             var multiviewButton = new Button(OnManageSceneMultiviewClicked)
             {
@@ -733,6 +733,8 @@ namespace MCPForUnity.Editor.Windows.Components.Tools
         }
 
         private static bool IsManageSceneTool(ToolMetadata tool) => string.Equals(tool?.Name, "manage_scene", StringComparison.OrdinalIgnoreCase);
+
+        private static bool IsManageCameraTool(ToolMetadata tool) => string.Equals(tool?.Name, "manage_camera", StringComparison.OrdinalIgnoreCase);
 
         private static bool IsBatchExecuteTool(ToolMetadata tool) => string.Equals(tool?.Name, "batch_execute", StringComparison.OrdinalIgnoreCase);
 

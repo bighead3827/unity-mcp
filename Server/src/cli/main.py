@@ -267,6 +267,9 @@ def register_commands():
         ("cli.commands.batch", "batch"),
         ("cli.commands.texture", "texture"),
         ("cli.commands.probuilder", "probuilder"),
+        ("cli.commands.camera", "camera"),
+        ("cli.commands.graphics", "graphics"),
+        ("cli.commands.packages", "packages"),
     ]
 
     for module_name, command_name in optional_commands:
