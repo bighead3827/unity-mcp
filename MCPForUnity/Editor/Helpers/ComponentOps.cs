@@ -686,7 +686,7 @@ namespace MCPForUnity.Editor.Helpers
                 var nameToken = jObj["name"];
                 if (nameToken != null)
                 {
-                    return ResolveSceneObjectByName(prop, nameToken.ToString(), out error);
+                    return ResolveSceneObjectByName(prop, nameToken.ToString(), componentFilter, out error);
                 }
 
                 error = "Object reference must contain 'instanceID', 'guid', 'path', or 'name'.";
@@ -719,7 +719,7 @@ namespace MCPForUnity.Editor.Helpers
                 }
 
                 // Fall back to scene hierarchy lookup by name.
-                return ResolveSceneObjectByName(prop, strVal, out error);
+                return ResolveSceneObjectByName(prop, strVal, null, out error);
             }
 
             error = $"Unsupported object reference format: {value.Type}.";
@@ -791,7 +791,7 @@ namespace MCPForUnity.Editor.Helpers
         /// to a SerializedProperty. Uses GameObjectLookup for robust search
         /// including inactive objects and prefab stage support.
         /// </summary>
-        private static bool ResolveSceneObjectByName(SerializedProperty prop, string name, out string error)
+        private static bool ResolveSceneObjectByName(SerializedProperty prop, string name, string componentFilter, out string error)
         {
             error = null;
             if (string.IsNullOrWhiteSpace(name))
@@ -816,7 +816,7 @@ namespace MCPForUnity.Editor.Helpers
                 return false;
             }
 
-            return AssignObjectReference(prop, go, null, out error);
+            return AssignObjectReference(prop, go, componentFilter, out error);
         }
 
         /// <summary>

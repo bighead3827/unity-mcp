@@ -14,6 +14,7 @@ namespace MCPForUnity.Editor.Helpers
         private static readonly string ErrorLogPath = Path.Combine(Application.dataPath, "mcpError.log");
         private const long MaxLogSizeBytes = 1024 * 1024; // 1 MB
         private static bool _sessionStarted;
+        private static readonly object _logLock = new();
 
         internal static bool IsEnabled
         {
@@ -27,19 +28,6 @@ namespace MCPForUnity.Editor.Helpers
 
             try
             {
-                if (!_sessionStarted)
-                {
-                    _sessionStarted = true;
-                    RotateIfNeeded(LogPath);
-                    var sessionEntry = new JObject
-                    {
-                        ["ts"] = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
-                        ["event"] = "session_start",
-                        ["unity"] = Application.unityVersion
-                    };
-                    AppendLine(LogPath, sessionEntry.ToString(Formatting.None));
-                }
-
                 var entry = new JObject
                 {
                     ["ts"] = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
@@ -60,12 +48,27 @@ namespace MCPForUnity.Editor.Helpers
                     entry["error"] = error;
 
                 var line = entry.ToString(Formatting.None);
-                AppendLine(LogPath, line);
 
-                if (status == "ERROR")
+                lock (_logLock)
                 {
-                    RotateIfNeeded(ErrorLogPath);
-                    AppendLine(ErrorLogPath, line);
+                    if (!_sessionStarted)
+                    {
+                        _sessionStarted = true;
+                        var sessionEntry = new JObject
+                        {
+                            ["ts"] = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                            ["event"] = "session_start",
+                            ["unity"] = Application.unityVersion
+                        };
+                        RotateAndAppend(LogPath, sessionEntry.ToString(Formatting.None));
+                    }
+
+                    RotateAndAppend(LogPath, line);
+
+                    if (status == "ERROR")
+                    {
+                        RotateAndAppend(ErrorLogPath, line);
+                    }
                 }
             }
             catch (Exception ex)
@@ -74,8 +77,9 @@ namespace MCPForUnity.Editor.Helpers
             }
         }
 
-        private static void AppendLine(string path, string line)
+        private static void RotateAndAppend(string path, string line)
         {
+            RotateIfNeeded(path);
             File.AppendAllText(path, line + Environment.NewLine);
         }
 

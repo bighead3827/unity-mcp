@@ -374,10 +374,28 @@ namespace MCPForUnity.Editor.Services.Transport
                     pending.CompletionSource.Task.ContinueWith(t =>
                     {
                         sw?.Stop();
+                        var logStatus = "SUCCESS";
+                        string logError = null;
+                        if (t.IsFaulted)
+                        {
+                            logStatus = "ERROR";
+                            logError = t.Exception?.InnerException?.Message;
+                        }
+                        else if (t.IsCompletedSuccessfully && t.Result != null)
+                        {
+                            try
+                            {
+                                var resultObj = JObject.Parse(t.Result);
+                                if (string.Equals(resultObj.Value<string>("status"), "error", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    logStatus = "ERROR";
+                                    logError = resultObj.Value<string>("error");
+                                }
+                            }
+                            catch { }
+                        }
                         McpLogRecord.Log(capturedType, capturedParams, capturedLogType,
-                            t.IsFaulted ? "ERROR" : "SUCCESS",
-                            sw?.ElapsedMilliseconds ?? 0,
-                            t.IsFaulted ? t.Exception?.InnerException?.Message : null);
+                            logStatus, sw?.ElapsedMilliseconds ?? 0, logError);
                         EditorApplication.delayCall += () => RemovePending(id, pending);
                     }, TaskScheduler.Default);
                     return;
