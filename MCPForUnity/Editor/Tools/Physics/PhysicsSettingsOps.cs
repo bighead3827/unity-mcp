@@ -113,10 +113,28 @@ namespace MCPForUnity.Editor.Tools.Physics
             return SetSettings3D(settings);
         }
 
+        private static readonly HashSet<string> Valid3DKeys = new HashSet<string>
+        {
+            "gravity", "defaultcontactoffset", "sleepthreshold",
+            "defaultsolveriterations", "defaultsolvervelocityiterations",
+            "bouncethreshold", "defaultmaxangularspeed",
+            "querieshittriggers", "querieshitbackfaces", "simulationmode"
+        };
+
         private static object SetSettings3D(JObject settings)
         {
-            var changed = new List<string>();
+            // Validate all keys before applying any changes
             var unknown = new List<string>();
+            foreach (var prop in settings.Properties())
+            {
+                if (!Valid3DKeys.Contains(prop.Name.ToLowerInvariant()))
+                    unknown.Add(prop.Name);
+            }
+            if (unknown.Count > 0)
+                return new ErrorResponse(
+                    $"Unknown 3D physics setting(s): {string.Join(", ", unknown)}.");
+
+            var changed = new List<string>();
 
             foreach (var prop in settings.Properties())
             {
@@ -192,15 +210,8 @@ namespace MCPForUnity.Editor.Tools.Physics
                         break;
                     }
 #endif
-                    default:
-                        unknown.Add(prop.Name);
-                        break;
                 }
             }
-
-            if (unknown.Count > 0)
-                return new ErrorResponse(
-                    $"Unknown 3D physics setting(s): {string.Join(", ", unknown)}.");
 
             MarkDynamicsManagerDirty();
 
@@ -212,10 +223,27 @@ namespace MCPForUnity.Editor.Tools.Physics
             };
         }
 
+        private static readonly HashSet<string> Valid2DKeys = new HashSet<string>
+        {
+            "gravity", "velocityiterations", "positioniterations",
+            "querieshittriggers", "queriesstartincolliders",
+            "callbacksondisable", "autosynctransforms"
+        };
+
         private static object SetSettings2D(JObject settings)
         {
-            var changed = new List<string>();
+            // Validate all keys before applying any changes
             var unknown = new List<string>();
+            foreach (var prop in settings.Properties())
+            {
+                if (!Valid2DKeys.Contains(prop.Name.ToLowerInvariant()))
+                    unknown.Add(prop.Name);
+            }
+            if (unknown.Count > 0)
+                return new ErrorResponse(
+                    $"Unknown 2D physics setting(s): {string.Join(", ", unknown)}.");
+
+            var changed = new List<string>();
 
             foreach (var prop in settings.Properties())
             {
@@ -256,15 +284,8 @@ namespace MCPForUnity.Editor.Tools.Physics
                         UnityEngine.Physics.autoSyncTransforms = prop.Value.Value<bool>();
                         changed.Add("autoSyncTransforms");
                         break;
-                    default:
-                        unknown.Add(prop.Name);
-                        break;
                 }
             }
-
-            if (unknown.Count > 0)
-                return new ErrorResponse(
-                    $"Unknown 2D physics setting(s): {string.Join(", ", unknown)}.");
 
             MarkPhysics2DSettingsDirty();
 
