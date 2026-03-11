@@ -842,10 +842,11 @@ namespace MCPForUnity.Editor.Helpers
             try
             {
                 var globalId = GlobalObjectId.GetGlobalObjectIdSlow(sprite);
-                return (long)globalId.targetObjectId;
+                return unchecked((long)globalId.targetObjectId);
             }
-            catch
+            catch (Exception ex)
             {
+                McpLog.Warn($"Failed to get fileID for sprite '{sprite.name}' (instanceID={sprite.GetInstanceID()}): {ex.Message}");
                 return 0;
             }
         }
