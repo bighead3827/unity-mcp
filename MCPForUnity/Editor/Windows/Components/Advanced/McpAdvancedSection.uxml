@@ -28,6 +28,11 @@
             </ui:VisualElement>
 
             <ui:VisualElement class="setting-row">
+                <ui:Label text="Log Record (Assets/mcp.log):" class="setting-label" />
+                <ui:Toggle name="log-record-toggle" class="setting-toggle" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="setting-row">
                 <ui:Label text="Server Health:" class="setting-label" />
                 <ui:VisualElement class="status-container">
                     <ui:VisualElement name="health-indicator" class="status-dot" />
