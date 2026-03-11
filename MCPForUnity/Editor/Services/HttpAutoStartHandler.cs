@@ -17,8 +17,14 @@ namespace MCPForUnity.Editor.Services
     [InitializeOnLoad]
     internal static class HttpAutoStartHandler
     {
+        private const string SessionInitKey = "HttpAutoStartHandler.SessionInitialized";
+
         static HttpAutoStartHandler()
         {
+            // SessionState resets on editor process start but persists across domain reloads.
+            // Only run once per session — let HttpBridgeReloadHandler handle reload-resume cases.
+            if (SessionState.GetBool(SessionInitKey, false)) return;
+
             if (Application.isBatchMode &&
                 string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("UNITY_MCP_ALLOW_BATCH")))
             {
@@ -29,6 +35,8 @@ namespace MCPForUnity.Editor.Services
             // and MCPServiceLocator may not be initialized yet on fresh editor launch.
             bool autoStartEnabled = EditorPrefs.GetBool(EditorPrefKeys.AutoStartOnLoad, false);
             if (!autoStartEnabled) return;
+
+            SessionState.SetBool(SessionInitKey, true);
 
             // Delay to let the editor and services finish initialization.
             EditorApplication.delayCall += OnEditorReady;
@@ -43,10 +51,6 @@ namespace MCPForUnity.Editor.Services
 
                 bool useHttp = EditorConfigurationCache.Instance.UseHttpTransport;
                 if (!useHttp) return;
-
-                // Don't auto-start if HttpBridgeReloadHandler will resume (avoids double-start).
-                bool resumingAfterReload = EditorPrefs.GetBool(EditorPrefKeys.ResumeHttpAfterReload, false);
-                if (resumingAfterReload) return;
 
                 // Don't auto-start if bridge is already running.
                 if (MCPServiceLocator.TransportManager.IsRunning(TransportMode.Http)) return;
