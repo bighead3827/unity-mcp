@@ -333,6 +333,7 @@ namespace MCPForUnity.Editor.Windows
 
             // Initial updates
             RefreshAllData();
+            QueueUpdateCheck();
         }
 
         private void UpdateVersionLabel()
@@ -517,7 +518,6 @@ namespace MCPForUnity.Editor.Windows
 
             advancedSection?.UpdatePathOverrides();
             clientConfigSection?.RefreshSelectedClient();
-            QueueUpdateCheck();
         }
 
         private void SetupTabs()
