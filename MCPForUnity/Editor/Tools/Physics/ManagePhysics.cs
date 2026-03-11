@@ -32,10 +32,28 @@ namespace MCPForUnity.Editor.Tools.Physics
                     case "set_settings":
                         return PhysicsSettingsOps.SetSettings(@params);
 
+                    // --- Physics material actions ---
+                    case "create_physics_material":
+                        return PhysicsMaterialOps.Create(@params);
+                    case "configure_physics_material":
+                        return PhysicsMaterialOps.Configure(@params);
+                    case "assign_physics_material":
+                        return PhysicsMaterialOps.Assign(@params);
+
+                    // --- Joint actions ---
+                    case "add_joint":
+                        return JointOps.AddJoint(@params);
+                    case "configure_joint":
+                        return JointOps.ConfigureJoint(@params);
+                    case "remove_joint":
+                        return JointOps.RemoveJoint(@params);
+
                     default:
                         return new ErrorResponse(
                             $"Unknown action: '{action}'. Valid actions: ping, "
-                            + "get_settings, set_settings.");
+                            + "get_settings, set_settings, "
+                            + "create_physics_material, configure_physics_material, assign_physics_material, "
+                            + "add_joint, configure_joint, remove_joint.");
                 }
             }
             catch (Exception ex)
