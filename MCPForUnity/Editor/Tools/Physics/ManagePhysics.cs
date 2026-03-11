@@ -32,6 +32,12 @@ namespace MCPForUnity.Editor.Tools.Physics
                     case "set_settings":
                         return PhysicsSettingsOps.SetSettings(@params);
 
+                    // --- Collision matrix actions ---
+                    case "get_collision_matrix":
+                        return CollisionMatrixOps.GetCollisionMatrix(@params);
+                    case "set_collision_matrix":
+                        return CollisionMatrixOps.SetCollisionMatrix(@params);
+
                     // --- Physics material actions ---
                     case "create_physics_material":
                         return PhysicsMaterialOps.Create(@params);
@@ -52,6 +58,7 @@ namespace MCPForUnity.Editor.Tools.Physics
                         return new ErrorResponse(
                             $"Unknown action: '{action}'. Valid actions: ping, "
                             + "get_settings, set_settings, "
+                            + "get_collision_matrix, set_collision_matrix, "
                             + "create_physics_material, configure_physics_material, assign_physics_material, "
                             + "add_joint, configure_joint, remove_joint.");
                 }

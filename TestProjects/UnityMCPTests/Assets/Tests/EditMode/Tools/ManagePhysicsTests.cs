@@ -337,7 +337,7 @@ namespace MCPForUnityTests.Editor.Tools
         }
 
         // =====================================================================
-        // CreatePhysicsMaterial
+        // GetCollisionMatrix
         // =====================================================================
 
         [Test]
@@ -654,6 +654,111 @@ namespace MCPForUnityTests.Editor.Tools
                 "HingeJoint should be removed.");
             Assert.IsNull(go.GetComponent<FixedJoint>(),
                 "FixedJoint should be removed.");
+        }
+
+        // =====================================================================
+        // GetCollisionMatrix
+        // =====================================================================
+
+        [Test]
+        public void GetCollisionMatrix_3D_ReturnsMatrix()
+        {
+            var result = ToJObject(ManagePhysics.HandleCommand(new JObject
+            {
+                ["action"] = "get_collision_matrix",
+                ["dimension"] = "3d"
+            }));
+            Assert.IsTrue(result.Value<bool>("success"), result.ToString());
+            var data = result["data"];
+            Assert.IsNotNull(data["layers"]);
+            Assert.IsTrue(data["layers"] is JArray);
+            Assert.IsTrue(((JArray)data["layers"]).Count > 0);
+            Assert.IsNotNull(data["matrix"]);
+            Assert.IsTrue(data["matrix"].Type == JTokenType.Object);
+        }
+
+        [Test]
+        public void GetCollisionMatrix_2D_ReturnsMatrix()
+        {
+            var result = ToJObject(ManagePhysics.HandleCommand(new JObject
+            {
+                ["action"] = "get_collision_matrix",
+                ["dimension"] = "2d"
+            }));
+            Assert.IsTrue(result.Value<bool>("success"), result.ToString());
+            var data = result["data"];
+            Assert.IsNotNull(data["layers"]);
+            Assert.IsTrue(data["layers"] is JArray);
+            Assert.IsTrue(((JArray)data["layers"]).Count > 0);
+            Assert.IsNotNull(data["matrix"]);
+            Assert.IsTrue(data["matrix"].Type == JTokenType.Object);
+        }
+
+        // =====================================================================
+        // SetCollisionMatrix
+        // =====================================================================
+
+        [Test]
+        public void SetCollisionMatrix_3D_ChangesAndRestores()
+        {
+            bool original = !UnityEngine.Physics.GetIgnoreLayerCollision(0, 0);
+
+            try
+            {
+                var result = ToJObject(ManagePhysics.HandleCommand(new JObject
+                {
+                    ["action"] = "set_collision_matrix",
+                    ["dimension"] = "3d",
+                    ["layer_a"] = "Default",
+                    ["layer_b"] = "Default",
+                    ["collide"] = false
+                }));
+                Assert.IsTrue(result.Value<bool>("success"), result.ToString());
+                Assert.IsTrue(UnityEngine.Physics.GetIgnoreLayerCollision(0, 0),
+                    "Layers should be ignoring collision after setting collide=false");
+
+                result = ToJObject(ManagePhysics.HandleCommand(new JObject
+                {
+                    ["action"] = "set_collision_matrix",
+                    ["dimension"] = "3d",
+                    ["layer_a"] = "Default",
+                    ["layer_b"] = "Default",
+                    ["collide"] = true
+                }));
+                Assert.IsTrue(result.Value<bool>("success"), result.ToString());
+                Assert.IsFalse(UnityEngine.Physics.GetIgnoreLayerCollision(0, 0),
+                    "Layers should NOT be ignoring collision after setting collide=true");
+            }
+            finally
+            {
+                UnityEngine.Physics.IgnoreLayerCollision(0, 0, !original);
+            }
+        }
+
+        [Test]
+        public void SetCollisionMatrix_InvalidLayer_ReturnsError()
+        {
+            var result = ToJObject(ManagePhysics.HandleCommand(new JObject
+            {
+                ["action"] = "set_collision_matrix",
+                ["dimension"] = "3d",
+                ["layer_a"] = "NonExistentLayerXYZ",
+                ["layer_b"] = "Default"
+            }));
+            Assert.IsFalse(result.Value<bool>("success"));
+            Assert.That(result["error"].ToString(), Does.Contain("layer_a"));
+        }
+
+        [Test]
+        public void SetCollisionMatrix_MissingParams_ReturnsError()
+        {
+            var result = ToJObject(ManagePhysics.HandleCommand(new JObject
+            {
+                ["action"] = "set_collision_matrix",
+                ["dimension"] = "3d"
+            }));
+            Assert.IsFalse(result.Value<bool>("success"));
+            Assert.That(result["error"].ToString(), Does.Contain("layer_a"));
         }
     }
 }
