@@ -643,7 +643,7 @@ namespace MCPForUnity.Editor.Helpers
                     var fileIdToken = jObj["fileID"];
                     if (fileIdToken != null)
                     {
-                        long targetFileId = ParamCoercion.CoerceLong(fileIdToken, 0);
+                        long targetFileId = fileIdToken.Value<long>();
                         if (targetFileId != 0)
                         {
                             var allAssets = AssetDatabase.LoadAllAssetsAtPath(path);
@@ -660,6 +660,9 @@ namespace MCPForUnity.Editor.Helpers
                                 }
                             }
                         }
+
+                        error = $"Sprite with fileID '{targetFileId}' not found in atlas '{path}'.";
+                        return false;
                     }
 
                     prop.objectReferenceValue = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
@@ -830,7 +833,6 @@ namespace MCPForUnity.Editor.Helpers
             error = $"Unknown enum name '{s}'.";
             return false;
         }
-
 
         private static long GetSpriteFileId(Sprite sprite)
         {
