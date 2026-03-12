@@ -464,6 +464,7 @@ def build_screenshot_params(
     camera: str | None = None,
     include_image: bool | str | None = None,
     max_resolution: int | str | None = None,
+    capture_source: str | None = None,
     batch: str | None = None,
     look_at: str | int | list[float] | None = None,
     orbit_angles: int | str | None = None,
@@ -472,6 +473,7 @@ def build_screenshot_params(
     orbit_fov: float | str | None = None,
     view_position: list[float] | str | None = None,
     view_rotation: list[float] | str | None = None,
+    scene_view_target: str | int | None = None,
 ) -> dict[str, Any] | None:
     """Populate screenshot-related keys in *params* dict. Returns an error dict
     if validation fails, or None on success.
@@ -493,6 +495,8 @@ def build_screenshot_params(
         if coerced_max_resolution <= 0:
             return {"success": False, "message": "max_resolution must be a positive integer."}
         params["maxResolution"] = coerced_max_resolution
+    if capture_source is not None:
+        params["captureSource"] = capture_source
     if batch:
         params["batch"] = batch
     if look_at is not None:
@@ -533,5 +537,7 @@ def build_screenshot_params(
         if err:
             return {"success": False, "message": err}
         params["viewRotation"] = vec
+    if scene_view_target is not None:
+        params["sceneViewTarget"] = scene_view_target
 
     return None

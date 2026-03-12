@@ -457,6 +457,20 @@ class TestSceneCommands:
             assert result.exit_code == 0
 
 
+class TestCameraCommands:
+    """Tests for Camera CLI commands."""
+
+    def test_camera_screenshot_scene_view(self, runner, mock_unity_response):
+        with patch("cli.commands.camera.run_command", return_value=mock_unity_response):
+            result = runner.invoke(cli, [
+                "camera", "screenshot",
+                "--capture-source", "scene_view",
+                "--scene-view-target", "Canvas",
+                "--include-image",
+            ])
+            assert result.exit_code == 0
+
+
 
 # =============================================================================
 # Asset Command Tests

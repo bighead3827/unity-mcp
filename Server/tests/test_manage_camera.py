@@ -398,6 +398,22 @@ def test_screenshot_positioned(mock_unity):
     assert mock_unity["params"]["lookAt"] == "Player"
 
 
+def test_screenshot_scene_view_capture_params(mock_unity):
+    result = asyncio.run(
+        manage_camera(
+            SimpleNamespace(),
+            action="screenshot",
+            capture_source="scene_view",
+            scene_view_target="Canvas",
+            include_image=True,
+        )
+    )
+    assert result["success"] is True
+    assert mock_unity["params"]["captureSource"] == "scene_view"
+    assert mock_unity["params"]["sceneViewTarget"] == "Canvas"
+    assert mock_unity["params"]["includeImage"] is True
+
+
 def test_screenshot_multiview_sends_action(mock_unity):
     result = asyncio.run(
         manage_camera(SimpleNamespace(), action="screenshot_multiview")
