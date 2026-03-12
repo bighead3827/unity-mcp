@@ -244,8 +244,25 @@ namespace MCPForUnity.Editor.Tools.Physics
         // Configure helpers
         // =====================================================================
 
+        private static readonly HashSet<string> Valid3DMatKeys = new HashSet<string>
+        {
+            "dynamicfriction", "staticfriction", "bounciness", "frictioncombine", "bouncecombine"
+        };
+
         private static object Configure3D(string path, JObject properties)
         {
+            // Validate all keys before applying any changes
+            var unknown = new List<string>();
+            foreach (var prop in properties.Properties())
+            {
+                string key = prop.Name.ToLowerInvariant().Replace("_", "");
+                if (!Valid3DMatKeys.Contains(key))
+                    unknown.Add(prop.Name);
+            }
+            if (unknown.Count > 0)
+                return new ErrorResponse(
+                    $"Unknown 3D physics material property(ies): {string.Join(", ", unknown)}.");
+
 #if UNITY_6000_0_OR_NEWER
             var mat = AssetDatabase.LoadAssetAtPath<PhysicsMaterial>(path);
 #else
@@ -308,8 +325,6 @@ namespace MCPForUnity.Editor.Tools.Physics
 #endif
                         break;
                     }
-                    default:
-                        return new ErrorResponse($"Unknown 3D physics material property: '{prop.Name}'.");
                 }
             }
 
@@ -324,8 +339,25 @@ namespace MCPForUnity.Editor.Tools.Physics
             };
         }
 
+        private static readonly HashSet<string> Valid2DMatKeys = new HashSet<string>
+        {
+            "friction", "bounciness"
+        };
+
         private static object Configure2D(string path, JObject properties)
         {
+            // Validate all keys before applying any changes
+            var unknown = new List<string>();
+            foreach (var prop in properties.Properties())
+            {
+                string key = prop.Name.ToLowerInvariant().Replace("_", "");
+                if (!Valid2DMatKeys.Contains(key))
+                    unknown.Add(prop.Name);
+            }
+            if (unknown.Count > 0)
+                return new ErrorResponse(
+                    $"Unknown 2D physics material property(ies): {string.Join(", ", unknown)}.");
+
             var mat = AssetDatabase.LoadAssetAtPath<PhysicsMaterial2D>(path);
             if (mat == null)
                 return new ErrorResponse($"No 2D physics material found at: '{path}'.");
@@ -346,8 +378,6 @@ namespace MCPForUnity.Editor.Tools.Physics
                         mat.bounciness = prop.Value.Value<float>();
                         changed.Add("bounciness");
                         break;
-                    default:
-                        return new ErrorResponse($"Unknown 2D physics material property: '{prop.Name}'.");
                 }
             }
 

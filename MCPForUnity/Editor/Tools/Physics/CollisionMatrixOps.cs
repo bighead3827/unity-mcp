@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
+using UnityEditor;
 using UnityEngine;
 using MCPForUnity.Editor.Helpers;
 
@@ -81,9 +82,15 @@ namespace MCPForUnity.Editor.Tools.Physics
             bool collide = p.GetBool("collide", true);
 
             if (dimension == "2d")
+            {
                 Physics2D.IgnoreLayerCollision(layerA, layerB, !collide);
+                MarkSettingsDirty("ProjectSettings/Physics2DSettings.asset");
+            }
             else
+            {
                 UnityEngine.Physics.IgnoreLayerCollision(layerA, layerB, !collide);
+                MarkSettingsDirty("ProjectSettings/DynamicsManager.asset");
+            }
 
             string nameA = LayerMask.LayerToName(layerA);
             string nameB = LayerMask.LayerToName(layerB);
@@ -96,6 +103,13 @@ namespace MCPForUnity.Editor.Tools.Physics
                 message = $"Collision between '{nameA}' and '{nameB}' set to {(collide ? "enabled" : "disabled")} ({dimension}).",
                 data = new { layer_a = nameA, layer_b = nameB, collide, dimension }
             };
+        }
+
+        private static void MarkSettingsDirty(string assetPath)
+        {
+            var assets = AssetDatabase.LoadAllAssetsAtPath(assetPath);
+            if (assets != null && assets.Length > 0)
+                EditorUtility.SetDirty(assets[0]);
         }
 
         private static int ResolveLayer(JToken token)

@@ -26,14 +26,20 @@ namespace MCPForUnity.Editor.Tools.Physics
             {
                 UnityEngine.Physics.SyncTransforms();
 #if UNITY_2022_2_OR_NEWER
-                if (UnityEngine.Physics.simulationMode != SimulationMode.Script)
+                var prevMode = UnityEngine.Physics.simulationMode;
+                if (prevMode != SimulationMode.Script)
                     UnityEngine.Physics.simulationMode = SimulationMode.Script;
-#else
-                if (UnityEngine.Physics.autoSimulation)
-                    UnityEngine.Physics.autoSimulation = false;
-#endif
                 for (int i = 0; i < steps; i++)
                     UnityEngine.Physics.Simulate(stepSize);
+                UnityEngine.Physics.simulationMode = prevMode;
+#else
+                bool wasAuto = UnityEngine.Physics.autoSimulation;
+                if (wasAuto)
+                    UnityEngine.Physics.autoSimulation = false;
+                for (int i = 0; i < steps; i++)
+                    UnityEngine.Physics.Simulate(stepSize);
+                UnityEngine.Physics.autoSimulation = wasAuto;
+#endif
             }
 
             return new

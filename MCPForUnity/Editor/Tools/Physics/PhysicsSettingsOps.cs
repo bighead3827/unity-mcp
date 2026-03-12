@@ -59,7 +59,7 @@ namespace MCPForUnity.Editor.Tools.Physics
                         queriesHitTriggers = Physics2D.queriesHitTriggers,
                         queriesStartInColliders = Physics2D.queriesStartInColliders,
                         callbacksOnDisable = Physics2D.callbacksOnDisable,
-                        autoSyncTransforms = UnityEngine.Physics.autoSyncTransforms
+                        autoSyncTransforms = Physics2D.autoSyncTransforms
                     }
                 };
             }
@@ -281,7 +281,7 @@ namespace MCPForUnity.Editor.Tools.Physics
                         changed.Add("callbacksOnDisable");
                         break;
                     case "autosynctransforms":
-                        UnityEngine.Physics.autoSyncTransforms = prop.Value.Value<bool>();
+                        Physics2D.autoSyncTransforms = prop.Value.Value<bool>();
                         changed.Add("autoSyncTransforms");
                         break;
                 }
