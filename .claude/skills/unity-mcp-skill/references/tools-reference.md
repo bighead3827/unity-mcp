@@ -669,6 +669,8 @@ manage_ui(
 3. Create an empty GameObject and attach UIDocument with the UXML source
 4. Use `get_visual_tree` to inspect the result
 
+**Important:** Always use `<ui:Style>` (with the `ui:` namespace prefix) in UXML files, not bare `<Style>`. UI Builder will fail to open files that use `<Style>` without the prefix.
+
 ---
 
 ## Editor Control Tools
