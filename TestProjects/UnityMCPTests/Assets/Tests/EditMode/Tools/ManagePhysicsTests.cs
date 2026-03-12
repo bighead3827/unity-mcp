@@ -760,5 +760,214 @@ namespace MCPForUnityTests.Editor.Tools
             Assert.IsFalse(result.Value<bool>("success"));
             Assert.That(result["error"].ToString(), Does.Contain("layer_a"));
         }
+
+        // =====================================================================
+        // Raycast
+        // =====================================================================
+
+        [Test]
+        public void Raycast_HitsCollider()
+        {
+            var go = new GameObject("PhysTest_RayTarget");
+            go.transform.position = new Vector3(0, 0, 5);
+            var col = go.AddComponent<BoxCollider>();
+            col.size = new Vector3(10, 10, 1);
+            UnityEngine.Physics.SyncTransforms();
+
+            var result = ToJObject(ManagePhysics.HandleCommand(new JObject
+            {
+                ["action"] = "raycast",
+                ["origin"] = new JArray(0, 0, 0),
+                ["direction"] = new JArray(0, 0, 1),
+                ["max_distance"] = 100
+            }));
+            Assert.IsTrue(result.Value<bool>("success"), result.ToString());
+            Assert.IsTrue(result["data"].Value<bool>("hit"));
+            Assert.AreEqual("PhysTest_RayTarget", result["data"]["gameObject"].ToString());
+        }
+
+        [Test]
+        public void Raycast_MissesWhenNoTarget()
+        {
+            var result = ToJObject(ManagePhysics.HandleCommand(new JObject
+            {
+                ["action"] = "raycast",
+                ["origin"] = new JArray(0, 1000, 0),
+                ["direction"] = new JArray(0, 1, 0),
+                ["max_distance"] = 1
+            }));
+            Assert.IsTrue(result.Value<bool>("success"), result.ToString());
+            Assert.IsFalse(result["data"].Value<bool>("hit"));
+        }
+
+        [Test]
+        public void Raycast_MissingOrigin_ReturnsError()
+        {
+            var result = ToJObject(ManagePhysics.HandleCommand(new JObject
+            {
+                ["action"] = "raycast",
+                ["direction"] = new JArray(0, 0, 1)
+            }));
+            Assert.IsFalse(result.Value<bool>("success"));
+            Assert.That(result["error"].ToString(), Does.Contain("origin"));
+        }
+
+        // =====================================================================
+        // Overlap
+        // =====================================================================
+
+        [Test]
+        public void Overlap_Sphere_FindsColliders()
+        {
+            var go = new GameObject("PhysTest_OverlapTarget");
+            go.transform.position = Vector3.zero;
+            go.AddComponent<SphereCollider>();
+            UnityEngine.Physics.SyncTransforms();
+
+            var result = ToJObject(ManagePhysics.HandleCommand(new JObject
+            {
+                ["action"] = "overlap",
+                ["shape"] = "sphere",
+                ["position"] = new JArray(0, 0, 0),
+                ["size"] = 10
+            }));
+            Assert.IsTrue(result.Value<bool>("success"), result.ToString());
+            var colliders = result["data"]["colliders"] as JArray;
+            Assert.IsNotNull(colliders);
+            Assert.IsTrue(colliders.Count > 0);
+        }
+
+        [Test]
+        public void Overlap_MissingShape_ReturnsError()
+        {
+            var result = ToJObject(ManagePhysics.HandleCommand(new JObject
+            {
+                ["action"] = "overlap",
+                ["position"] = new JArray(0, 0, 0),
+                ["size"] = 10
+            }));
+            Assert.IsFalse(result.Value<bool>("success"));
+            Assert.That(result["error"].ToString(), Does.Contain("shape"));
+        }
+
+        // =====================================================================
+        // Validate
+        // =====================================================================
+
+        [Test]
+        public void Validate_DetectsMeshColliderWithoutConvex()
+        {
+            var go = new GameObject("PhysTest_BadMesh");
+            go.AddComponent<Rigidbody>();
+            var mc = go.AddComponent<MeshCollider>();
+            mc.convex = false;
+
+            var result = ToJObject(ManagePhysics.HandleCommand(new JObject
+            {
+                ["action"] = "validate",
+                ["target"] = "PhysTest_BadMesh"
+            }));
+            Assert.IsTrue(result.Value<bool>("success"), result.ToString());
+            var warnings = result["data"]["warnings"] as JArray;
+            Assert.IsNotNull(warnings);
+            Assert.IsTrue(warnings.Count > 0);
+            bool foundConvex = false;
+            foreach (var w in warnings)
+            {
+                if (w.ToString().Contains("Convex"))
+                { foundConvex = true; break; }
+            }
+            Assert.IsTrue(foundConvex, "Should detect MeshCollider without Convex.");
+        }
+
+        [Test]
+        public void Validate_DetectsColliderWithoutRigidbody()
+        {
+            var go = new GameObject("PhysTest_NoRigidbody");
+            go.isStatic = false;
+            go.AddComponent<BoxCollider>();
+
+            var result = ToJObject(ManagePhysics.HandleCommand(new JObject
+            {
+                ["action"] = "validate",
+                ["target"] = "PhysTest_NoRigidbody"
+            }));
+            Assert.IsTrue(result.Value<bool>("success"), result.ToString());
+            var warnings = result["data"]["warnings"] as JArray;
+            Assert.IsNotNull(warnings);
+            bool foundWarning = false;
+            foreach (var w in warnings)
+            {
+                if (w.ToString().Contains("Collider") && w.ToString().Contains("Rigidbody"))
+                { foundWarning = true; break; }
+            }
+            Assert.IsTrue(foundWarning, "Should detect Collider without Rigidbody on non-static object.");
+        }
+
+        [Test]
+        public void Validate_CleanObject_FewWarnings()
+        {
+            var go = new GameObject("PhysTest_Clean");
+            go.AddComponent<Rigidbody>();
+            go.AddComponent<BoxCollider>();
+
+            var result = ToJObject(ManagePhysics.HandleCommand(new JObject
+            {
+                ["action"] = "validate",
+                ["target"] = "PhysTest_Clean"
+            }));
+            Assert.IsTrue(result.Value<bool>("success"), result.ToString());
+            Assert.AreEqual(1, result["data"].Value<int>("objects_scanned"));
+        }
+
+        [Test]
+        public void Validate_TargetNotFound_ReturnsError()
+        {
+            var result = ToJObject(ManagePhysics.HandleCommand(new JObject
+            {
+                ["action"] = "validate",
+                ["target"] = "PhysTest_DoesNotExistXYZ"
+            }));
+            Assert.IsFalse(result.Value<bool>("success"));
+        }
+
+        // =====================================================================
+        // SimulateStep
+        // =====================================================================
+
+        [Test]
+        public void SimulateStep_ExecutesWithoutError()
+        {
+            var result = ToJObject(ManagePhysics.HandleCommand(new JObject
+            {
+                ["action"] = "simulate_step",
+                ["steps"] = 1
+            }));
+            Assert.IsTrue(result.Value<bool>("success"), result.ToString());
+            Assert.AreEqual(1, result["data"].Value<int>("steps_executed"));
+        }
+
+        [Test]
+        public void SimulateStep_ClampsMax()
+        {
+            var result = ToJObject(ManagePhysics.HandleCommand(new JObject
+            {
+                ["action"] = "simulate_step",
+                ["steps"] = 999
+            }));
+            Assert.IsTrue(result.Value<bool>("success"), result.ToString());
+            Assert.AreEqual(100, result["data"].Value<int>("steps_executed"));
+        }
+
+        [Test]
+        public void SimulateStep_InvalidDimension_ReturnsError()
+        {
+            var result = ToJObject(ManagePhysics.HandleCommand(new JObject
+            {
+                ["action"] = "simulate_step",
+                ["dimension"] = "4d"
+            }));
+            Assert.IsFalse(result.Value<bool>("success"));
+        }
     }
 }

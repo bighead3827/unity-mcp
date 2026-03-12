@@ -54,13 +54,28 @@ namespace MCPForUnity.Editor.Tools.Physics
                     case "remove_joint":
                         return JointOps.RemoveJoint(@params);
 
+                    // --- Query actions ---
+                    case "raycast":
+                        return PhysicsQueryOps.Raycast(@params);
+                    case "overlap":
+                        return PhysicsQueryOps.Overlap(@params);
+
+                    // --- Validation ---
+                    case "validate":
+                        return PhysicsValidationOps.Validate(@params);
+
+                    // --- Simulation ---
+                    case "simulate_step":
+                        return PhysicsSimulationOps.SimulateStep(@params);
+
                     default:
                         return new ErrorResponse(
                             $"Unknown action: '{action}'. Valid actions: ping, "
                             + "get_settings, set_settings, "
                             + "get_collision_matrix, set_collision_matrix, "
                             + "create_physics_material, configure_physics_material, assign_physics_material, "
-                            + "add_joint, configure_joint, remove_joint.");
+                            + "add_joint, configure_joint, remove_joint, "
+                            + "raycast, overlap, validate, simulate_step.");
                 }
             }
             catch (Exception ex)
