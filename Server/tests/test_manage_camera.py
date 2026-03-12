@@ -414,6 +414,33 @@ def test_screenshot_scene_view_capture_params(mock_unity):
     assert mock_unity["params"]["includeImage"] is True
 
 
+def test_screenshot_invalid_capture_source(mock_unity):
+    result = asyncio.run(
+        manage_camera(
+            SimpleNamespace(),
+            action="screenshot",
+            capture_source="editor_view",
+        )
+    )
+    assert result["success"] is False
+    assert "capture_source must be either" in result["message"]
+    assert "params" not in mock_unity
+
+
+def test_screenshot_scene_view_rejects_batch_in_python(mock_unity):
+    result = asyncio.run(
+        manage_camera(
+            SimpleNamespace(),
+            action="screenshot",
+            capture_source="scene_view",
+            batch="surround",
+        )
+    )
+    assert result["success"] is False
+    assert "does not support batch modes" in result["message"]
+    assert "params" not in mock_unity
+
+
 def test_screenshot_multiview_sends_action(mock_unity):
     result = asyncio.run(
         manage_camera(SimpleNamespace(), action="screenshot_multiview")

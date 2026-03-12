@@ -1268,11 +1268,7 @@ namespace MCPForUnity.Editor.Tools
         private static bool TryGetRendererBounds(GameObject target, out Bounds bounds)
         {
             bounds = default(Bounds);
-#if UNITY_2022_2_OR_NEWER
             var renderers = target.GetComponentsInChildren<Renderer>(true);
-#else
-            var renderers = target.GetComponentsInChildren<Renderer>(true);
-#endif
             bool hasBounds = false;
             foreach (var renderer in renderers)
             {

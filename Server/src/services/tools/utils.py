@@ -496,7 +496,13 @@ def build_screenshot_params(
             return {"success": False, "message": "max_resolution must be a positive integer."}
         params["maxResolution"] = coerced_max_resolution
     if capture_source is not None:
-        params["captureSource"] = capture_source
+        normalized_capture_source = str(capture_source).strip().lower()
+        if normalized_capture_source not in {"game_view", "scene_view"}:
+            return {
+                "success": False,
+                "message": "capture_source must be either 'game_view' or 'scene_view'.",
+            }
+        params["captureSource"] = normalized_capture_source
     if batch:
         params["batch"] = batch
     if look_at is not None:
@@ -539,5 +545,27 @@ def build_screenshot_params(
         params["viewRotation"] = vec
     if scene_view_target is not None:
         params["sceneViewTarget"] = scene_view_target
+
+    if params.get("captureSource") == "scene_view":
+        if coerced_super_size is not None and coerced_super_size > 1:
+            return {
+                "success": False,
+                "message": "capture_source='scene_view' does not support super_size above 1.",
+            }
+        if batch:
+            return {
+                "success": False,
+                "message": "capture_source='scene_view' does not support batch modes.",
+            }
+        if look_at is not None or view_position is not None or view_rotation is not None:
+            return {
+                "success": False,
+                "message": "capture_source='scene_view' does not support look_at/view_position/view_rotation.",
+            }
+        if camera:
+            return {
+                "success": False,
+                "message": "capture_source='scene_view' does not support camera selection.",
+            }
 
     return None
