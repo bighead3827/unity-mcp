@@ -15,8 +15,23 @@ namespace MCPForUnity.Editor.Helpers
     internal static class EditorWindowScreenshotUtility
     {
         private const string ScreenshotsFolderName = "Screenshots";
+        // Keep capture synchronous so callers can immediately return the screenshot payload.
+        // The short sleep gives Unity a chance to flush repaint work before GrabPixels reads the viewport.
         private const int RepaintSettlingDelayMs = 75;
 
+        /// <summary>
+        /// Captures the active Scene View viewport to a PNG asset.
+        /// </summary>
+        /// <param name="sceneView">Scene View window to capture.</param>
+        /// <param name="fileName">Optional file name, defaulting to a timestamped PNG.</param>
+        /// <param name="superSize">
+        /// Preserved in the result for API consistency, but Scene View capture always uses the current viewport resolution.
+        /// </param>
+        /// <param name="ensureUniqueFileName">If true, appends a suffix instead of overwriting an existing file.</param>
+        /// <param name="includeImage">If true, includes a base64 PNG in the returned result.</param>
+        /// <param name="maxResolution">Maximum edge length for the inline image payload.</param>
+        /// <param name="viewportWidth">Captured viewport width in pixels.</param>
+        /// <param name="viewportHeight">Captured viewport height in pixels.</param>
         public static ScreenshotCaptureResult CaptureSceneViewViewportToAssets(
             SceneView sceneView,
             string fileName,
@@ -29,6 +44,11 @@ namespace MCPForUnity.Editor.Helpers
         {
             if (sceneView == null)
                 throw new ArgumentNullException(nameof(sceneView));
+
+            if (superSize > 1)
+            {
+                McpLog.Warn("[EditorWindowScreenshotUtility] Scene View capture ignores superSize and uses the displayed viewport resolution.");
+            }
 
             FocusAndRepaint(sceneView);
 
@@ -158,6 +178,8 @@ namespace MCPForUnity.Editor.Helpers
             if (hostView == null)
                 throw new InvalidOperationException("Failed to resolve Scene view host view.");
 
+            // GrabPixels is an internal editor API accessed reflectively. If Unity changes this surface,
+            // the MissingMethodException below keeps the failure explicit instead of silently degrading.
             MethodInfo grabPixels = hostView.GetType().GetMethod(
                 "GrabPixels",
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
@@ -239,8 +261,9 @@ namespace MCPForUnity.Editor.Helpers
             {
                 return (Rect)property.GetValue(instance, null);
             }
-            catch
+            catch (Exception ex)
             {
+                McpLog.Debug($"[EditorWindowScreenshotUtility] Failed to read rect property '{propertyName}': {ex.Message}");
                 return null;
             }
         }
@@ -258,9 +281,9 @@ namespace MCPForUnity.Editor.Helpers
             {
                 method.Invoke(instance, null);
             }
-            catch
+            catch (Exception ex)
             {
-                // Best-effort only.
+                McpLog.Debug($"[EditorWindowScreenshotUtility] Best-effort invoke of '{methodName}' failed: {ex.Message}");
             }
         }
 

@@ -461,7 +461,7 @@ class TestCameraCommands:
     """Tests for Camera CLI commands."""
 
     def test_camera_screenshot_scene_view(self, runner, mock_unity_response):
-        with patch("cli.commands.camera.run_command", return_value=mock_unity_response):
+        with patch("cli.commands.camera.run_command", return_value=mock_unity_response) as mock_run:
             result = runner.invoke(cli, [
                 "camera", "screenshot",
                 "--capture-source", "scene_view",
@@ -469,6 +469,11 @@ class TestCameraCommands:
                 "--include-image",
             ])
             assert result.exit_code == 0
+            mock_run.assert_called_once()
+            params = mock_run.call_args[0][2]
+            assert params["captureSource"] == "scene_view"
+            assert params["sceneViewTarget"] == "Canvas"
+            assert params["includeImage"] is True
 
 
 
