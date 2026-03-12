@@ -610,6 +610,8 @@ Unity has two UI systems: **UI Toolkit** (modern, recommended) and **uGUI** (Can
 
 UI Toolkit uses a web-like approach: **UXML** (like HTML) for structure, **USS** (like CSS) for styling. This is the preferred UI system for new projects.
 
+> **Important:** Always use `<ui:Style>` (with the `ui:` namespace prefix) in UXML, not bare `<Style>`. UI Builder will fail to open files that use `<Style>` without the prefix.
+
 #### Create a Complete UI Screen
 
 ```python

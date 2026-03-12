@@ -42,7 +42,9 @@ _VALID_EXTENSIONS = {".uxml", ".uss"}
         "     call render_ui a second time to retrieve the saved PNG (hasContent will be true).\n"
         "   - In editor mode: assigns a RenderTexture to PanelSettings (best-effort; may stay blank).\n"
         "9. Use detach_ui_document to remove UIDocument from a GameObject\n"
-        "10. Use delete to remove .uxml/.uss files"
+        "10. Use delete to remove .uxml/.uss files\n\n"
+        "Important: Always use <ui:Style> (with the ui: namespace prefix) in UXML, not bare <Style>. "
+        "UI Builder will fail to open files that use <Style> without the prefix."
     ),
     annotations=ToolAnnotations(
         title="Manage UI",
