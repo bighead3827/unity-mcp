@@ -360,9 +360,11 @@ namespace MCPForUnity.Editor.Helpers
                 return $"screenshot-{DateTime.Now:yyyyMMdd-HHmmss}.png";
 
             string candidate = trimmed;
-            if (Path.IsPathRooted(candidate) || candidate.Contains("/") || candidate.Contains("\\") || candidate.Contains(".."))
+            string normalizedSeparators = candidate.Replace('\\', '/');
+            if (Path.IsPathRooted(candidate) || normalizedSeparators.Contains("/") || normalizedSeparators.Contains(".."))
             {
-                candidate = Path.GetFileName(candidate);
+                string[] pathParts = normalizedSeparators.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                candidate = pathParts.Length > 0 ? pathParts[pathParts.Length - 1] : string.Empty;
             }
 
             if (string.IsNullOrWhiteSpace(candidate) || candidate == "." || candidate == "..")
