@@ -544,6 +544,11 @@ def build_screenshot_params(
             return {"success": False, "message": err}
         params["viewRotation"] = vec
     if scene_view_target is not None:
+        if params.get("captureSource") != "scene_view":
+            return {
+                "success": False,
+                "message": "scene_view_target is only valid with capture_source='scene_view'.",
+            }
         params["sceneViewTarget"] = scene_view_target
 
     if params.get("captureSource") == "scene_view":

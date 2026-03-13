@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using MCPForUnity.Runtime.Helpers;
 using UnityEditor;
@@ -220,7 +221,8 @@ namespace MCPForUnity.Editor.Helpers
             }
             catch (TargetInvocationException ex)
             {
-                throw ex.InnerException ?? ex;
+                ExceptionDispatchInfo.Capture(ex.InnerException ?? ex).Throw();
+                throw;
             }
             finally
             {
@@ -378,6 +380,8 @@ namespace MCPForUnity.Editor.Helpers
 
             string extension = Path.GetExtension(candidate);
             string stem = Path.GetFileNameWithoutExtension(candidate);
+            extension = extension.TrimEnd(' ', '.');
+            stem = stem.TrimEnd(' ', '.');
             if (WindowsReservedNames.Contains(stem))
             {
                 candidate = $"_{stem}{extension}";

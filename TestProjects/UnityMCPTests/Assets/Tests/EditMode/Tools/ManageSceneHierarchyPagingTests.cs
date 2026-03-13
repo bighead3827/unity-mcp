@@ -133,7 +133,7 @@ namespace MCPForUnityTests.Editor.Tools
             Assert.IsFalse(sanitized.Contains("\\"));
             Assert.IsFalse(sanitized.Contains(".."));
 
-            string[] reservedInputs = { "CON", "NUL", "PRN", "AUX", "../CON.txt", "folder/COM1.log", "nested\\LPT9" };
+            string[] reservedInputs = { "CON", "NUL", "PRN", "AUX", "../CON.txt", "folder/COM1.log", "nested\\LPT9", "CON ", "NUL." };
             foreach (string input in reservedInputs)
             {
                 sanitized = (string)sanitizeMethod.Invoke(null, new object[] { input });
@@ -166,6 +166,37 @@ namespace MCPForUnityTests.Editor.Tools
 
             normalized = (int)normalizeMethod.Invoke(null, new object[] { 0 });
             Assert.AreEqual(1, normalized);
+        }
+
+        [Test]
+        public void Screenshot_GameViewRejectsSceneViewTarget()
+        {
+            var raw = ManageScene.HandleCommand(new JObject
+            {
+                ["action"] = "screenshot",
+                ["sceneViewTarget"] = "Canvas",
+            });
+            var response = raw as JObject ?? JObject.FromObject(raw);
+
+            Assert.IsFalse(response.Value<bool>("success"), response.ToString());
+            StringAssert.Contains("scene_view_target is only valid", response.Value<string>("message"));
+        }
+
+        [Test]
+        public void CalculateFrameBounds_UsesCollider2D()
+        {
+            var helperType = typeof(ManageScene).GetMethod("CalculateFrameBounds", BindingFlags.NonPublic | BindingFlags.Static);
+            Assert.IsNotNull(helperType, "Expected CalculateFrameBounds helper.");
+
+            var root = new GameObject("HS_2D");
+            _created.Add(root);
+            var collider = root.AddComponent<BoxCollider2D>();
+            collider.size = new Vector2(4f, 2f);
+            collider.offset = new Vector2(1f, -1f);
+
+            Bounds bounds = (Bounds)helperType.Invoke(null, new object[] { root });
+            Assert.Greater(bounds.size.x, 0.1f);
+            Assert.Greater(bounds.size.y, 0.1f);
         }
     }
 }

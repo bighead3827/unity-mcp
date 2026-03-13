@@ -441,6 +441,19 @@ def test_screenshot_scene_view_rejects_batch_in_python(mock_unity):
     assert "params" not in mock_unity
 
 
+def test_screenshot_scene_view_target_requires_scene_view_capture(mock_unity):
+    result = asyncio.run(
+        manage_camera(
+            SimpleNamespace(),
+            action="screenshot",
+            scene_view_target="Canvas",
+        )
+    )
+    assert result["success"] is False
+    assert "scene_view_target is only valid" in result["message"]
+    assert "params" not in mock_unity
+
+
 def test_screenshot_multiview_sends_action(mock_unity):
     result = asyncio.run(
         manage_camera(SimpleNamespace(), action="screenshot_multiview")

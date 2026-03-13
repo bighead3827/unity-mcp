@@ -85,6 +85,7 @@ namespace MCPForUnity.Editor.Tools
         private static SceneCommand ToSceneCommand(JObject p)
         {
             if (p == null) return new SceneCommand();
+            var toolParams = new ToolParams(p);
             return new SceneCommand
             {
                 action = (p["action"]?.ToString() ?? string.Empty).Trim().ToLowerInvariant(),
@@ -96,7 +97,7 @@ namespace MCPForUnity.Editor.Tools
 
                 // screenshot: camera selection, inline image, batch, view positioning
                 camera = (p["camera"])?.ToString(),
-                captureSource = (p["captureSource"] ?? p["capture_source"])?.ToString(),
+                captureSource = toolParams.Get("capture_source"),
                 includeImage = ParamCoercion.CoerceBoolNullable(p["includeImage"] ?? p["include_image"]),
                 maxResolution = ParamCoercion.CoerceIntNullable(p["maxResolution"] ?? p["max_resolution"]),
                 batch = (p["batch"])?.ToString(),
@@ -111,7 +112,7 @@ namespace MCPForUnity.Editor.Tools
                 orbitFov = ParamCoercion.CoerceFloatNullable(p["orbitFov"] ?? p["orbit_fov"]),
 
                 // scene_view_frame
-                sceneViewTarget = p["sceneViewTarget"] ?? p["scene_view_target"],
+                sceneViewTarget = toolParams.GetRaw("scene_view_target"),
 
                 // get_hierarchy paging + safety
                 parent = p["parent"],
@@ -473,6 +474,12 @@ namespace MCPForUnity.Editor.Tools
                             "capture_source='scene_view' does not support camera selection. Remove 'camera' or use capture_source='game_view'.");
                     }
                     return CaptureSceneViewScreenshot(cmd, fileName, resolvedSuperSize, includeImage, maxResolution);
+                }
+
+                if (cmd.sceneViewTarget != null && cmd.sceneViewTarget.Type != JTokenType.Null)
+                {
+                    return new ErrorResponse(
+                        "scene_view_target is only valid with capture_source='scene_view'. Use capture_source='scene_view' or remove scene_view_target.");
                 }
 
                 // Batch capture (e.g., "surround" for 6 angles around the scene)
@@ -1295,6 +1302,23 @@ namespace MCPForUnity.Editor.Tools
             var colliders = target.GetComponentsInChildren<Collider>(true);
             bool hasBounds = false;
             foreach (var collider in colliders)
+            {
+                if (collider == null || !collider.gameObject.activeInHierarchy)
+                    continue;
+
+                if (!hasBounds)
+                {
+                    bounds = collider.bounds;
+                    hasBounds = true;
+                }
+                else
+                {
+                    bounds.Encapsulate(collider.bounds);
+                }
+            }
+
+            var colliders2D = target.GetComponentsInChildren<Collider2D>(true);
+            foreach (var collider in colliders2D)
             {
                 if (collider == null || !collider.gameObject.activeInHierarchy)
                     continue;
