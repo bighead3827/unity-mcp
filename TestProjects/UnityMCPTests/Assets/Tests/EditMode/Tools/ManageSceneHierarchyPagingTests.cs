@@ -132,6 +132,24 @@ namespace MCPForUnityTests.Editor.Tools
             Assert.IsFalse(sanitized.Contains("/"));
             Assert.IsFalse(sanitized.Contains("\\"));
             Assert.IsFalse(sanitized.Contains(".."));
+
+            string[] reservedInputs = { "CON", "NUL", "PRN", "AUX", "../CON.txt", "folder/COM1.log", "nested\\LPT9" };
+            foreach (string input in reservedInputs)
+            {
+                sanitized = (string)sanitizeMethod.Invoke(null, new object[] { input });
+                string sanitizedStem = System.IO.Path.GetFileNameWithoutExtension(sanitized);
+                Assert.IsFalse(
+                    string.Equals(sanitizedStem, "CON", System.StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(sanitizedStem, "NUL", System.StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(sanitizedStem, "PRN", System.StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(sanitizedStem, "AUX", System.StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(sanitizedStem, "COM1", System.StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(sanitizedStem, "LPT9", System.StringComparison.OrdinalIgnoreCase),
+                    $"Expected reserved device name to be sanitized for input '{input}', got '{sanitized}'.");
+                Assert.IsFalse(sanitized.Contains("/"));
+                Assert.IsFalse(sanitized.Contains("\\"));
+                Assert.IsFalse(sanitized.Contains(".."));
+            }
         }
 
         [Test]

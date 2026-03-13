@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
@@ -18,6 +19,12 @@ namespace MCPForUnity.Editor.Helpers
         // Keep capture synchronous so callers can immediately return the screenshot payload.
         // The short sleep gives Unity a chance to flush repaint work before GrabPixels reads the viewport.
         private const int RepaintSettlingDelayMs = 75;
+        private static readonly HashSet<string> WindowsReservedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "CON", "PRN", "AUX", "NUL",
+            "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+            "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+        };
 
         /// <summary>
         /// Captures the active Scene View viewport to a PNG asset.
@@ -365,6 +372,13 @@ namespace MCPForUnity.Editor.Helpers
             foreach (char invalidChar in invalidChars)
             {
                 candidate = candidate.Replace(invalidChar, '_');
+            }
+
+            string extension = Path.GetExtension(candidate);
+            string stem = Path.GetFileNameWithoutExtension(candidate);
+            if (WindowsReservedNames.Contains(stem))
+            {
+                candidate = $"_{stem}{extension}";
             }
 
             return candidate;
