@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using System.Reflection;
 using UnityEngine;
 using Newtonsoft.Json.Linq;
 using MCPForUnity.Editor.Tools;
@@ -115,6 +116,38 @@ namespace MCPForUnityTests.Editor.Tools
 
             Assert.IsFalse(response.Value<bool>("success"), response.ToString());
             StringAssert.Contains("does not support super_size above 1", response.Value<string>("message"));
+        }
+
+        [Test]
+        public void EditorWindowScreenshotUtility_SanitizesFileName()
+        {
+            var helperType = typeof(ManageScene).Assembly.GetType("MCPForUnity.Editor.Helpers.EditorWindowScreenshotUtility");
+            Assert.IsNotNull(helperType, "Expected EditorWindowScreenshotUtility type.");
+
+            var sanitizeMethod = helperType.GetMethod("SanitizeFileName", BindingFlags.NonPublic | BindingFlags.Static);
+            Assert.IsNotNull(sanitizeMethod, "Expected SanitizeFileName helper.");
+
+            string sanitized = (string)sanitizeMethod.Invoke(null, new object[] { "../evil/path/shot" });
+            Assert.AreEqual("shot", sanitized);
+            Assert.IsFalse(sanitized.Contains("/"));
+            Assert.IsFalse(sanitized.Contains("\\"));
+            Assert.IsFalse(sanitized.Contains(".."));
+        }
+
+        [Test]
+        public void EditorWindowScreenshotUtility_ClampsSceneViewSupersizeToOne()
+        {
+            var helperType = typeof(ManageScene).Assembly.GetType("MCPForUnity.Editor.Helpers.EditorWindowScreenshotUtility");
+            Assert.IsNotNull(helperType, "Expected EditorWindowScreenshotUtility type.");
+
+            var normalizeMethod = helperType.GetMethod("NormalizeSceneViewSuperSize", BindingFlags.NonPublic | BindingFlags.Static);
+            Assert.IsNotNull(normalizeMethod, "Expected NormalizeSceneViewSuperSize helper.");
+
+            int normalized = (int)normalizeMethod.Invoke(null, new object[] { 4 });
+            Assert.AreEqual(1, normalized);
+
+            normalized = (int)normalizeMethod.Invoke(null, new object[] { 0 });
+            Assert.AreEqual(1, normalized);
         }
     }
 }

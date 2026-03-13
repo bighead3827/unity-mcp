@@ -45,10 +45,7 @@ namespace MCPForUnity.Editor.Helpers
             if (sceneView == null)
                 throw new ArgumentNullException(nameof(sceneView));
 
-            if (superSize > 1)
-            {
-                McpLog.Warn("[EditorWindowScreenshotUtility] Scene View capture ignores superSize and uses the displayed viewport resolution.");
-            }
+            int effectiveSuperSize = NormalizeSceneViewSuperSize(superSize);
 
             FocusAndRepaint(sceneView);
 
@@ -65,7 +62,7 @@ namespace MCPForUnity.Editor.Helpers
             {
                 captured = CaptureViewRect(sceneView, viewportRectPixels);
 
-                var result = PrepareCaptureResult(fileName, superSize, ensureUniqueFileName);
+                var result = PrepareCaptureResult(fileName, effectiveSuperSize, ensureUniqueFileName);
                 byte[] png = captured.EncodeToPNG();
                 File.WriteAllBytes(result.FullPath, png);
 
@@ -330,12 +327,47 @@ namespace MCPForUnity.Editor.Helpers
         {
             string baseName = string.IsNullOrWhiteSpace(fileName)
                 ? $"screenshot-{DateTime.Now:yyyyMMdd-HHmmss}.png"
-                : fileName.Trim();
+                : SanitizeFileName(fileName);
 
             if (!baseName.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
                 baseName += ".png";
 
             return baseName;
+        }
+
+        private static int NormalizeSceneViewSuperSize(int superSize)
+        {
+            if (superSize > 1)
+            {
+                McpLog.Warn("[EditorWindowScreenshotUtility] Scene View capture ignores superSize and uses the displayed viewport resolution.");
+                return 1;
+            }
+
+            return Mathf.Max(1, superSize);
+        }
+
+        private static string SanitizeFileName(string fileName)
+        {
+            string trimmed = (fileName ?? string.Empty).Trim();
+            if (string.IsNullOrEmpty(trimmed))
+                return $"screenshot-{DateTime.Now:yyyyMMdd-HHmmss}.png";
+
+            string candidate = trimmed;
+            if (Path.IsPathRooted(candidate) || candidate.Contains("/") || candidate.Contains("\\") || candidate.Contains(".."))
+            {
+                candidate = Path.GetFileName(candidate);
+            }
+
+            if (string.IsNullOrWhiteSpace(candidate) || candidate == "." || candidate == "..")
+                candidate = $"screenshot-{DateTime.Now:yyyyMMdd-HHmmss}.png";
+
+            char[] invalidChars = Path.GetInvalidFileNameChars();
+            foreach (char invalidChar in invalidChars)
+            {
+                candidate = candidate.Replace(invalidChar, '_');
+            }
+
+            return candidate;
         }
 
         private static string EnsureUnique(string fullPath)
