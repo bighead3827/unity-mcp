@@ -247,6 +247,16 @@ namespace MCPForUnity.Editor.Tools
         /// Captures a 6-angle contact-sheet around the scene bounds centre.
         /// Public so the tools UI can reuse the same logic.
         /// </summary>
+        /// <summary>
+        /// Captures the active Scene View viewport to a PNG asset.
+        /// Public so the tools UI can reuse the same logic.
+        /// </summary>
+        public static object ExecuteSceneViewScreenshot(string fileName = null)
+        {
+            var cmd = new SceneCommand { fileName = fileName ?? string.Empty };
+            return CaptureSceneViewScreenshot(cmd, cmd.fileName, 1, false, 0);
+        }
+
         public static object ExecuteMultiviewScreenshot(int maxResolution = 480)
         {
             var cmd = new SceneCommand { maxResolution = maxResolution };
