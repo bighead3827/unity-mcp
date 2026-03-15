@@ -29,15 +29,21 @@ Before applying a template:
 
 ## Critical Best Practices
 
-### 1. After Writing/Editing Scripts: Always Refresh and Check Console
+### 1. After Writing/Editing Scripts: Wait for Compilation and Check Console
 
 ```python
 # After create_script or script_apply_edits:
-refresh_unity(mode="force", scope="scripts", compile="request", wait_for_ready=True)
+# Both tools already trigger AssetDatabase.ImportAsset + RequestScriptCompilation automatically.
+# No need to call refresh_unity — just wait for compilation to finish, then check console.
+
+# 1. Poll editor state until compilation completes
+# Read mcpforunity://editor/state → wait until is_compiling == false
+
+# 2. Check for compilation errors
 read_console(types=["error"], count=10, include_stacktrace=True)
 ```
 
-**Why:** Unity must compile scripts before they're usable. Compilation errors block all tool execution.
+**Why:** Unity must compile scripts before they're usable. `create_script` and `script_apply_edits` already trigger import and compilation automatically — calling `refresh_unity` afterward is redundant.
 
 ### 2. Use `batch_execute` for Multiple Operations
 
@@ -54,6 +60,15 @@ batch_execute(
 ```
 
 **Max 25 commands per batch by default (configurable in Unity MCP Tools window, max 100).** Use `fail_fast=True` for dependent operations.
+
+**Tip:** Also use `batch_execute` for discovery — batch multiple `find_gameobjects` calls instead of calling them one at a time:
+```python
+batch_execute(commands=[
+    {"tool": "find_gameobjects", "params": {"search_term": "Camera", "search_method": "by_component"}},
+    {"tool": "find_gameobjects", "params": {"search_term": "Player", "search_method": "by_tag"}},
+    {"tool": "find_gameobjects", "params": {"search_term": "GameManager", "search_method": "by_name"}}
+])
+```
 
 ### 3. Use Screenshots to Verify Visual Results
 
@@ -165,8 +180,8 @@ uri="file:///full/path/to/file.cs"
 |----------|-----------|---------|
 | **Scene** | `manage_scene`, `find_gameobjects` | Scene operations, finding objects |
 | **Objects** | `manage_gameobject`, `manage_components` | Creating/modifying GameObjects |
-| **Scripts** | `create_script`, `script_apply_edits`, `refresh_unity` | C# code management |
-| **Assets** | `manage_asset`, `manage_prefabs` | Asset operations |
+| **Scripts** | `create_script`, `script_apply_edits`, `validate_script` | C# code management (auto-refreshes on create/edit) |
+| **Assets** | `manage_asset`, `manage_prefabs` | Asset operations. **Prefab instantiation** is done via `manage_gameobject(action="create", prefab_path="...")`, not `manage_prefabs`. |
 | **Editor** | `manage_editor`, `execute_menu_item`, `read_console` | Editor control, package deployment (`deploy_package`/`restore_package` actions) |
 | **Testing** | `run_tests`, `get_test_job` | Unity Test Framework |
 | **Batch** | `batch_execute` | Parallel/bulk operations |
@@ -181,14 +196,14 @@ uri="file:///full/path/to/file.cs"
 ### Creating a New Script and Using It
 
 ```python
-# 1. Create the script
+# 1. Create the script (automatically triggers import + compilation)
 create_script(
     path="Assets/Scripts/PlayerController.cs",
     contents="using UnityEngine;\n\npublic class PlayerController : MonoBehaviour\n{\n    void Update() { }\n}"
 )
 
-# 2. CRITICAL: Refresh and wait for compilation
-refresh_unity(mode="force", scope="scripts", compile="request", wait_for_ready=True)
+# 2. Wait for compilation to finish
+# Read mcpforunity://editor/state → wait until is_compiling == false
 
 # 3. Check for compilation errors
 read_console(types=["error"], count=10)
