@@ -213,6 +213,17 @@ manage_gameobject(
     prefab_path="Assets/Prefabs/MyCube.prefab"
 )
 
+# Prefab instantiation — place a prefab instance in the scene
+manage_gameobject(
+    action="create",
+    name="Enemy_1",
+    prefab_path="Assets/Prefabs/Enemy.prefab",
+    position=[5, 0, 3],
+    parent="Enemies"                # optional parent GameObject
+)
+# Smart lookup — just the prefab name works too:
+manage_gameobject(action="create", name="Enemy_2", prefab_path="Enemy", position=[10, 0, 3])
+
 # Modify
 manage_gameobject(
     action="modify",
@@ -671,6 +682,8 @@ manage_ui(
 3. Create an empty GameObject and attach UIDocument with the UXML source
 4. Use `get_visual_tree` to inspect the result
 
+**Important:** Always use `<ui:Style>` (with the `ui:` namespace prefix) in UXML files, not bare `<Style>`. UI Builder will fail to open files that use `<Style>` without the prefix.
+
 ---
 
 ## Editor Control Tools
@@ -691,6 +704,8 @@ manage_editor(action="remove_tag", tag_name="OldTag")
 
 manage_editor(action="add_layer", layer_name="Projectiles")
 manage_editor(action="remove_layer", layer_name="OldLayer")
+
+manage_editor(action="close_prefab_stage")  # Exit prefab editing mode back to main scene
 
 # Package deployment (no confirmation dialog — designed for LLM-driven iteration)
 manage_editor(action="deploy_package")     # Copy configured MCPForUnity source into installed package
