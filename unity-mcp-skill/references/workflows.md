@@ -117,7 +117,7 @@ manage_script(
     contents="using UnityEngine;\n\npublic class MyScript : MonoBehaviour { ... }"
 )
 # manage_script update auto-triggers import + compile — just wait and check console
-# Read mcpforunity://editor/state → wait until isCompiling == false
+# Read mcpforunity://editor/state → wait until is_compiling == false
 read_console(types=["error"], count=10)
 ```
 
@@ -232,7 +232,7 @@ public class EnemyAI : MonoBehaviour
 )
 
 # 2. Wait for compilation to finish
-# Read mcpforunity://editor/state → wait until isCompiling == false
+# Read mcpforunity://editor/state → wait until is_compiling == false
 
 # 3. Check for errors
 console = read_console(types=["error"], count=10)
@@ -289,7 +289,7 @@ validate_script(
 )
 
 # 5. Wait for compilation (script_apply_edits auto-triggers import + compile)
-# Read mcpforunity://editor/state → wait until isCompiling == false
+# Read mcpforunity://editor/state → wait until is_compiling == false
 
 # 6. Check console
 read_console(types=["error"], count=10)
@@ -518,7 +518,7 @@ public class PlayerTests
 )
 
 # 2. Wait for compilation (create_script auto-triggers import + compile)
-# Read mcpforunity://editor/state → wait until isCompiling == false
+# Read mcpforunity://editor/state → wait until is_compiling == false
 
 # 3. Run test (expect pass for this simple test)
 result = run_tests(mode="EditMode", test_names=["PlayerTests.TestPlayerStartsAtOrigin"])

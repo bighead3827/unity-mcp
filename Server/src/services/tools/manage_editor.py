@@ -10,7 +10,7 @@ from transport.unity_transport import send_with_unity_instance
 from transport.legacy.unity_connection import async_send_command_with_retry
 
 @mcp_for_unity_tool(
-    description="Controls and queries the Unity editor's state and settings. Tip: pass booleans as true/false; if your client only sends strings, 'true'/'false' are accepted. Read-only actions: telemetry_status, telemetry_ping. Modifying actions: play, pause, stop, set_active_tool, add_tag, remove_tag, add_layer, remove_layer, close_prefab_stage, deploy_package, restore_package. deploy_package copies the configured MCPForUnity source folder into the project's installed package location (triggers recompile, no confirmation dialog). restore_package reverts to the pre-deployment backup.",
+    description="Controls and queries the Unity editor's state and settings. Read-only actions: telemetry_status, telemetry_ping. Modifying actions: play, pause, stop, set_active_tool, add_tag, remove_tag, add_layer, remove_layer, close_prefab_stage, deploy_package, restore_package. deploy_package copies the configured MCPForUnity source folder into the project's installed package location (triggers recompile, no confirmation dialog). restore_package reverts to the pre-deployment backup.",
     annotations=ToolAnnotations(
         title="Manage Editor",
     ),

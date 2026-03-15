@@ -310,13 +310,8 @@ namespace MCPForUnity.Editor.Tools.Prefabs
                         continue;
                     }
 
-                    // Ensure the Materials directory exists
-                    if (!AssetDatabase.IsValidFolder(materialsFolder))
-                    {
-                        string parentDir = Path.GetDirectoryName(materialsFolder).Replace("\\", "/");
-                        string folderName = Path.GetFileName(materialsFolder);
-                        AssetDatabase.CreateFolder(parentDir, folderName);
-                    }
+                    // Ensure the Materials directory exists (recursive)
+                    EnsureAssetFolderExists(materialsFolder);
 
                     Material persisted = AssetDatabase.LoadAssetAtPath<Material>(matPath);
                     if (persisted == null)
@@ -373,6 +368,22 @@ namespace MCPForUnity.Editor.Tools.Prefabs
         /// <summary>
         /// Checks if a renderer has a MaterialPropertyBlock with color data on the given slot.
         /// </summary>
+        private static void EnsureAssetFolderExists(string assetFolderPath)
+        {
+            if (AssetDatabase.IsValidFolder(assetFolderPath))
+                return;
+
+            string[] parts = assetFolderPath.Replace('\\', '/').Split('/');
+            string current = parts[0]; // "Assets"
+            for (int i = 1; i < parts.Length; i++)
+            {
+                string next = current + "/" + parts[i];
+                if (!AssetDatabase.IsValidFolder(next))
+                    AssetDatabase.CreateFolder(current, parts[i]);
+                current = next;
+            }
+        }
+
         private static bool HasPropertyBlockColors(Renderer renderer, int slot)
         {
             MaterialPropertyBlock block = new MaterialPropertyBlock();

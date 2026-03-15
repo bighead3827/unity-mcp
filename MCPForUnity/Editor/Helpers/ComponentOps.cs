@@ -541,7 +541,9 @@ namespace MCPForUnity.Editor.Helpers
                 switch (prop.propertyType)
                 {
                     case SerializedPropertyType.Integer:
-                        if (value == null || value.Type == JTokenType.Null)
+                        if (value == null || value.Type == JTokenType.Null
+                            || (value.Type != JTokenType.Integer && value.Type != JTokenType.Float
+                                && !long.TryParse(value.ToString(), out _)))
                         {
                             error = "Expected integer value.";
                             return false;

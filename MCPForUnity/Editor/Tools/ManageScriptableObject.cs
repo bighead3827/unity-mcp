@@ -929,6 +929,12 @@ namespace MCPForUnity.Editor.Tools
                             message = "Expected integer value.";
                             return false;
                         }
+                        if (valueToken.Type != JTokenType.Integer && valueToken.Type != JTokenType.Float
+                            && !long.TryParse(valueToken.ToString(), out _))
+                        {
+                            message = "Expected integer value.";
+                            return false;
+                        }
                         if (prop.type == "long")
                             prop.longValue = ParamCoercion.CoerceLong(valueToken, 0);
                         else

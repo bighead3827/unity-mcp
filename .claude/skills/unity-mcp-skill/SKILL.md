@@ -37,7 +37,7 @@ Before applying a template:
 # No need to call refresh_unity — just wait for compilation to finish, then check console.
 
 # 1. Poll editor state until compilation completes
-# Read mcpforunity://editor/state → wait until isCompiling == false
+# Read mcpforunity://editor/state → wait until is_compiling == false
 
 # 2. Check for compilation errors
 read_console(types=["error"], count=10, include_stacktrace=True)
@@ -195,7 +195,7 @@ create_script(
 )
 
 # 2. Wait for compilation to finish
-# Read mcpforunity://editor/state → wait until isCompiling == false
+# Read mcpforunity://editor/state → wait until is_compiling == false
 
 # 3. Check for compilation errors
 read_console(types=["error"], count=10)
