@@ -116,8 +116,8 @@ manage_script(
     path="Assets/Scripts/MyScript.cs",
     contents="using UnityEngine;\n\npublic class MyScript : MonoBehaviour { ... }"
 )
-# Then refresh and check console
-refresh_unity(mode="force", scope="scripts", compile="request", wait_for_ready=True)
+# manage_script update auto-triggers import + compile — just wait and check console
+# Read mcpforunity://editor/state → wait until is_compiling == false
 read_console(types=["error"], count=10)
 ```
 
@@ -210,7 +210,7 @@ for i in range(10):
 ### Create New Script and Attach
 
 ```python
-# 1. Create script
+# 1. Create script (automatically triggers import + compilation)
 create_script(
     path="Assets/Scripts/EnemyAI.cs",
     contents='''using UnityEngine;
@@ -219,7 +219,7 @@ public class EnemyAI : MonoBehaviour
 {
     public float speed = 5f;
     public Transform target;
-    
+
     void Update()
     {
         if (target != null)
@@ -231,8 +231,8 @@ public class EnemyAI : MonoBehaviour
 }'''
 )
 
-# 2. CRITICAL: Refresh and compile
-refresh_unity(mode="force", scope="scripts", compile="request", wait_for_ready=True)
+# 2. Wait for compilation to finish
+# Read mcpforunity://editor/state → wait until is_compiling == false
 
 # 3. Check for errors
 console = read_console(types=["error"], count=10)
@@ -242,7 +242,7 @@ if console["messages"]:
 else:
     # 4. Attach to GameObject
     manage_gameobject(action="modify", target="Enemy", components_to_add=["EnemyAI"])
-    
+
     # 5. Set component properties
     manage_components(
         action="set_property",
@@ -288,8 +288,8 @@ validate_script(
     level="standard"
 )
 
-# 5. Refresh
-refresh_unity(mode="force", scope="scripts", compile="request", wait_for_ready=True)
+# 5. Wait for compilation (script_apply_edits auto-triggers import + compile)
+# Read mcpforunity://editor/state → wait until is_compiling == false
 
 # 6. Check console
 read_console(types=["error"], count=10)
@@ -419,6 +419,35 @@ for asset in result["assets"]:
     print(f"Prefab: {prefab_path}, Children: {info['childCount']}")
 ```
 
+### Instantiate Prefab in Scene
+
+Use `manage_gameobject` (not `manage_prefabs`) to place prefab instances in the scene.
+
+```python
+# Full path
+manage_gameobject(
+    action="create",
+    name="Enemy_1",
+    prefab_path="Assets/Prefabs/Enemy.prefab",
+    position=[5, 0, 3],
+    parent="Enemies"
+)
+
+# Smart lookup — just the prefab name works too
+manage_gameobject(action="create", name="Enemy_2", prefab_path="Enemy", position=[10, 0, 3])
+
+# Batch-spawn multiple instances
+batch_execute(commands=[
+    {"tool": "manage_gameobject", "params": {
+        "action": "create", "name": f"Enemy_{i}",
+        "prefab_path": "Enemy", "position": [i * 3, 0, 0], "parent": "Enemies"
+    }}
+    for i in range(5)
+])
+```
+
+> **Note:** `manage_prefabs` is for headless prefab editing (inspect, modify contents, create from GameObject). To *instantiate* a prefab into the scene, always use `manage_gameobject(action="create", prefab_path="...")`.
+
 ---
 
 ## Testing Workflows
@@ -488,8 +517,8 @@ public class PlayerTests
 }'''
 )
 
-# 2. Refresh
-refresh_unity(mode="force", scope="scripts", compile="request", wait_for_ready=True)
+# 2. Wait for compilation (create_script auto-triggers import + compile)
+# Read mcpforunity://editor/state → wait until is_compiling == false
 
 # 3. Run test (expect pass for this simple test)
 result = run_tests(mode="EditMode", test_names=["PlayerTests.TestPlayerStartsAtOrigin"])
@@ -1854,6 +1883,21 @@ refresh_unity(mode="force", compile="request", wait_for_ready=True)
 ---
 
 ## Batch Operations
+
+### Batch Discovery (Multi-Search)
+
+Use `batch_execute` to search for multiple things in a single call instead of calling `find_gameobjects` repeatedly:
+
+```python
+# Instead of 4 separate find_gameobjects calls, batch them:
+batch_execute(commands=[
+    {"tool": "find_gameobjects", "params": {"search_term": "Camera", "search_method": "by_component"}},
+    {"tool": "find_gameobjects", "params": {"search_term": "Rigidbody", "search_method": "by_component"}},
+    {"tool": "find_gameobjects", "params": {"search_term": "Player", "search_method": "by_tag"}},
+    {"tool": "find_gameobjects", "params": {"search_term": "GameManager", "search_method": "by_name"}}
+])
+# Returns array of results, one per command
+```
 
 ### Mass Property Update
 
