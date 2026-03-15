@@ -1526,6 +1526,26 @@ manage_camera(action="list_cameras")
 manage_camera(action="screenshot_multiview", max_resolution=480)
 ```
 
+### Scene View Screenshot Workflow
+
+Use `capture_source="scene_view"` to capture the editor's Scene View viewport — useful for seeing gizmos, wireframes, grid, debug overlays, and objects without cameras.
+
+```python
+# 1. Capture the Scene View as-is
+manage_camera(action="screenshot", capture_source="scene_view", include_image=True)
+
+# 2. Frame on a specific object first, then capture
+manage_camera(action="screenshot", capture_source="scene_view",
+    view_target="Player", include_image=True, max_resolution=512)
+
+# 3. Frame on UI Canvas (RectTransform bounds are supported)
+manage_camera(action="screenshot", capture_source="scene_view",
+    view_target="Canvas", include_image=True)
+
+# Limitations: scene_view does not support batch, view_position, view_rotation, or camera selection.
+# Use capture_source="game_view" (default) for those features.
+```
+
 ---
 
 ## ProBuilder Workflows

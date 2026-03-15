@@ -136,7 +136,7 @@ manage_scene(
 manage_scene(
     action="screenshot",
     batch="surround",
-    look_at="Player",            # str|int|list[float] - center surround on this target
+    view_target="Player",        # str|int|list[float] - center surround on this target
     max_resolution=256
 )
 
@@ -144,7 +144,7 @@ manage_scene(
 manage_scene(
     action="screenshot",
     batch="orbit",               # str - "orbit" for configurable angle grid
-    look_at="Player",            # str|int|list[float] - target to orbit around
+    view_target="Player",        # str|int|list[float] - target to orbit around
     orbit_angles=8,              # int, default 8 - number of azimuth steps
     orbit_elevations=[0, 30],    # list[float], default [0, 30, -15] - vertical angles in degrees
     orbit_distance=10,           # float, optional - camera distance (auto-fit if omitted)
@@ -156,9 +156,9 @@ manage_scene(
 # Positioned screenshot (temp camera at viewpoint, no file saved)
 manage_scene(
     action="screenshot",
-    look_at="Enemy",             # str|int|list[float] - target to aim at
+    view_target="Enemy",         # str|int|list[float] - target to aim at
     view_position=[0, 10, -10],  # list[float], optional - camera position
-    view_rotation=[45, 0, 0],    # list[float], optional - euler angles (overrides look_at aim)
+    view_rotation=[45, 0, 0],    # list[float], optional - euler angles (overrides view_target aim)
     max_resolution=512
 )
 
@@ -821,13 +821,14 @@ Unified camera management (Unity Camera + Cinemachine). Works without Cinemachin
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `camera` | string | Camera to capture from (defaults to Camera.main) |
+| `capture_source` | string | `"game_view"` (default) or `"scene_view"` (editor viewport) |
+| `view_target` | string\|int\|list | Target to focus on (GO name/path/ID or [x,y,z]). game_view: aims camera; scene_view: frames viewport |
+| `camera` | string | Camera to capture from (defaults to Camera.main). game_view only |
 | `include_image` | bool | Return base64 PNG inline (default false) |
 | `max_resolution` | int | Downscale cap in px (default 640) |
-| `batch` | string | `"surround"` (6 angles) or `"orbit"` (configurable grid) |
-| `look_at` | string\|int\|list | Target to aim at (GO name/path/ID or [x,y,z]) |
-| `view_position` | list[float] | World position [x,y,z] to place camera |
-| `view_rotation` | list[float] | Euler rotation [x,y,z] (overrides look_at) |
+| `batch` | string | `"surround"` (6 angles) or `"orbit"` (configurable grid). game_view only |
+| `view_position` | list[float] | World position [x,y,z] to place camera. game_view only |
+| `view_rotation` | list[float] | Euler rotation [x,y,z] (overrides view_target). game_view only |
 
 **Actions by category:**
 
@@ -858,7 +859,7 @@ Unified camera management (Unity Camera + Cinemachine). Works without Cinemachin
 - `release_override` — Release camera override
 
 **Capture:**
-- `screenshot` — Capture from a camera. Supports inline base64, batch surround/orbit, positioned capture.
+- `screenshot` — Capture screenshot. Supports `capture_source="game_view"` (default, camera-based) or `"scene_view"` (editor viewport). game_view supports inline base64, batch surround/orbit, positioned capture. scene_view supports `view_target` for framing.
 - `screenshot_multiview` — Shorthand for screenshot with batch='surround' and include_image=true.
 
 **Examples:**
@@ -909,8 +910,14 @@ manage_camera(action="add_extension", target="FollowCam", properties={
     "extensionType": "CinemachineDeoccluder"
 })
 
-# Screenshot from a specific camera
+# Screenshot from a specific camera (game_view, default)
 manage_camera(action="screenshot", camera="FollowCam", include_image=True, max_resolution=512)
+
+# Scene View screenshot (captures editor viewport — gizmos, wireframes, grid)
+manage_camera(action="screenshot", capture_source="scene_view", include_image=True)
+
+# Scene View screenshot framed on a specific object
+manage_camera(action="screenshot", capture_source="scene_view", view_target="Canvas", include_image=True)
 
 # Multi-view screenshot (6-angle contact sheet)
 manage_camera(action="screenshot_multiview", max_resolution=480)

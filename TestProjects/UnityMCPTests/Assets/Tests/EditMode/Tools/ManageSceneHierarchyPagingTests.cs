@@ -169,17 +169,20 @@ namespace MCPForUnityTests.Editor.Tools
         }
 
         [Test]
-        public void Screenshot_GameViewRejectsSceneViewTarget()
+        public void Screenshot_ViewTargetAcceptedForGameView()
         {
+            // view_target should be accepted for game_view (positioned capture path).
+            // It will fail to resolve a non-existent GO, but should NOT reject the parameter itself.
             var raw = ManageScene.HandleCommand(new JObject
             {
                 ["action"] = "screenshot",
-                ["sceneViewTarget"] = "Canvas",
+                ["viewTarget"] = "NonExistentObject",
             });
             var response = raw as JObject ?? JObject.FromObject(raw);
 
+            // Should attempt positioned capture and fail to resolve the GO — not reject the param
             Assert.IsFalse(response.Value<bool>("success"), response.ToString());
-            StringAssert.Contains("scene_view_target is only valid", response.Value<string>("message"));
+            StringAssert.Contains("not found", response.Value<string>("message"));
         }
 
         [Test]

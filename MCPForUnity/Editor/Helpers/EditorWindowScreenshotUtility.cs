@@ -183,8 +183,9 @@ namespace MCPForUnity.Editor.Helpers
             if (hostView == null)
                 throw new InvalidOperationException("Failed to resolve Scene view host view.");
 
-            // GrabPixels is an internal editor API accessed reflectively. If Unity changes this surface,
-            // the MissingMethodException below keeps the failure explicit instead of silently degrading.
+            // GrabPixels is an internal extern on GUIView (parent of HostView), present since at least Unity 2021.1.
+            // See: UnityCsReference/Editor/Mono/GUIView.bindings.cs — `internal extern void GrabPixels(RenderTexture, Rect)`
+            // If Unity removes this, the MissingMethodException below keeps the failure explicit.
             MethodInfo grabPixels = hostView.GetType().GetMethod(
                 "GrabPixels",
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
@@ -300,17 +301,19 @@ namespace MCPForUnity.Editor.Helpers
 
             int width = texture.width;
             int height = texture.height;
-            Color32[] source = texture.GetPixels32();
-            Color32[] flipped = new Color32[source.Length];
+            Color32[] pixels = texture.GetPixels32();
+            var temp = new Color32[width];
 
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < height / 2; y++)
             {
-                int srcRow = y * width;
-                int dstRow = (height - 1 - y) * width;
-                Array.Copy(source, srcRow, flipped, dstRow, width);
+                int topRow = y * width;
+                int bottomRow = (height - 1 - y) * width;
+                Array.Copy(pixels, topRow, temp, 0, width);
+                Array.Copy(pixels, bottomRow, pixels, topRow, width);
+                Array.Copy(temp, 0, pixels, bottomRow, width);
             }
 
-            texture.SetPixels32(flipped);
+            texture.SetPixels32(pixels);
             texture.Apply();
         }
 

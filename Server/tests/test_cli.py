@@ -465,14 +465,14 @@ class TestCameraCommands:
             result = runner.invoke(cli, [
                 "camera", "screenshot",
                 "--capture-source", "scene_view",
-                "--scene-view-target", "Canvas",
+                "--view-target", "Canvas",
                 "--include-image",
             ])
             assert result.exit_code == 0
             mock_run.assert_called_once()
             params = mock_run.call_args[0][2]
             assert params["captureSource"] == "scene_view"
-            assert params["sceneViewTarget"] == "Canvas"
+            assert params["viewTarget"] == "Canvas"
             assert params["includeImage"] is True
 
 

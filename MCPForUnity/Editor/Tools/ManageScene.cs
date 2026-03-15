@@ -33,7 +33,7 @@ namespace MCPForUnity.Editor.Tools
             public bool? includeImage { get; set; }
             public int? maxResolution { get; set; }
             public string batch { get; set; }           // "surround" or "orbit" for multi-angle batch capture
-            public JToken lookAt { get; set; }          // GO reference or [x,y,z] to aim at before capture
+            public JToken viewTarget { get; set; }       // GO reference or [x,y,z] to focus on before capture
             public Vector3? viewPosition { get; set; }  // camera position for view-based capture
             public Vector3? viewRotation { get; set; }  // euler rotation for view-based capture
 
@@ -101,7 +101,7 @@ namespace MCPForUnity.Editor.Tools
                 includeImage = ParamCoercion.CoerceBoolNullable(p["includeImage"] ?? p["include_image"]),
                 maxResolution = ParamCoercion.CoerceIntNullable(p["maxResolution"] ?? p["max_resolution"]),
                 batch = (p["batch"])?.ToString(),
-                lookAt = p["lookAt"] ?? p["look_at"],
+                viewTarget = p["viewTarget"] ?? p["view_target"],
                 viewPosition = VectorParsing.ParseVector3(p["viewPosition"] ?? p["view_position"]),
                 viewRotation = VectorParsing.ParseVector3(p["viewRotation"] ?? p["view_rotation"]),
 
@@ -463,10 +463,10 @@ namespace MCPForUnity.Editor.Tools
                         return new ErrorResponse(
                             "capture_source='scene_view' does not support batch modes. Use capture_source='game_view' for batch capture.");
                     }
-                    if ((cmd.lookAt != null && cmd.lookAt.Type != JTokenType.Null) || cmd.viewPosition.HasValue || cmd.viewRotation.HasValue)
+                    if (cmd.viewPosition.HasValue || cmd.viewRotation.HasValue)
                     {
                         return new ErrorResponse(
-                            "capture_source='scene_view' does not support look_at/view_position/view_rotation. Use scene_view_target to frame a Scene View object.");
+                            "capture_source='scene_view' does not support view_position/view_rotation. Use view_target to frame a Scene View object.");
                     }
                     if (!string.IsNullOrEmpty(cameraRef))
                     {
@@ -474,12 +474,6 @@ namespace MCPForUnity.Editor.Tools
                             "capture_source='scene_view' does not support camera selection. Remove 'camera' or use capture_source='game_view'.");
                     }
                     return CaptureSceneViewScreenshot(cmd, fileName, resolvedSuperSize, includeImage, maxResolution);
-                }
-
-                if (cmd.sceneViewTarget != null && cmd.sceneViewTarget.Type != JTokenType.Null)
-                {
-                    return new ErrorResponse(
-                        "scene_view_target is only valid with capture_source='scene_view'. Use capture_source='scene_view' or remove scene_view_target.");
                 }
 
                 // Batch capture (e.g., "surround" for 6 angles around the scene)
@@ -492,8 +486,8 @@ namespace MCPForUnity.Editor.Tools
                     return new ErrorResponse($"Unknown batch mode: '{cmd.batch}'. Valid modes: 'surround', 'orbit'.");
                 }
 
-                // Positioned view-based capture (creates temp camera at view_position, aimed at look_at)
-                if ((cmd.lookAt != null && cmd.lookAt.Type != JTokenType.Null) || cmd.viewPosition.HasValue)
+                // Positioned view-based capture (creates temp camera at view_position, aimed at view_target)
+                if ((cmd.viewTarget != null && cmd.viewTarget.Type != JTokenType.Null) || cmd.viewPosition.HasValue)
                 {
                     return CapturePositionedScreenshot(cmd);
                 }
@@ -641,9 +635,9 @@ namespace MCPForUnity.Editor.Tools
                     "No active Scene View found. Open a Scene View window first, then retry screenshot with capture_source='scene_view'.");
             }
 
-            if (cmd.sceneViewTarget != null && cmd.sceneViewTarget.Type != JTokenType.Null)
+            if (cmd.viewTarget != null && cmd.viewTarget.Type != JTokenType.Null)
             {
-                var frameResult = FrameSceneView(new SceneCommand { sceneViewTarget = cmd.sceneViewTarget });
+                var frameResult = FrameSceneView(new SceneCommand { sceneViewTarget = cmd.viewTarget });
                 if (frameResult is ErrorResponse)
                 {
                     return frameResult;
@@ -679,9 +673,9 @@ namespace MCPForUnity.Editor.Tools
                     { "viewportHeight", viewportHeight },
                 };
 
-                if (cmd.sceneViewTarget != null && cmd.sceneViewTarget.Type != JTokenType.Null)
+                if (cmd.viewTarget != null && cmd.viewTarget.Type != JTokenType.Null)
                 {
-                    data["sceneViewTarget"] = cmd.sceneViewTarget;
+                    data["viewTarget"] = cmd.viewTarget;
                 }
 
                 if (includeImage && result.ImageBase64 != null)
@@ -702,7 +696,7 @@ namespace MCPForUnity.Editor.Tools
         }
 
         /// <summary>
-        /// Captures screenshots from 6 angles around scene bounds (or a look_at target) for AI scene understanding.
+        /// Captures screenshots from 6 angles around scene bounds (or a view_target) for AI scene understanding.
         /// Does NOT save to disk — returns all images as inline base64 PNGs. Always uses camera-based capture.
         /// </summary>
         private static object CaptureSurroundBatch(SceneCommand cmd)
@@ -714,24 +708,24 @@ namespace MCPForUnity.Editor.Tools
                 Vector3 center;
                 float radius;
 
-                // If look_at is provided, center on that target instead of scene bounds
-                if (cmd.lookAt != null && cmd.lookAt.Type != JTokenType.Null)
+                // If view_target is provided, center on that target instead of scene bounds
+                if (cmd.viewTarget != null && cmd.viewTarget.Type != JTokenType.Null)
                 {
-                    var lookAtPos = VectorParsing.ParseVector3(cmd.lookAt);
-                    if (lookAtPos.HasValue)
+                    var targetPos3 = VectorParsing.ParseVector3(cmd.viewTarget);
+                    if (targetPos3.HasValue)
                     {
-                        center = lookAtPos.Value;
+                        center = targetPos3.Value;
                         radius = 5f;
                     }
                     else
                     {
-                        Scene lookAtScene = EditorSceneManager.GetActiveScene();
-                        var lookAtGo = ResolveGameObject(cmd.lookAt, lookAtScene);
-                        if (lookAtGo == null)
-                            return new ErrorResponse($"look_at target '{cmd.lookAt}' not found for batch capture.");
+                        Scene targetScene = EditorSceneManager.GetActiveScene();
+                        var targetGo = ResolveGameObject(cmd.viewTarget, targetScene);
+                        if (targetGo == null)
+                            return new ErrorResponse($"view_target '{cmd.viewTarget}' not found for batch capture.");
 
-                        Bounds targetBounds = new Bounds(lookAtGo.transform.position, Vector3.zero);
-                        foreach (var r in lookAtGo.GetComponentsInChildren<Renderer>())
+                        Bounds targetBounds = new Bounds(targetGo.transform.position, Vector3.zero);
+                        foreach (var r in targetGo.GetComponentsInChildren<Renderer>())
                         {
                             if (r != null && r.gameObject.activeInHierarchy) targetBounds.Encapsulate(r.bounds);
                         }
@@ -860,24 +854,24 @@ namespace MCPForUnity.Editor.Tools
                 Vector3 center;
                 float radius;
 
-                // Resolve center and radius from look_at target or scene bounds
-                if (cmd.lookAt != null && cmd.lookAt.Type != JTokenType.Null)
+                // Resolve center and radius from view_target or scene bounds
+                if (cmd.viewTarget != null && cmd.viewTarget.Type != JTokenType.Null)
                 {
-                    var lookAtPos = VectorParsing.ParseVector3(cmd.lookAt);
-                    if (lookAtPos.HasValue)
+                    var targetPos3 = VectorParsing.ParseVector3(cmd.viewTarget);
+                    if (targetPos3.HasValue)
                     {
-                        center = lookAtPos.Value;
+                        center = targetPos3.Value;
                         radius = cmd.orbitDistance ?? 5f;
                     }
                     else
                     {
-                        Scene lookAtScene = EditorSceneManager.GetActiveScene();
-                        var lookAtGo = ResolveGameObject(cmd.lookAt, lookAtScene);
-                        if (lookAtGo == null)
-                            return new ErrorResponse($"look_at target '{cmd.lookAt}' not found for orbit capture.");
+                        Scene targetScene = EditorSceneManager.GetActiveScene();
+                        var targetGo = ResolveGameObject(cmd.viewTarget, targetScene);
+                        if (targetGo == null)
+                            return new ErrorResponse($"view_target '{cmd.viewTarget}' not found for orbit capture.");
 
-                        Bounds targetBounds = new Bounds(lookAtGo.transform.position, Vector3.zero);
-                        foreach (var r in lookAtGo.GetComponentsInChildren<Renderer>())
+                        Bounds targetBounds = new Bounds(targetGo.transform.position, Vector3.zero);
+                        foreach (var r in targetGo.GetComponentsInChildren<Renderer>())
                         {
                             if (r != null && r.gameObject.activeInHierarchy) targetBounds.Encapsulate(r.bounds);
                         }
@@ -998,7 +992,7 @@ namespace MCPForUnity.Editor.Tools
         }
 
         /// <summary>
-        /// Captures a single screenshot from a temporary camera placed at view_position and aimed at look_at.
+        /// Captures a single screenshot from a temporary camera placed at view_position and aimed at view_target.
         /// Returns inline base64 PNG and also saves the image to Assets/Screenshots/.
         /// </summary>
         private static object CapturePositionedScreenshot(SceneCommand cmd)
@@ -1009,9 +1003,9 @@ namespace MCPForUnity.Editor.Tools
 
                 // Resolve where to aim
                 Vector3? targetPos = null;
-                if (cmd.lookAt != null && cmd.lookAt.Type != JTokenType.Null)
+                if (cmd.viewTarget != null && cmd.viewTarget.Type != JTokenType.Null)
                 {
-                    var parsedPos = VectorParsing.ParseVector3(cmd.lookAt);
+                    var parsedPos = VectorParsing.ParseVector3(cmd.viewTarget);
                     if (parsedPos.HasValue)
                     {
                         targetPos = parsedPos.Value;
@@ -1019,10 +1013,10 @@ namespace MCPForUnity.Editor.Tools
                     else
                     {
                         Scene activeScene = EditorSceneManager.GetActiveScene();
-                        var lookAtGo = ResolveGameObject(cmd.lookAt, activeScene);
-                        if (lookAtGo == null)
-                            return new ErrorResponse($"look_at target '{cmd.lookAt}' not found.");
-                        targetPos = lookAtGo.transform.position;
+                        var resolvedGo = ResolveGameObject(cmd.viewTarget, activeScene);
+                        if (resolvedGo == null)
+                            return new ErrorResponse($"view_target '{cmd.viewTarget}' not found.");
+                        targetPos = resolvedGo.transform.position;
                     }
                 }
 
@@ -1034,12 +1028,12 @@ namespace MCPForUnity.Editor.Tools
                 }
                 else if (targetPos.HasValue)
                 {
-                    // Default: offset from look_at target
+                    // Default: offset from view_target
                     camPos = targetPos.Value + new Vector3(0, 2, -5);
                 }
                 else
                 {
-                    return new ErrorResponse("Provide 'look_at' or 'view_position' for a positioned screenshot.");
+                    return new ErrorResponse("Provide 'view_target' or 'view_position' for a positioned screenshot.");
                 }
 
                 // Create temporary camera
@@ -1095,7 +1089,7 @@ namespace MCPForUnity.Editor.Tools
                         { "path", assetsRelativePath },
                     };
                     if (targetPos.HasValue)
-                        data["lookAt"] = new[] { targetPos.Value.x, targetPos.Value.y, targetPos.Value.z };
+                        data["viewTarget"] = new[] { targetPos.Value.x, targetPos.Value.y, targetPos.Value.z };
 
                     return new SuccessResponse(
                         $"Positioned screenshot captured (max {maxRes}px) and saved to '{assetsRelativePath}'.",
