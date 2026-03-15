@@ -366,7 +366,7 @@ namespace MCPForUnity.Editor.Tools.Prefabs
         }
 
         /// <summary>
-        /// Checks if a renderer has a MaterialPropertyBlock with color data on the given slot.
+        /// Recursively creates the folder hierarchy for the given asset path if it doesn't exist.
         /// </summary>
         private static void EnsureAssetFolderExists(string assetFolderPath)
         {
