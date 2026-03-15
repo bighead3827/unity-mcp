@@ -86,18 +86,24 @@ manage_camera(action="screenshot", camera="MainCamera", include_image=True, max_
 manage_camera(action="screenshot", batch="surround", max_resolution=256)
 
 # Batch surround centered on a specific object
-manage_camera(action="screenshot", batch="surround", look_at="Player", max_resolution=256)
+manage_camera(action="screenshot", batch="surround", view_target="Player", max_resolution=256)
 
 # Positioned screenshot: place a temp camera and capture in one call
-manage_camera(action="screenshot", look_at="Player", view_position=[0, 10, -10], max_resolution=512)
+manage_camera(action="screenshot", view_target="Player", view_position=[0, 10, -10], max_resolution=512)
+
+# Scene View screenshot: capture what the developer sees in the editor
+manage_camera(action="screenshot", capture_source="scene_view", include_image=True)
+
+# Scene View framed on a specific object
+manage_camera(action="screenshot", capture_source="scene_view", view_target="Canvas", include_image=True)
 ```
 
 **Best practices for AI scene understanding:**
 - Use `include_image=True` when you need to *see* the scene, not just save a file.
 - Use `batch="surround"` for a comprehensive overview (6 angles, one command).
-- Use `look_at`/`view_position` to capture from a specific viewpoint without needing a scene camera.
+- Use `view_target`/`view_position` to capture from a specific viewpoint without needing a scene camera.
+- Use `capture_source="scene_view"` to see the editor viewport (gizmos, wireframes, grid).
 - Keep `max_resolution` at 256–512 to balance quality vs. token cost.
-- Combine with `look_at` on `manage_gameobject` to orient a game camera before capturing.
 
 ```python
 # Agentic camera loop: point, shoot, analyze
@@ -105,9 +111,11 @@ manage_gameobject(action="look_at", target="MainCamera", look_at_target="Player"
 manage_camera(action="screenshot", camera="MainCamera", include_image=True, max_resolution=512)
 # → Analyze image, decide next action
 
-# Screenshot from a different camera
-manage_camera(action="screenshot", camera="FollowCam", include_image=True, max_resolution=512)
-manage_camera(action="screenshot_multiview", max_resolution=480)  # 6-angle contact sheet
+# Multi-view screenshot (6-angle contact sheet)
+manage_camera(action="screenshot_multiview", max_resolution=480)
+
+# Scene View for editor-level inspection (shows gizmos, debug overlays, etc.)
+manage_camera(action="screenshot", capture_source="scene_view", view_target="Player", include_image=True)
 ```
 
 ### 4. Check Console After Major Changes
