@@ -85,6 +85,11 @@ async def unity_reflect(
     if query is not None:
         params_dict["query"] = query
     if action_lower == "search" and scope is not None:
+        if scope not in VALID_SCOPES:
+            return {
+                "success": False,
+                "message": f"Invalid scope '{scope}'. Valid scopes: {', '.join(VALID_SCOPES)}",
+            }
         params_dict["scope"] = scope
 
     return await _send_reflect_command(ctx, params_dict)

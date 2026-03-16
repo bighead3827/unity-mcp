@@ -113,9 +113,11 @@ class _UnityDocParser(HTMLParser):
         super().__init__()
         # Tracking state
         self._in_subsection = False
+        self._subsection_depth = 0
         self._subsection_title: str | None = None
         self._in_signature = False
         self._in_pre = False
+        self._signature_from_pre = False
         self._in_code_example = False
         self._in_param_table = False
         self._in_td = False
@@ -138,7 +140,10 @@ class _UnityDocParser(HTMLParser):
 
         if tag == "div" and "subsection" in classes:
             self._in_subsection = True
+            self._subsection_depth = 1
             self._subsection_title = None
+        elif tag == "div" and self._in_subsection:
+            self._subsection_depth += 1
 
         if tag == "div" and ("signature" in classes or "signature-CS" in classes):
             self._in_signature = True
@@ -188,16 +193,19 @@ class _UnityDocParser(HTMLParser):
             elif self._in_pre:
                 self._in_pre = False
                 self.signatures.append("".join(self._current_text).strip())
+                self._signature_from_pre = True  # Mark that pre already captured this
 
         if tag == "div" and self._in_signature:
-            # Capture inline signature text (modern Unity docs don't use <pre>)
-            text = " ".join("".join(self._current_text).split()).strip()
-            # Remove "Declaration" prefix that appears inside the sig block
-            if text.startswith("Declaration"):
-                text = text[len("Declaration"):].strip()
-            if text:
-                self.signatures.append(text)
+            if not self._signature_from_pre:
+                # Capture inline signature text (modern Unity docs don't use <pre>)
+                text = " ".join("".join(self._current_text).split()).strip()
+                # Remove "Declaration" prefix that appears inside the sig block
+                if text.startswith("Declaration"):
+                    text = text[len("Declaration"):].strip()
+                if text:
+                    self.signatures.append(text)
             self._in_signature = False
+            self._signature_from_pre = False
 
         if tag == "p" and self._in_p:
             self._in_p = False
@@ -225,7 +233,9 @@ class _UnityDocParser(HTMLParser):
             self._in_param_table = False
 
         if tag == "div" and self._in_subsection:
-            self._in_subsection = False
+            self._subsection_depth -= 1
+            if self._subsection_depth <= 0:
+                self._in_subsection = False
 
     def handle_data(self, data: str) -> None:
         if self._in_h2 or self._in_pre or self._in_code_example or self._in_p or self._in_td or self._in_signature:
@@ -316,11 +326,13 @@ class _ManualPageParser(HTMLParser):
 
     def _flush_section(self) -> None:
         """Flush the current heading + accumulated content as a section."""
-        if self._current_heading is not None:
-            content = "\n".join(self._content_parts)
-            self.sections.append({"heading": self._current_heading, "content": content})
-            self._current_heading = None
-            self._content_parts = []
+        if not self._content_parts and self._current_heading is None:
+            return
+        heading = self._current_heading or "Introduction"
+        content = "\n".join(self._content_parts)
+        self.sections.append({"heading": heading, "content": content})
+        self._current_heading = None
+        self._content_parts = []
 
     def close(self) -> None:
         self._flush_section()
@@ -520,7 +532,7 @@ async def _search_assets(ctx: Any, query: str) -> dict[str, Any] | None:
         seen_paths: set[str] = set()
 
         async def _do_search(params: dict) -> list[dict]:
-            search_params: dict[str, Any] = {"action": "search", "path": ".", "pageSize": 10}
+            search_params: dict[str, Any] = {"action": "search", "path": "Assets", "pageSize": 10}
             search_params.update(params)
             result = await send_with_unity_instance(
                 async_send_command_with_retry, unity_instance, "manage_asset", search_params,
@@ -547,8 +559,14 @@ async def _search_assets(ctx: Any, query: str) -> dict[str, Any] | None:
                 "found": True,
                 "assets": all_assets[:15],  # Cap to avoid huge payloads
             }
-    except Exception:
-        pass  # No Unity connection or import failure — skip silently
+    except ImportError:
+        pass  # Unity transport not available — skip asset search
+    except Exception as e:
+        try:
+            if hasattr(ctx, 'warning'):
+                await ctx.warning(f"Asset search failed: {e}")
+        except Exception:
+            pass  # ctx might not be usable
     return None
 
 

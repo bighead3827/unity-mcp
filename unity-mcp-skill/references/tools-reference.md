@@ -1344,7 +1344,7 @@ No Unity connection needed for doc fetching. The `lookup` action with asset-rela
 - **`get_doc`**: Fetch ScriptReference docs for a class or member. Parses HTML to extract description, signatures, parameters, return type, and code examples.
 - **`get_manual`**: Fetch a Unity Manual page by slug. Returns title, sections, and code examples.
 - **`get_package_doc`**: Fetch package documentation. Requires package name, page slug, and package version.
-- **`lookup`**: Search all doc sources in parallel (ScriptReference + Manual + package docs). Supports batch queries. For asset-related queries (shader, material, texture, etc.), also searches project assets via `manage_asset`.
+- **`lookup`**: Search doc sources in parallel (ScriptReference + Manual; also package docs if `package` + `pkg_version` provided). Supports batch queries. For asset-related queries (shader, material, texture, etc.), also searches project assets via `manage_asset`.
 
 ```python
 # Fetch ScriptReference for a class

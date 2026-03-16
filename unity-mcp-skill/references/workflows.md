@@ -1905,6 +1905,8 @@ refresh_unity(mode="force", compile="request", wait_for_ready=True)
 
 ## API Verification Workflows
 
+> These tools live in the opt-in `docs` group. Activate it first: `manage_tools(action="activate", group="docs")`
+
 ### Full API Verification Before Writing Code
 
 Use `unity_reflect` and `unity_docs` to verify Unity APIs before writing C# code. This prevents hallucinated or outdated API references.
@@ -1934,7 +1936,7 @@ unity_docs(action="get_doc", class_name="NavMeshAgent", member_name="SetDestinat
 Use `unity_docs` `lookup` action to search multiple APIs in a single call:
 
 ```python
-# Search ScriptReference + Manual + package docs in parallel
+# Search ScriptReference + Manual in parallel (+ package docs if package/pkg_version provided)
 unity_docs(action="lookup", queries="Physics.Raycast,NavMeshAgent,Light2D")
 
 # Include package docs in the search
