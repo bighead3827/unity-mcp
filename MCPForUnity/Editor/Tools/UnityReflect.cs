@@ -420,30 +420,22 @@ namespace MCPForUnity.Editor.Tools
 
         private static Type ResolveType(string className)
         {
-            // 1. Try direct resolution
-            var type = Type.GetType(className);
+            // Use the shared UnityTypeResolver which handles caching,
+            // namespace prefixes, player-over-editor priority, and TypeCache fallback.
+            var type = UnityTypeResolver.ResolveAny(className);
             if (type != null) return type;
 
-            // 2. Try with namespace prefixes
+            // UnityTypeResolver doesn't try our extended namespace prefixes,
+            // so fall back to assembly cache scan for edge cases.
+            var cache = GetAssemblyTypeCache();
             foreach (var prefix in NamespacePrefixes)
             {
                 string fullName = prefix + className;
-                type = Type.GetType(fullName);
-                if (type != null) return type;
-
-                // Also search all assemblies for this full name
-                foreach (var kvp in GetAssemblyTypeCache())
+                foreach (var kvp in cache)
                 {
                     type = Array.Find(kvp.Value, t => t.FullName == fullName);
                     if (type != null) return type;
                 }
-            }
-
-            // 3. Scan all loaded assemblies for exact name match
-            foreach (var kvp in GetAssemblyTypeCache())
-            {
-                type = Array.Find(kvp.Value, t => t.Name == className || t.FullName == className);
-                if (type != null) return type;
             }
 
             return null;
@@ -542,6 +534,7 @@ namespace MCPForUnity.Editor.Tools
             }).ToArray();
 
             string signature = FormatMethodSignature(m);
+            var obsoleteAttr = m.GetCustomAttribute<ObsoleteAttribute>();
 
             return new
             {
@@ -555,8 +548,8 @@ namespace MCPForUnity.Editor.Tools
                 generic_arguments = m.IsGenericMethod
                     ? m.GetGenericArguments().Select(a => a.Name).ToArray()
                     : null,
-                is_obsolete = m.GetCustomAttribute<ObsoleteAttribute>() != null,
-                obsolete_message = m.GetCustomAttribute<ObsoleteAttribute>()?.Message,
+                is_obsolete = obsoleteAttr != null,
+                obsolete_message = obsoleteAttr?.Message,
                 declaring_type = m.DeclaringType != m.ReflectedType
                     ? FormatTypeName(m.DeclaringType)
                     : null
@@ -602,11 +595,11 @@ namespace MCPForUnity.Editor.Tools
 
         private static string[] GetObsoleteMembers(Type type, BindingFlags flags)
         {
-            var obsolete = new List<string>();
+            var obsolete = new HashSet<string>();
 
             foreach (var m in type.GetMethods(flags).Where(m => !m.IsSpecialName))
             {
-                if (m.GetCustomAttribute<ObsoleteAttribute>() != null && !obsolete.Contains(m.Name))
+                if (m.GetCustomAttribute<ObsoleteAttribute>() != null)
                     obsolete.Add(m.Name);
             }
             foreach (var pr in type.GetProperties(flags))
@@ -639,24 +632,16 @@ namespace MCPForUnity.Editor.Tools
             }
 
             var extensionNames = new HashSet<string>();
+            var cache = GetAssemblyTypeCache();
 
-            foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+            foreach (var kvp in cache)
             {
-                string asmName = asm.GetName().Name;
+                // Extract assembly name from the FullName key (e.g., "UnityEngine, Version=...")
+                string asmName = kvp.Key.Split(',')[0];
                 if (!asmName.StartsWith("UnityEngine") && !asmName.StartsWith("UnityEditor") && !asmName.StartsWith("Unity."))
                     continue;
 
-                Type[] types;
-                try
-                {
-                    types = asm.GetExportedTypes();
-                }
-                catch
-                {
-                    continue;
-                }
-
-                foreach (var t in types)
+                foreach (var t in kvp.Value)
                 {
                     if (!t.IsAbstract || !t.IsSealed) continue; // Static classes only
                     if (!t.IsDefined(typeof(ExtensionAttribute), false)) continue;
