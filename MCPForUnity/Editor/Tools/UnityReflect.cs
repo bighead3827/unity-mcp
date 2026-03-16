@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -15,7 +16,7 @@ namespace MCPForUnity.Editor.Tools
     {
         private static Dictionary<string, Type[]> _assemblyTypeCache;
         private static readonly object CacheLock = new();
-        private static readonly Dictionary<Type, string[]> ExtensionMethodCache = new();
+        private static readonly ConcurrentDictionary<Type, string[]> ExtensionMethodCache = new();
 
         private static readonly string[] NamespacePrefixes =
         {
@@ -69,10 +70,7 @@ namespace MCPForUnity.Editor.Tools
             {
                 _assemblyTypeCache = null;
             }
-            lock (ExtensionMethodCache)
-            {
-                ExtensionMethodCache.Clear();
-            }
+            ExtensionMethodCache.Clear();
         }
 
         private static Dictionary<string, Type[]> GetAssemblyTypeCache()
@@ -247,6 +245,22 @@ namespace MCPForUnity.Editor.Tools
             string className = classResult.Value;
             string memberName = memberResult.Value;
             string normalizedName = NormalizeGenericName(className);
+
+            if (!normalizedName.Contains('.') && !normalizedName.Contains('`'))
+            {
+                var matches = FindAllTypesByShortName(normalizedName);
+                if (matches.Count > 1)
+                {
+                    return new SuccessResponse($"Ambiguous type name '{className}'.", new
+                    {
+                        found = true,
+                        ambiguous = true,
+                        query = className,
+                        matches = matches.Select(t => t.FullName).OrderBy(n => n).ToArray(),
+                        hint = "Use the fully qualified name to disambiguate before requesting member details."
+                    });
+                }
+            }
 
             var type = ResolveType(normalizedName);
             if (type == null)
@@ -625,11 +639,8 @@ namespace MCPForUnity.Editor.Tools
 
         private static string[] FindExtensionMethods(Type targetType)
         {
-            lock (ExtensionMethodCache)
-            {
-                if (ExtensionMethodCache.TryGetValue(targetType, out var cached))
-                    return cached;
-            }
+            if (ExtensionMethodCache.TryGetValue(targetType, out var cached))
+                return cached;
 
             var extensionNames = new HashSet<string>();
             var cache = GetAssemblyTypeCache();
@@ -668,11 +679,7 @@ namespace MCPForUnity.Editor.Tools
                 ? extensionNames.OrderBy(n => n).ToArray()
                 : Array.Empty<string>();
 
-            lock (ExtensionMethodCache)
-            {
-                ExtensionMethodCache[targetType] = result;
-            }
-
+            ExtensionMethodCache.TryAdd(targetType, result);
             return result;
         }
 

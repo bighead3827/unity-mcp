@@ -205,5 +205,14 @@ namespace MCPForUnityTests.Editor.Tools
             var data = jo["data"];
             Assert.IsTrue((bool)data["found"], "List<T> should resolve via generic normalization");
         }
+
+        [Test]
+        public void GetType_GenericDictionary_Resolves()
+        {
+            var jo = Invoke("get_type", new JObject { ["class_name"] = "Dictionary<TKey, TValue>" });
+            Assert.IsTrue((bool)jo["success"]);
+            var data = jo["data"];
+            Assert.IsTrue((bool)data["found"], "Dictionary<TKey, TValue> should resolve via generic normalization");
+        }
     }
 }
