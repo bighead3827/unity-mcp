@@ -660,3 +660,23 @@ def test_asset_keyword_detection():
     assert _should_search_assets("Physics.Raycast") is False
     assert _should_search_assets("NavMeshAgent") is False
     assert _should_search_assets("execution-order") is False
+
+
+def test_build_asset_search_terms():
+    """Extract meaningful search terms from query, infer filter types."""
+    from services.tools.unity_docs import _build_asset_search_terms
+    # "Mesh2D shader" → search for *mesh2d* with filter_type=Shader
+    terms = _build_asset_search_terms("Mesh2D shader")
+    assert len(terms) >= 1
+    assert any("mesh2d" in t.get("search_pattern", "") for t in terms)
+    assert any(t.get("filter_type") == "Shader" for t in terms)
+
+    # "MeshRenderer 2D lights" → search for *meshrenderer*, *lights* (2d triggers keyword)
+    terms = _build_asset_search_terms("MeshRenderer 2D lights")
+    assert len(terms) >= 1
+    assert any("meshrenderer" in t.get("search_pattern", "") for t in terms)
+
+    # "Physics.Raycast" → no asset search terms (no asset keywords)
+    # (This won't be called since _should_search_assets returns False, but test the function)
+    terms = _build_asset_search_terms("Physics.Raycast")
+    assert len(terms) >= 1  # Still extracts terms, just won't be triggered

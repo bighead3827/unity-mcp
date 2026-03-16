@@ -454,6 +454,54 @@ _ASSET_KEYWORDS = {
 }
 
 
+# Words to skip when building asset search patterns
+_ASSET_STOPWORDS = {
+    "in", "the", "a", "an", "to", "for", "of", "on", "with", "how", "can", "do",
+    "i", "my", "is", "it", "this", "that", "unity", "objects", "object", "using",
+    "receive", "make", "apply", "get", "set", "use", "create",
+}
+
+# Map keywords to Unity asset filter types
+_KEYWORD_TO_FILTER_TYPE = {
+    "shader": "Shader", "shaders": "Shader", "lit": "Shader", "unlit": "Shader",
+    "material": "Material", "materials": "Material", "mat": "Material",
+    "texture": "Texture2D", "textures": "Texture2D", "tex": "Texture2D",
+    "sprite": "Sprite", "sprites": "Sprite",
+    "prefab": "Prefab", "prefabs": "Prefab",
+    "mesh": "Mesh", "model": "Mesh",
+    "font": "Font", "fonts": "Font",
+}
+
+
+def _build_asset_search_terms(query: str) -> list[dict[str, str]]:
+    """Extract meaningful search terms and infer asset filter types from query."""
+    words = query.lower().replace("-", " ").replace("_", " ").split()
+    terms = [w for w in words if w not in _ASSET_STOPWORDS and len(w) > 1]
+
+    # Infer filter_type from keywords
+    filter_type = None
+    for w in words:
+        if w in _KEYWORD_TO_FILTER_TYPE:
+            filter_type = _KEYWORD_TO_FILTER_TYPE[w]
+            break
+
+    # Build search patterns: each non-stopword term as a separate search
+    searches = []
+    for term in terms:
+        if term in _ASSET_KEYWORDS:
+            continue  # Skip generic keywords like "shader" — they're too broad
+        params: dict[str, str] = {"search_pattern": f"*{term}*"}
+        if filter_type:
+            params["filter_type"] = filter_type
+        searches.append(params)
+
+    # If only keywords remain (e.g., "2D shader"), search by filter type alone
+    if not searches and filter_type:
+        searches.append({"filter_type": filter_type})
+
+    return searches
+
+
 async def _search_assets(ctx: Any, query: str) -> dict[str, Any] | None:
     """Search Unity assets if ctx has a Unity connection. Returns None if unavailable."""
     try:
@@ -462,23 +510,43 @@ async def _search_assets(ctx: Any, query: str) -> dict[str, Any] | None:
         from transport.legacy.unity_connection import async_send_command_with_retry
 
         unity_instance = await get_unity_instance_from_context(ctx)
-        result = await send_with_unity_instance(
-            async_send_command_with_retry,
-            unity_instance,
-            "manage_asset",
-            {"action": "search", "path": ".", "search_pattern": f"*{query}*", "pageSize": 10},
-        )
-        if isinstance(result, dict) and result.get("success"):
-            assets = result.get("data", {}).get("assets", [])
-            if assets:
-                return {
-                    "source": "project_assets",
-                    "found": True,
-                    "assets": [
-                        {"name": a.get("name", ""), "path": a.get("path", ""), "type": a.get("assetType", "")}
-                        for a in assets
-                    ],
-                }
+
+        search_terms = _build_asset_search_terms(query)
+        if not search_terms:
+            return None
+
+        # Run all search terms in parallel
+        all_assets = []
+        seen_paths: set[str] = set()
+
+        async def _do_search(params: dict) -> list[dict]:
+            search_params: dict[str, Any] = {"action": "search", "path": ".", "pageSize": 10}
+            search_params.update(params)
+            result = await send_with_unity_instance(
+                async_send_command_with_retry, unity_instance, "manage_asset", search_params,
+            )
+            if isinstance(result, dict) and result.get("success"):
+                return result.get("data", {}).get("assets", [])
+            return []
+
+        results = await asyncio.gather(*[_do_search(p) for p in search_terms], return_exceptions=True)
+
+        for result in results:
+            if isinstance(result, list):
+                for a in result:
+                    path = a.get("path", "")
+                    if path and path not in seen_paths:
+                        seen_paths.add(path)
+                        all_assets.append(
+                            {"name": a.get("name", ""), "path": path, "type": a.get("assetType", "")}
+                        )
+
+        if all_assets:
+            return {
+                "source": "project_assets",
+                "found": True,
+                "assets": all_assets[:15],  # Cap to avoid huge payloads
+            }
     except Exception:
         pass  # No Unity connection or import failure — skip silently
     return None
