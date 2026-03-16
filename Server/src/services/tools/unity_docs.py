@@ -597,27 +597,37 @@ async def _lookup_single(
     # ScriptReference
     tasks.append(("script_ref", _get_doc(class_name, member_name, version)))
 
-    # Manual — try query as slug (replace spaces with hyphens, lowercase)
-    manual_slug = query.lower().replace(" ", "-").replace("_", "-")
-    tasks.append(("manual", _get_manual(manual_slug, version)))
+    # Manual — try original case first (e.g., UIE-USS-Properties-Reference),
+    # then lowercase fallback if different
+    original_slug = query.replace(" ", "-").replace("_", "-")
+    tasks.append(("manual", _get_manual(original_slug, version)))
+    lowercase_slug = original_slug.lower()
+    if lowercase_slug != original_slug:
+        tasks.append(("manual_lc", _get_manual(lowercase_slug, version)))
 
     # Package docs (if package info provided)
     if package and pkg_version:
-        page = manual_slug
-        tasks.append(("package", _get_package_doc(package, page, pkg_version)))
+        tasks.append(("package", _get_package_doc(package, original_slug, pkg_version)))
+        if lowercase_slug != original_slug:
+            tasks.append(("package_lc", _get_package_doc(package, lowercase_slug, pkg_version)))
 
     # Run doc tasks in parallel
     labels = [t[0] for t in tasks]
     results = await asyncio.gather(*(t[1] for t in tasks), return_exceptions=True)
 
-    # Collect successful hits
+    # Collect successful hits and errors
     hits = []
+    errors = []
     for label, result in zip(labels, results):
         if isinstance(result, Exception):
+            errors.append({"source": label, "error": str(result)})
             continue
         if not isinstance(result, dict):
             continue
-        if result.get("success") and result.get("data", {}).get("found"):
+        if not result.get("success"):
+            errors.append({"source": label, "error": result.get("message", "unknown error")})
+            continue
+        if result.get("data", {}).get("found"):
             hits.append({"source": label, **result["data"]})
 
     # Auto-search project assets for asset-related queries
@@ -627,7 +637,10 @@ async def _lookup_single(
             hits.append(asset_result)
             labels.append("project_assets")
 
-    return {"query": query, "hits": hits, "sources_checked": labels}
+    result: dict[str, Any] = {"query": query, "hits": hits, "sources_checked": labels}
+    if errors and not hits:
+        result["errors"] = errors
+    return result
 
 
 async def _lookup(

@@ -349,6 +349,23 @@ namespace MCPForUnity.Editor.Tools
                 });
             }
 
+            // Try extension methods as a last resort
+            var extMethods = FindExtensionMethodInfos(type, memberName);
+            if (extMethods.Length > 0)
+            {
+                var overloads = extMethods.Select(m => FormatMethodDetail(m)).ToArray();
+                return new SuccessResponse($"Extension method '{memberName}' on '{FormatTypeName(type)}'.", new
+                {
+                    found = true,
+                    type_name = FormatTypeName(type),
+                    member_name = memberName,
+                    member_type = "extension_method",
+                    overload_count = overloads.Length,
+                    overloads,
+                    declaring_type = FormatTypeName(extMethods[0].DeclaringType)
+                });
+            }
+
             return new SuccessResponse($"Member '{memberName}' not found on '{FormatTypeName(type)}'.", new
             {
                 found = false,
@@ -681,6 +698,44 @@ namespace MCPForUnity.Editor.Tools
 
             ExtensionMethodCache.TryAdd(targetType, result);
             return result;
+        }
+
+        private static MethodInfo[] FindExtensionMethodInfos(Type targetType, string methodName)
+        {
+            var results = new List<MethodInfo>();
+            var cache = GetAssemblyTypeCache();
+
+            foreach (var kvp in cache)
+            {
+                string asmName = kvp.Key.Split(',')[0];
+                if (!asmName.StartsWith("UnityEngine") && !asmName.StartsWith("UnityEditor") && !asmName.StartsWith("Unity."))
+                    continue;
+
+                foreach (var t in kvp.Value)
+                {
+                    if (!t.IsAbstract || !t.IsSealed) continue;
+                    if (!t.IsDefined(typeof(ExtensionAttribute), false)) continue;
+
+                    foreach (var method in t.GetMethods(BindingFlags.Public | BindingFlags.Static))
+                    {
+                        if (method.Name != methodName) continue;
+                        if (!method.IsDefined(typeof(ExtensionAttribute), false)) continue;
+
+                        var firstParam = method.GetParameters().FirstOrDefault();
+                        if (firstParam == null) continue;
+
+                        var paramType = firstParam.ParameterType;
+                        if (paramType.IsAssignableFrom(targetType) || targetType.IsSubclassOf(paramType)
+                            || paramType == targetType
+                            || (paramType.IsGenericType && IsGenericMatch(paramType, targetType)))
+                        {
+                            results.Add(method);
+                        }
+                    }
+                }
+            }
+
+            return results.ToArray();
         }
 
         private static bool IsGenericMatch(Type genericParamType, Type targetType)
