@@ -445,21 +445,13 @@ async def _get_package_doc(
 # lookup — parallel search across all doc sources
 # ---------------------------------------------------------------------------
 
-async def _lookup(
+async def _lookup_single(
     query: str,
     version: str | None,
     package: str | None,
     pkg_version: str | None,
 ) -> dict[str, Any]:
-    """Search ScriptReference, Manual, and package docs in parallel.
-
-    Tries the query as:
-    1. ScriptReference class name (e.g., "Physics" or "Physics.Raycast")
-    2. Manual page slug (e.g., "execution-order")
-    3. Package doc page (if package + pkg_version provided)
-    """
-    extracted_version = _extract_version(version)
-
+    """Search all doc sources for a single query."""
     # Split "Physics.Raycast" into class_name + member_name
     class_name = query
     member_name = None
@@ -496,30 +488,50 @@ async def _lookup(
         if result.get("success") and result.get("data", {}).get("found"):
             hits.append({"source": label, **result["data"]})
 
-    if hits:
-        return {
-            "success": True,
-            "data": {
-                "found": True,
-                "query": query,
-                "results": hits,
-                "sources_checked": labels,
-            },
-        }
+    return {"query": query, "hits": hits, "sources_checked": labels}
+
+
+async def _lookup(
+    queries: list[str],
+    version: str | None,
+    package: str | None,
+    pkg_version: str | None,
+) -> dict[str, Any]:
+    """Search ScriptReference, Manual, and package docs in parallel.
+
+    Supports multiple queries — all run concurrently via asyncio.gather.
+    """
+    # Run all queries in parallel
+    tasks = [_lookup_single(q, version, package, pkg_version) for q in queries]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    query_results = []
+    for result in results:
+        if isinstance(result, Exception):
+            continue
+        if isinstance(result, dict):
+            query_results.append(result)
+
+    all_found = [r for r in query_results if r.get("hits")]
+    all_missed = [r for r in query_results if not r.get("hits")]
 
     return {
         "success": True,
         "data": {
-            "found": False,
-            "query": query,
-            "sources_checked": labels,
+            "found": len(all_found) > 0,
+            "queries": [q for q in queries],
+            "results": query_results,
+            "summary": {
+                "total": len(queries),
+                "found": len(all_found),
+                "missed": len(all_missed),
+            },
             "suggestion": (
-                "No results found. Try:\n"
-                "- get_doc with exact class name (e.g., 'Physics', 'NavMeshAgent')\n"
-                "- get_manual with the correct page slug from the URL\n"
-                "- get_package_doc with package name, page, and version\n"
+                "For missed queries, try:\n"
+                "- get_doc with exact class name\n"
+                "- get_manual with the correct page slug\n"
                 "- manage_asset(action='search') for shaders, materials, prefabs"
-            ),
+            ) if all_missed else None,
         },
     }
 
@@ -544,7 +556,8 @@ async def _lookup(
         "- get_package_doc: Fetch package documentation. Requires package, page, pkg_version "
         "(e.g., package='com.unity.render-pipelines.universal', page='2d-index', pkg_version='17.0').\n"
         "- lookup: Search all doc sources in parallel (ScriptReference + Manual + package docs). "
-        "Requires query (class name, topic, or slug). Optional package + pkg_version to also search package docs."
+        "Requires query or queries (comma-separated). Supports batch: queries='Physics.Raycast,NavMeshAgent,Light2D' "
+        "searches all in one call. Optional package + pkg_version to also search package docs."
     ),
     annotations=ToolAnnotations(
         title="Unity Docs",
@@ -562,7 +575,8 @@ async def unity_docs(
     package: Annotated[Optional[str], "Package name (e.g., 'com.unity.render-pipelines.universal')."] = None,
     page: Annotated[Optional[str], "Package doc page (e.g., 'index', '2d-index')."] = None,
     pkg_version: Annotated[Optional[str], "Package version major.minor (e.g., '17.0')."] = None,
-    query: Annotated[Optional[str], "Search query for lookup action (class name, topic, or slug)."] = None,
+    query: Annotated[Optional[str], "Single search query for lookup (class name, topic, or slug)."] = None,
+    queries: Annotated[Optional[str], "Comma-separated search queries for batch lookup (e.g., 'Physics.Raycast,NavMeshAgent,Light2D')."] = None,
 ) -> dict[str, Any]:
     action_lower = action.lower()
     if action_lower not in ALL_ACTIONS:
@@ -593,9 +607,14 @@ async def unity_docs(
         return await _get_package_doc(package, page, pkg_version)
 
     if action_lower == "lookup":
-        if not query:
-            return {"success": False, "message": "lookup requires query."}
-        return await _lookup(query, version, package, pkg_version)
+        # Accept single query or comma-separated queries string
+        if queries:
+            query_list = [q.strip() for q in queries.split(",") if q.strip()]
+        elif query:
+            query_list = [query]
+        else:
+            return {"success": False, "message": "lookup requires query or queries."}
+        return await _lookup(query_list, version, package, pkg_version)
 
     return {"success": False, "message": "Unreachable"}
 

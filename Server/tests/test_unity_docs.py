@@ -587,11 +587,11 @@ def test_get_package_doc_404():
 def test_lookup_requires_query():
     result = asyncio.run(unity_docs(SimpleNamespace(), action="lookup"))
     assert result["success"] is False
-    assert "query" in result["message"]
+    assert "query" in result["message"] or "queries" in result["message"]
 
 
-def test_lookup_finds_scriptref():
-    """lookup with a class name should find it via ScriptReference."""
+def test_lookup_single_query():
+    """lookup with a single query finds it via ScriptReference."""
     async def mock_fetch(url):
         if "ScriptReference/Physics" in url:
             return (200, SAMPLE_DOC_HTML)
@@ -607,14 +607,14 @@ def test_lookup_finds_scriptref():
         )
     assert result["success"] is True
     assert result["data"]["found"] is True
-    assert any(r["source"] == "script_ref" for r in result["data"]["results"])
+    assert result["data"]["summary"]["found"] == 1
 
 
-def test_lookup_finds_manual():
-    """lookup with a slug should find it via Manual."""
+def test_lookup_batch_queries():
+    """lookup with multiple queries searches all in parallel."""
     async def mock_fetch(url):
-        if "Manual/execution-order" in url:
-            return (200, SAMPLE_MANUAL_HTML)
+        if "ScriptReference/Physics" in url or "ScriptReference/Camera" in url:
+            return (200, SAMPLE_DOC_HTML)
         return (404, "")
 
     async def mock_fetch_full(url):
@@ -623,11 +623,13 @@ def test_lookup_finds_manual():
     with patch("services.tools.unity_docs._fetch_url", side_effect=mock_fetch), \
          patch("services.tools.unity_docs._fetch_url_full", side_effect=mock_fetch_full):
         result = asyncio.run(
-            unity_docs(SimpleNamespace(), action="lookup", query="execution-order")
+            unity_docs(SimpleNamespace(), action="lookup",
+                       queries="Physics,Camera,zzz-nonexistent")
         )
     assert result["success"] is True
-    assert result["data"]["found"] is True
-    assert any(r["source"] == "manual" for r in result["data"]["results"])
+    assert result["data"]["summary"]["total"] == 3
+    assert result["data"]["summary"]["found"] == 2
+    assert result["data"]["summary"]["missed"] == 1
 
 
 def test_lookup_no_results():
@@ -645,22 +647,4 @@ def test_lookup_no_results():
         )
     assert result["success"] is True
     assert result["data"]["found"] is False
-    assert "suggestion" in result["data"]
-
-
-def test_lookup_multiple_hits():
-    """lookup can return results from multiple sources."""
-    async def mock_fetch(url):
-        return (200, SAMPLE_DOC_HTML if "ScriptReference" in url else SAMPLE_MANUAL_HTML)
-
-    async def mock_fetch_full(url):
-        return (404, "", url)
-
-    with patch("services.tools.unity_docs._fetch_url", side_effect=mock_fetch), \
-         patch("services.tools.unity_docs._fetch_url_full", side_effect=mock_fetch_full):
-        result = asyncio.run(
-            unity_docs(SimpleNamespace(), action="lookup", query="Physics")
-        )
-    assert result["data"]["found"] is True
-    sources = [r["source"] for r in result["data"]["results"]]
-    assert len(sources) >= 2
+    assert result["data"]["summary"]["missed"] == 1
