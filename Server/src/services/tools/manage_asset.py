@@ -33,7 +33,7 @@ async def manage_asset(
     path: Annotated[str, "Asset path (e.g., 'Materials/MyMaterial.mat') or search scope (e.g., 'Assets')."],
     asset_type: Annotated[str,
                           "Asset type (e.g., 'Material', 'Folder') - required for 'create'. Note: For ScriptableObjects, use manage_scriptable_object."] | None = None,
-    properties: Annotated[dict[str, Any],
+    properties: Annotated[dict[str, Any] | str,
                           "Dictionary of properties for 'create'/'modify'. Keys are property names, values are property values."] | None = None,
     destination: Annotated[str,
                            "Target path for 'duplicate'/'move'."] | None = None,
