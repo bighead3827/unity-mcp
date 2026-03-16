@@ -648,3 +648,15 @@ def test_lookup_no_results():
     assert result["success"] is True
     assert result["data"]["found"] is False
     assert result["data"]["summary"]["missed"] == 1
+
+
+def test_asset_keyword_detection():
+    """Queries with asset keywords trigger project asset search."""
+    from services.tools.unity_docs import _should_search_assets
+    assert _should_search_assets("Mesh2D shader") is True
+    assert _should_search_assets("Lit material") is True
+    assert _should_search_assets("URP 2D lighting") is True
+    assert _should_search_assets("default sprite") is True
+    assert _should_search_assets("Physics.Raycast") is False
+    assert _should_search_assets("NavMeshAgent") is False
+    assert _should_search_assets("execution-order") is False

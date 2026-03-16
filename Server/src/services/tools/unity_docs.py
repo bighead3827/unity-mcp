@@ -445,11 +445,57 @@ async def _get_package_doc(
 # lookup — parallel search across all doc sources
 # ---------------------------------------------------------------------------
 
+# Asset-related keywords that trigger manage_asset search in lookup
+_ASSET_KEYWORDS = {
+    "shader", "shaders", "material", "materials", "mat",
+    "texture", "textures", "tex", "sprite", "sprites",
+    "prefab", "prefabs", "mesh", "model", "font", "fonts",
+    "lit", "unlit", "urp", "hdrp", "2d", "3d",
+}
+
+
+async def _search_assets(ctx: Any, query: str) -> dict[str, Any] | None:
+    """Search Unity assets if ctx has a Unity connection. Returns None if unavailable."""
+    try:
+        from services.tools import get_unity_instance_from_context
+        from transport.unity_transport import send_with_unity_instance
+        from transport.legacy.unity_connection import async_send_command_with_retry
+
+        unity_instance = await get_unity_instance_from_context(ctx)
+        result = await send_with_unity_instance(
+            async_send_command_with_retry,
+            unity_instance,
+            "manage_asset",
+            {"action": "search", "path": ".", "search_pattern": f"*{query}*", "pageSize": 10},
+        )
+        if isinstance(result, dict) and result.get("success"):
+            assets = result.get("data", {}).get("assets", [])
+            if assets:
+                return {
+                    "source": "project_assets",
+                    "found": True,
+                    "assets": [
+                        {"name": a.get("name", ""), "path": a.get("path", ""), "type": a.get("assetType", "")}
+                        for a in assets
+                    ],
+                }
+    except Exception:
+        pass  # No Unity connection or import failure — skip silently
+    return None
+
+
+def _should_search_assets(query: str) -> bool:
+    """Check if the query likely refers to an asset (shader, material, texture, etc.)."""
+    words = set(query.lower().replace("-", " ").replace("_", " ").split())
+    return bool(words & _ASSET_KEYWORDS)
+
+
 async def _lookup_single(
     query: str,
     version: str | None,
     package: str | None,
     pkg_version: str | None,
+    ctx: Any = None,
 ) -> dict[str, Any]:
     """Search all doc sources for a single query."""
     # Split "Physics.Raycast" into class_name + member_name
@@ -474,7 +520,7 @@ async def _lookup_single(
         page = manual_slug
         tasks.append(("package", _get_package_doc(package, page, pkg_version)))
 
-    # Run all in parallel
+    # Run doc tasks in parallel
     labels = [t[0] for t in tasks]
     results = await asyncio.gather(*(t[1] for t in tasks), return_exceptions=True)
 
@@ -488,6 +534,13 @@ async def _lookup_single(
         if result.get("success") and result.get("data", {}).get("found"):
             hits.append({"source": label, **result["data"]})
 
+    # Auto-search project assets for asset-related queries
+    if ctx and _should_search_assets(query):
+        asset_result = await _search_assets(ctx, query)
+        if asset_result:
+            hits.append(asset_result)
+            labels.append("project_assets")
+
     return {"query": query, "hits": hits, "sources_checked": labels}
 
 
@@ -496,13 +549,15 @@ async def _lookup(
     version: str | None,
     package: str | None,
     pkg_version: str | None,
+    ctx: Any = None,
 ) -> dict[str, Any]:
     """Search ScriptReference, Manual, and package docs in parallel.
 
     Supports multiple queries — all run concurrently via asyncio.gather.
+    For asset-related queries (shader, material, etc.), also searches project assets.
     """
     # Run all queries in parallel
-    tasks = [_lookup_single(q, version, package, pkg_version) for q in queries]
+    tasks = [_lookup_single(q, version, package, pkg_version, ctx) for q in queries]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     query_results = []
@@ -614,7 +669,7 @@ async def unity_docs(
             query_list = [query]
         else:
             return {"success": False, "message": "lookup requires query or queries."}
-        return await _lookup(query_list, version, package, pkg_version)
+        return await _lookup(query_list, version, package, pkg_version, ctx)
 
     return {"success": False, "message": "Unreachable"}
 
