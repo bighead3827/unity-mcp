@@ -13,6 +13,7 @@ from services.tools.unity_docs import (
     _build_doc_url,
     _build_property_url,
     _parse_unity_doc_html,
+    _parse_manual_html,
 )
 
 
@@ -373,8 +374,206 @@ def test_get_doc_class_only_no_member_in_response():
 
 
 def test_all_actions_list():
-    assert ALL_ACTIONS == ["get_doc"]
+    assert ALL_ACTIONS == ["get_doc", "get_manual", "get_package_doc"]
 
 
 def test_no_duplicate_actions():
     assert len(ALL_ACTIONS) == len(set(ALL_ACTIONS))
+
+
+def test_all_actions_includes_new():
+    assert "get_manual" in ALL_ACTIONS
+    assert "get_package_doc" in ALL_ACTIONS
+    assert len(ALL_ACTIONS) == 3
+
+
+# ---------------------------------------------------------------------------
+# Manual page HTML samples
+# ---------------------------------------------------------------------------
+
+SAMPLE_MANUAL_HTML = """\
+<h1>Execution Order</h1>
+<h2>Overview</h2>
+<p>Unity calls event functions in a specific order.</p>
+<h2>Initialization</h2>
+<p>Awake is called first, then OnEnable, then Start.</p>
+<pre>void Awake() {
+    Debug.Log("Awake");
+}</pre>
+"""
+
+
+# ---------------------------------------------------------------------------
+# Manual HTML parsing (pure)
+# ---------------------------------------------------------------------------
+
+def test_parse_manual_title():
+    result = _parse_manual_html(SAMPLE_MANUAL_HTML)
+    assert result["title"] == "Execution Order"
+
+
+def test_parse_manual_sections():
+    result = _parse_manual_html(SAMPLE_MANUAL_HTML)
+    assert len(result["sections"]) == 2
+    assert result["sections"][0]["heading"] == "Overview"
+    assert "event functions" in result["sections"][0]["content"]
+    assert result["sections"][1]["heading"] == "Initialization"
+    assert "Awake is called first" in result["sections"][1]["content"]
+
+
+def test_parse_manual_code_examples():
+    result = _parse_manual_html(SAMPLE_MANUAL_HTML)
+    assert len(result["code_examples"]) == 1
+    assert "Debug.Log" in result["code_examples"][0]
+
+
+def test_parse_manual_empty():
+    result = _parse_manual_html("")
+    assert result["title"] == ""
+    assert result["sections"] == []
+    assert result["code_examples"] == []
+
+
+# ---------------------------------------------------------------------------
+# get_manual action tests (mock _fetch_url)
+# ---------------------------------------------------------------------------
+
+def test_get_manual_success():
+    async def mock_fetch(url):
+        return (200, SAMPLE_MANUAL_HTML)
+
+    with patch("services.tools.unity_docs._fetch_url", side_effect=mock_fetch):
+        result = asyncio.run(
+            unity_docs(SimpleNamespace(), action="get_manual", slug="execution-order")
+        )
+    assert result["success"] is True
+    assert result["data"]["found"] is True
+    assert result["data"]["title"] == "Execution Order"
+    assert "Manual/execution-order" in result["data"]["url"]
+    assert len(result["data"]["sections"]) == 2
+    assert len(result["data"]["code_examples"]) == 1
+
+
+def test_get_manual_requires_slug():
+    result = asyncio.run(unity_docs(SimpleNamespace(), action="get_manual"))
+    assert result["success"] is False
+    assert "slug" in result["message"]
+
+
+def test_get_manual_404():
+    async def mock_fetch(url):
+        return (404, "")
+
+    with patch("services.tools.unity_docs._fetch_url", side_effect=mock_fetch):
+        result = asyncio.run(
+            unity_docs(SimpleNamespace(), action="get_manual", slug="nonexistent-page")
+        )
+    assert result["success"] is True
+    assert result["data"]["found"] is False
+
+
+def test_get_manual_version_fallback():
+    """Versioned URL 404s, unversioned succeeds."""
+    async def mock_fetch(url):
+        if "/6000.0/" in url:
+            return (404, "")
+        return (200, SAMPLE_MANUAL_HTML)
+
+    with patch("services.tools.unity_docs._fetch_url", side_effect=mock_fetch):
+        result = asyncio.run(
+            unity_docs(
+                SimpleNamespace(),
+                action="get_manual",
+                slug="execution-order",
+                version="6000.0.38f1",
+            )
+        )
+    assert result["success"] is True
+    assert result["data"]["found"] is True
+    assert "/6000.0/" not in result["data"]["url"]
+
+
+# ---------------------------------------------------------------------------
+# get_package_doc action tests (mock _fetch_url_full)
+# ---------------------------------------------------------------------------
+
+def test_get_package_doc_success():
+    async def mock_fetch_full(url):
+        final = "https://docs.unity3d.com/6000.0/Documentation/Manual/urp/2d-index.html"
+        return (200, SAMPLE_MANUAL_HTML, final)
+
+    with patch("services.tools.unity_docs._fetch_url_full", side_effect=mock_fetch_full):
+        result = asyncio.run(
+            unity_docs(
+                SimpleNamespace(),
+                action="get_package_doc",
+                package="com.unity.render-pipelines.universal",
+                page="2d-index",
+                pkg_version="17.0",
+            )
+        )
+    assert result["success"] is True
+    assert result["data"]["found"] is True
+    assert result["data"]["package"] == "com.unity.render-pipelines.universal"
+    assert result["data"]["page"] == "2d-index"
+    assert result["data"]["title"] == "Execution Order"
+    assert len(result["data"]["sections"]) == 2
+    assert len(result["data"]["code_examples"]) == 1
+    # Should use the final (redirected) URL
+    assert "Manual/urp/2d-index" in result["data"]["url"]
+
+
+def test_get_package_doc_requires_all_params():
+    # Missing package
+    result = asyncio.run(
+        unity_docs(
+            SimpleNamespace(),
+            action="get_package_doc",
+            page="index",
+            pkg_version="17.0",
+        )
+    )
+    assert result["success"] is False
+    assert "package" in result["message"]
+
+    # Missing page
+    result = asyncio.run(
+        unity_docs(
+            SimpleNamespace(),
+            action="get_package_doc",
+            package="com.unity.render-pipelines.universal",
+            pkg_version="17.0",
+        )
+    )
+    assert result["success"] is False
+    assert "page" in result["message"]
+
+    # Missing pkg_version
+    result = asyncio.run(
+        unity_docs(
+            SimpleNamespace(),
+            action="get_package_doc",
+            package="com.unity.render-pipelines.universal",
+            page="index",
+        )
+    )
+    assert result["success"] is False
+    assert "pkg_version" in result["message"]
+
+
+def test_get_package_doc_404():
+    async def mock_fetch_full(url):
+        return (404, "", url)
+
+    with patch("services.tools.unity_docs._fetch_url_full", side_effect=mock_fetch_full):
+        result = asyncio.run(
+            unity_docs(
+                SimpleNamespace(),
+                action="get_package_doc",
+                package="com.unity.fake-package",
+                page="index",
+                pkg_version="1.0",
+            )
+        )
+    assert result["success"] is True
+    assert result["data"]["found"] is False

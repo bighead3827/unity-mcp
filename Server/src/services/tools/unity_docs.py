@@ -10,7 +10,7 @@ from mcp.types import ToolAnnotations
 
 from services.registry import mcp_for_unity_tool
 
-ALL_ACTIONS = ["get_doc"]
+ALL_ACTIONS = ["get_doc", "get_manual", "get_package_doc"]
 
 
 # ---------------------------------------------------------------------------
@@ -77,15 +77,25 @@ async def _fetch_url(url: str) -> tuple[int, str]:
 
     Runs urllib in an executor to avoid blocking the event loop.
     """
+    status, body, _final = await _fetch_url_full(url)
+    return (status, body)
+
+
+async def _fetch_url_full(url: str) -> tuple[int, str, str]:
+    """Fetch a URL and return (status_code, body_text, final_url).
+
+    Like _fetch_url but also returns the final URL after any redirects.
+    """
     loop = asyncio.get_running_loop()
 
-    def _do_fetch() -> tuple[int, str]:
+    def _do_fetch() -> tuple[int, str, str]:
         req = Request(url, headers={"User-Agent": "MCPForUnity/1.0"})
         try:
             with urlopen(req, timeout=10) as resp:
-                return (resp.status, resp.read().decode("utf-8", errors="replace"))
+                body = resp.read().decode("utf-8", errors="replace")
+                return (resp.status, body, resp.url)
         except HTTPError as e:
-            return (e.code, "")
+            return (e.code, "", url)
         except URLError as e:
             raise ConnectionError(f"Cannot reach {url}: {e}") from e
 
@@ -237,6 +247,201 @@ def _parse_unity_doc_html(html: str) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# Manual / package doc HTML parser
+# ---------------------------------------------------------------------------
+
+class _ManualPageParser(HTMLParser):
+    """Extracts content from Unity Manual / package doc HTML pages.
+
+    These are article-style pages with h1 title, h2/h3 section headings,
+    p paragraphs, and pre code blocks — simpler than ScriptReference.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._in_h1 = False
+        self._in_heading = False
+        self._in_p = False
+        self._in_pre = False
+        self._current_text: list[str] = []
+        self._current_heading: str | None = None
+        self._content_parts: list[str] = []
+
+        # Collected results
+        self.title = ""
+        self.sections: list[dict[str, str]] = []
+        self.code_examples: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == "h1" and not self.title:
+            self._in_h1 = True
+            self._current_text = []
+        elif tag in ("h2", "h3"):
+            # Flush previous section before starting a new heading
+            self._flush_section()
+            self._in_heading = True
+            self._current_text = []
+        elif tag == "p":
+            self._in_p = True
+            self._current_text = []
+        elif tag == "pre":
+            self._in_pre = True
+            self._current_text = []
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "h1" and self._in_h1:
+            self._in_h1 = False
+            self.title = "".join(self._current_text).strip()
+
+        elif tag in ("h2", "h3") and self._in_heading:
+            self._in_heading = False
+            self._current_heading = "".join(self._current_text).strip()
+            self._content_parts = []
+
+        elif tag == "p" and self._in_p:
+            self._in_p = False
+            text = "".join(self._current_text).strip()
+            if text:
+                self._content_parts.append(text)
+
+        elif tag == "pre" and self._in_pre:
+            self._in_pre = False
+            code = "".join(self._current_text).strip()
+            if code:
+                self.code_examples.append(code)
+
+    def handle_data(self, data: str) -> None:
+        if self._in_h1 or self._in_heading or self._in_p or self._in_pre:
+            self._current_text.append(data)
+
+    def _flush_section(self) -> None:
+        """Flush the current heading + accumulated content as a section."""
+        if self._current_heading is not None:
+            content = "\n".join(self._content_parts)
+            self.sections.append({"heading": self._current_heading, "content": content})
+            self._current_heading = None
+            self._content_parts = []
+
+    def close(self) -> None:
+        self._flush_section()
+        super().close()
+
+
+def _parse_manual_html(html: str) -> dict[str, Any]:
+    """Parse Unity Manual or package doc HTML into structured data."""
+    parser = _ManualPageParser()
+    parser.feed(html)
+    parser.close()
+    return {
+        "title": parser.title,
+        "sections": parser.sections,
+        "code_examples": parser.code_examples,
+    }
+
+
+# ---------------------------------------------------------------------------
+# get_manual / get_package_doc helpers
+# ---------------------------------------------------------------------------
+
+async def _get_manual(slug: str, version: str | None) -> dict[str, Any]:
+    """Fetch a Unity Manual page by slug."""
+    extracted_version = _extract_version(version)
+
+    if extracted_version:
+        url = f"https://docs.unity3d.com/{extracted_version}/Documentation/Manual/{slug}.html"
+    else:
+        url = f"https://docs.unity3d.com/Manual/{slug}.html"
+
+    try:
+        status, body = await _fetch_url(url)
+
+        # Version fallback: try unversioned if versioned 404s
+        if status == 404 and extracted_version:
+            fallback_url = f"https://docs.unity3d.com/Manual/{slug}.html"
+            status, body = await _fetch_url(fallback_url)
+            if status == 200:
+                url = fallback_url
+
+        if status == 404:
+            return {
+                "success": True,
+                "data": {
+                    "found": False,
+                    "slug": slug,
+                    "suggestion": (
+                        "Check the slug matches the Manual page URL path. "
+                        "Common slugs: 'execution-order', 'urp/urp-introduction', "
+                        "'UIE-USS-Properties-Reference'."
+                    ),
+                },
+            }
+
+        parsed = _parse_manual_html(body)
+        return {
+            "success": True,
+            "data": {
+                "found": True,
+                "url": url,
+                "title": parsed["title"],
+                "sections": parsed["sections"],
+                "code_examples": parsed["code_examples"],
+            },
+        }
+
+    except ConnectionError as e:
+        return {
+            "success": False,
+            "message": f"Could not reach docs.unity3d.com: {e}",
+        }
+
+
+async def _get_package_doc(
+    package: str,
+    page: str,
+    pkg_version: str,
+) -> dict[str, Any]:
+    """Fetch a Unity package documentation page."""
+    url = f"https://docs.unity3d.com/Packages/{package}@{pkg_version}/manual/{page}.html"
+
+    try:
+        status, body, final_url = await _fetch_url_full(url)
+
+        if status == 404:
+            return {
+                "success": True,
+                "data": {
+                    "found": False,
+                    "package": package,
+                    "page": page,
+                    "suggestion": (
+                        "Check that the package name, version, and page slug are correct. "
+                        "Common pages: 'index', 'installation', 'whats-new'."
+                    ),
+                },
+            }
+
+        parsed = _parse_manual_html(body)
+        return {
+            "success": True,
+            "data": {
+                "found": True,
+                "url": final_url,
+                "package": package,
+                "page": page,
+                "title": parsed["title"],
+                "sections": parsed["sections"],
+                "code_examples": parsed["code_examples"],
+            },
+        }
+
+    except ConnectionError as e:
+        return {
+            "success": False,
+            "message": f"Could not reach docs.unity3d.com: {e}",
+        }
+
+
+# ---------------------------------------------------------------------------
 # MCP tool
 # ---------------------------------------------------------------------------
 
@@ -244,13 +449,17 @@ def _parse_unity_doc_html(html: str) -> dict[str, Any]:
     unity_target="unity_reflect",
     group="docs",
     description=(
-        "Fetch official Unity documentation for a class or member. "
+        "Fetch official Unity documentation from docs.unity3d.com. "
         "Returns descriptions, parameter details, code examples, and caveats. "
-        "Use after unity_reflect confirms a type exists, when you need richer "
-        "context about behavior or usage patterns.\n\n"
+        "Use after unity_reflect confirms a type exists, to get usage patterns, "
+        "gotchas, and code examples before writing implementation code.\n\n"
         "Actions:\n"
-        "- get_doc: Fetch docs for a class or member. Requires class_name. "
-        "Optional member_name, version."
+        "- get_doc: Fetch ScriptReference docs for a class or member. Requires class_name. "
+        "Optional member_name, version.\n"
+        "- get_manual: Fetch a Unity Manual page. Requires slug (e.g., 'execution-order', "
+        "'urp/urp-introduction'). Optional version.\n"
+        "- get_package_doc: Fetch package documentation. Requires package, page, pkg_version "
+        "(e.g., package='com.unity.render-pipelines.universal', page='2d-index', pkg_version='17.0')."
     ),
     annotations=ToolAnnotations(
         title="Unity Docs",
@@ -264,6 +473,10 @@ async def unity_docs(
     class_name: Annotated[Optional[str], "Unity class name (e.g. 'Physics', 'Transform')."] = None,
     member_name: Annotated[Optional[str], "Method or property name to look up."] = None,
     version: Annotated[Optional[str], "Unity version (e.g. '6000.0.38f1'). Auto-extracted."] = None,
+    slug: Annotated[Optional[str], "Manual page slug (e.g., 'execution-order')."] = None,
+    package: Annotated[Optional[str], "Package name (e.g., 'com.unity.render-pipelines.universal')."] = None,
+    page: Annotated[Optional[str], "Package doc page (e.g., 'index', '2d-index')."] = None,
+    pkg_version: Annotated[Optional[str], "Package version major.minor (e.g., '17.0')."] = None,
 ) -> dict[str, Any]:
     action_lower = action.lower()
     if action_lower not in ALL_ACTIONS:
@@ -279,6 +492,19 @@ async def unity_docs(
                 "message": "get_doc requires class_name.",
             }
         return await _get_doc(class_name, member_name, version)
+
+    if action_lower == "get_manual":
+        if not slug:
+            return {"success": False, "message": "get_manual requires slug."}
+        return await _get_manual(slug, version)
+
+    if action_lower == "get_package_doc":
+        if not package or not page or not pkg_version:
+            return {
+                "success": False,
+                "message": "get_package_doc requires package, page, and pkg_version.",
+            }
+        return await _get_package_doc(package, page, pkg_version)
 
     return {"success": False, "message": "Unreachable"}
 
