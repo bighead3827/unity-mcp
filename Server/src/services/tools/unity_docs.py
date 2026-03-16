@@ -10,7 +10,7 @@ from mcp.types import ToolAnnotations
 
 from services.registry import mcp_for_unity_tool
 
-ALL_ACTIONS = ["get_doc", "get_manual", "get_package_doc"]
+ALL_ACTIONS = ["get_doc", "get_manual", "get_package_doc", "lookup"]
 
 
 # ---------------------------------------------------------------------------
@@ -442,6 +442,89 @@ async def _get_package_doc(
 
 
 # ---------------------------------------------------------------------------
+# lookup — parallel search across all doc sources
+# ---------------------------------------------------------------------------
+
+async def _lookup(
+    query: str,
+    version: str | None,
+    package: str | None,
+    pkg_version: str | None,
+) -> dict[str, Any]:
+    """Search ScriptReference, Manual, and package docs in parallel.
+
+    Tries the query as:
+    1. ScriptReference class name (e.g., "Physics" or "Physics.Raycast")
+    2. Manual page slug (e.g., "execution-order")
+    3. Package doc page (if package + pkg_version provided)
+    """
+    extracted_version = _extract_version(version)
+
+    # Split "Physics.Raycast" into class_name + member_name
+    class_name = query
+    member_name = None
+    if "." in query and not query.startswith("com."):
+        parts = query.rsplit(".", 1)
+        class_name, member_name = parts[0], parts[1]
+
+    # Build tasks
+    tasks: list[tuple[str, Any]] = []
+
+    # ScriptReference
+    tasks.append(("script_ref", _get_doc(class_name, member_name, version)))
+
+    # Manual — try query as slug (replace spaces with hyphens, lowercase)
+    manual_slug = query.lower().replace(" ", "-").replace("_", "-")
+    tasks.append(("manual", _get_manual(manual_slug, version)))
+
+    # Package docs (if package info provided)
+    if package and pkg_version:
+        page = manual_slug
+        tasks.append(("package", _get_package_doc(package, page, pkg_version)))
+
+    # Run all in parallel
+    labels = [t[0] for t in tasks]
+    results = await asyncio.gather(*(t[1] for t in tasks), return_exceptions=True)
+
+    # Collect successful hits
+    hits = []
+    for label, result in zip(labels, results):
+        if isinstance(result, Exception):
+            continue
+        if not isinstance(result, dict):
+            continue
+        if result.get("success") and result.get("data", {}).get("found"):
+            hits.append({"source": label, **result["data"]})
+
+    if hits:
+        return {
+            "success": True,
+            "data": {
+                "found": True,
+                "query": query,
+                "results": hits,
+                "sources_checked": labels,
+            },
+        }
+
+    return {
+        "success": True,
+        "data": {
+            "found": False,
+            "query": query,
+            "sources_checked": labels,
+            "suggestion": (
+                "No results found. Try:\n"
+                "- get_doc with exact class name (e.g., 'Physics', 'NavMeshAgent')\n"
+                "- get_manual with the correct page slug from the URL\n"
+                "- get_package_doc with package name, page, and version\n"
+                "- manage_asset(action='search') for shaders, materials, prefabs"
+            ),
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
 # MCP tool
 # ---------------------------------------------------------------------------
 
@@ -459,7 +542,9 @@ async def _get_package_doc(
         "- get_manual: Fetch a Unity Manual page. Requires slug (e.g., 'execution-order', "
         "'urp/urp-introduction'). Optional version.\n"
         "- get_package_doc: Fetch package documentation. Requires package, page, pkg_version "
-        "(e.g., package='com.unity.render-pipelines.universal', page='2d-index', pkg_version='17.0')."
+        "(e.g., package='com.unity.render-pipelines.universal', page='2d-index', pkg_version='17.0').\n"
+        "- lookup: Search all doc sources in parallel (ScriptReference + Manual + package docs). "
+        "Requires query (class name, topic, or slug). Optional package + pkg_version to also search package docs."
     ),
     annotations=ToolAnnotations(
         title="Unity Docs",
@@ -477,6 +562,7 @@ async def unity_docs(
     package: Annotated[Optional[str], "Package name (e.g., 'com.unity.render-pipelines.universal')."] = None,
     page: Annotated[Optional[str], "Package doc page (e.g., 'index', '2d-index')."] = None,
     pkg_version: Annotated[Optional[str], "Package version major.minor (e.g., '17.0')."] = None,
+    query: Annotated[Optional[str], "Search query for lookup action (class name, topic, or slug)."] = None,
 ) -> dict[str, Any]:
     action_lower = action.lower()
     if action_lower not in ALL_ACTIONS:
@@ -505,6 +591,11 @@ async def unity_docs(
                 "message": "get_package_doc requires package, page, and pkg_version.",
             }
         return await _get_package_doc(package, page, pkg_version)
+
+    if action_lower == "lookup":
+        if not query:
+            return {"success": False, "message": "lookup requires query."}
+        return await _lookup(query, version, package, pkg_version)
 
     return {"success": False, "message": "Unreachable"}
 

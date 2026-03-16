@@ -374,7 +374,7 @@ def test_get_doc_class_only_no_member_in_response():
 
 
 def test_all_actions_list():
-    assert ALL_ACTIONS == ["get_doc", "get_manual", "get_package_doc"]
+    assert ALL_ACTIONS == ["get_doc", "get_manual", "get_package_doc", "lookup"]
 
 
 def test_no_duplicate_actions():
@@ -384,7 +384,8 @@ def test_no_duplicate_actions():
 def test_all_actions_includes_new():
     assert "get_manual" in ALL_ACTIONS
     assert "get_package_doc" in ALL_ACTIONS
-    assert len(ALL_ACTIONS) == 3
+    assert "lookup" in ALL_ACTIONS
+    assert len(ALL_ACTIONS) == 4
 
 
 # ---------------------------------------------------------------------------
@@ -577,3 +578,89 @@ def test_get_package_doc_404():
         )
     assert result["success"] is True
     assert result["data"]["found"] is False
+
+
+# ---------------------------------------------------------------------------
+# lookup action tests
+# ---------------------------------------------------------------------------
+
+def test_lookup_requires_query():
+    result = asyncio.run(unity_docs(SimpleNamespace(), action="lookup"))
+    assert result["success"] is False
+    assert "query" in result["message"]
+
+
+def test_lookup_finds_scriptref():
+    """lookup with a class name should find it via ScriptReference."""
+    async def mock_fetch(url):
+        if "ScriptReference/Physics" in url:
+            return (200, SAMPLE_DOC_HTML)
+        return (404, "")
+
+    async def mock_fetch_full(url):
+        return (404, "", url)
+
+    with patch("services.tools.unity_docs._fetch_url", side_effect=mock_fetch), \
+         patch("services.tools.unity_docs._fetch_url_full", side_effect=mock_fetch_full):
+        result = asyncio.run(
+            unity_docs(SimpleNamespace(), action="lookup", query="Physics")
+        )
+    assert result["success"] is True
+    assert result["data"]["found"] is True
+    assert any(r["source"] == "script_ref" for r in result["data"]["results"])
+
+
+def test_lookup_finds_manual():
+    """lookup with a slug should find it via Manual."""
+    async def mock_fetch(url):
+        if "Manual/execution-order" in url:
+            return (200, SAMPLE_MANUAL_HTML)
+        return (404, "")
+
+    async def mock_fetch_full(url):
+        return (404, "", url)
+
+    with patch("services.tools.unity_docs._fetch_url", side_effect=mock_fetch), \
+         patch("services.tools.unity_docs._fetch_url_full", side_effect=mock_fetch_full):
+        result = asyncio.run(
+            unity_docs(SimpleNamespace(), action="lookup", query="execution-order")
+        )
+    assert result["success"] is True
+    assert result["data"]["found"] is True
+    assert any(r["source"] == "manual" for r in result["data"]["results"])
+
+
+def test_lookup_no_results():
+    """lookup with garbage returns found=False with suggestions."""
+    async def mock_fetch(url):
+        return (404, "")
+
+    async def mock_fetch_full(url):
+        return (404, "", url)
+
+    with patch("services.tools.unity_docs._fetch_url", side_effect=mock_fetch), \
+         patch("services.tools.unity_docs._fetch_url_full", side_effect=mock_fetch_full):
+        result = asyncio.run(
+            unity_docs(SimpleNamespace(), action="lookup", query="zzz-nonexistent-xyz")
+        )
+    assert result["success"] is True
+    assert result["data"]["found"] is False
+    assert "suggestion" in result["data"]
+
+
+def test_lookup_multiple_hits():
+    """lookup can return results from multiple sources."""
+    async def mock_fetch(url):
+        return (200, SAMPLE_DOC_HTML if "ScriptReference" in url else SAMPLE_MANUAL_HTML)
+
+    async def mock_fetch_full(url):
+        return (404, "", url)
+
+    with patch("services.tools.unity_docs._fetch_url", side_effect=mock_fetch), \
+         patch("services.tools.unity_docs._fetch_url_full", side_effect=mock_fetch_full):
+        result = asyncio.run(
+            unity_docs(SimpleNamespace(), action="lookup", query="Physics")
+        )
+    assert result["data"]["found"] is True
+    sources = [r["source"] for r in result["data"]["results"]]
+    assert len(sources) >= 2
