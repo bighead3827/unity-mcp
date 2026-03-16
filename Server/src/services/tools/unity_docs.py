@@ -130,11 +130,17 @@ class _UnityDocParser(HTMLParser):
             self._in_subsection = True
             self._subsection_title = None
 
-        if tag == "div" and "signature" in classes:
+        if tag == "div" and ("signature" in classes or "signature-CS" in classes):
             self._in_signature = True
 
-        if tag == "h2" and self._in_subsection:
+        # Unity docs use h3 (not h2) for subsection titles
+        if tag in ("h2", "h3") and self._in_subsection:
             self._in_h2 = True
+            self._current_text = []
+
+        # Signatures: capture text inside signature-CS div (no <pre> in modern docs)
+        if tag == "div" and "signature-CS" in classes:
+            self._in_signature = True
             self._current_text = []
 
         if tag == "pre":
@@ -161,7 +167,7 @@ class _UnityDocParser(HTMLParser):
             self._current_param = {}
 
     def handle_endtag(self, tag: str) -> None:
-        if tag == "h2" and self._in_h2:
+        if tag in ("h2", "h3") and self._in_h2:
             self._in_h2 = False
             self._subsection_title = "".join(self._current_text).strip()
 
@@ -174,6 +180,13 @@ class _UnityDocParser(HTMLParser):
                 self.signatures.append("".join(self._current_text).strip())
 
         if tag == "div" and self._in_signature:
+            # Capture inline signature text (modern Unity docs don't use <pre>)
+            text = " ".join("".join(self._current_text).split()).strip()
+            # Remove "Declaration" prefix that appears inside the sig block
+            if text.startswith("Declaration"):
+                text = text[len("Declaration"):].strip()
+            if text:
+                self.signatures.append(text)
             self._in_signature = False
 
         if tag == "p" and self._in_p:
@@ -187,9 +200,10 @@ class _UnityDocParser(HTMLParser):
         if tag == "td" and self._in_td:
             self._in_td = False
             text = "".join(self._current_text).strip()
-            if self._td_class and "name-collumn" in self._td_class:
+            # Support both old ("name-collumn"/"desc-collumn") and new ("name lbl"/"desc") class names
+            if self._td_class and ("name-collumn" in self._td_class or "name" in self._td_class.split()):
                 self._current_param["name"] = text
-            elif self._td_class and "desc-collumn" in self._td_class:
+            elif self._td_class and ("desc-collumn" in self._td_class or "desc" in self._td_class.split()):
                 self._current_param["description"] = text
 
         if tag == "tr" and self._in_param_table:
@@ -204,7 +218,7 @@ class _UnityDocParser(HTMLParser):
             self._in_subsection = False
 
     def handle_data(self, data: str) -> None:
-        if self._in_h2 or self._in_pre or self._in_code_example or self._in_p or self._in_td:
+        if self._in_h2 or self._in_pre or self._in_code_example or self._in_p or self._in_td or self._in_signature:
             self._current_text.append(data)
 
 

@@ -56,6 +56,43 @@ SAMPLE_DOC_HTML = """\
 </div>
 """
 
+# Modern Unity docs use h3, "signature-CS", "name lbl", "desc" classes
+SAMPLE_DOC_HTML_MODERN = """\
+<div class="section">
+  <div class="subsection">
+    <div class="signature">
+      <div class="signature-CS sig-block">
+        <h2>Declaration</h2>public static bool Raycast(Vector3 origin, Vector3 direction, float maxDistance = Mathf.Infinity);
+      </div>
+    </div>
+  </div>
+  <div class="subsection">
+    <h3>Parameters</h3>
+    <table class="list">
+      <tr>
+        <td class="name lbl">origin</td>
+        <td class="desc">The starting point of the ray in world coordinates.</td>
+      </tr>
+      <tr>
+        <td class="name lbl">direction</td>
+        <td class="desc">The direction of the ray.</td>
+      </tr>
+    </table>
+  </div>
+  <div class="subsection">
+    <h3>Returns</h3>
+    <p><strong>bool</strong> Returns true if the ray intersects with a Collider.</p>
+  </div>
+  <div class="subsection">
+    <h3>Description</h3>
+    <p>Casts a ray against all colliders in the Scene.</p>
+  </div>
+  <pre class="codeExampleCS">void Update() {
+    Physics.Raycast(transform.position, Vector3.forward, 10f);
+}</pre>
+</div>
+"""
+
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -165,6 +202,39 @@ def test_parse_empty_html():
     assert result["returns"] == ""
     assert result["examples"] == []
     assert result["see_also"] == []
+
+
+# ---------------------------------------------------------------------------
+# Modern HTML format (h3 headings, "name lbl", "desc", "signature-CS")
+# ---------------------------------------------------------------------------
+
+def test_parse_modern_description():
+    result = _parse_unity_doc_html(SAMPLE_DOC_HTML_MODERN)
+    assert "Casts a ray" in result["description"]
+
+
+def test_parse_modern_signatures():
+    result = _parse_unity_doc_html(SAMPLE_DOC_HTML_MODERN)
+    assert len(result["signatures"]) >= 1
+    assert "Raycast" in result["signatures"][0]
+
+
+def test_parse_modern_parameters():
+    result = _parse_unity_doc_html(SAMPLE_DOC_HTML_MODERN)
+    assert len(result["parameters"]) == 2
+    assert result["parameters"][0]["name"] == "origin"
+    assert "starting point" in result["parameters"][0]["description"]
+
+
+def test_parse_modern_returns():
+    result = _parse_unity_doc_html(SAMPLE_DOC_HTML_MODERN)
+    assert "bool" in result["returns"]
+
+
+def test_parse_modern_examples():
+    result = _parse_unity_doc_html(SAMPLE_DOC_HTML_MODERN)
+    assert len(result["examples"]) >= 1
+    assert "Raycast" in result["examples"][0]
 
 
 # ---------------------------------------------------------------------------
