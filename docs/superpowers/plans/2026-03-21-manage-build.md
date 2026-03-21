@@ -77,7 +77,7 @@ In `MCPForUnity/Editor/Tools/McpForUnityToolAttribute.cs`, after the `PollAction
 public int MaxPollSeconds { get; set; } = 0;
 ```
 
-- [ ] **Step 2: Add `MaxPollSeconds` to `ToolInfo`**
+- [ ] **Step 2: Add `MaxPollSeconds` to `ToolMetadata`**
 
 In `MCPForUnity/Editor/Services/IToolDiscoveryService.cs`, after `PollAction` (line 19), add:
 
@@ -520,7 +520,7 @@ namespace MCPForUnity.Editor.Tools.Build
                     return new { property, value = PlayerSettings.GetScriptingDefineSymbols(namedTarget) };
                 case "architecture":
                     var arch = PlayerSettings.GetArchitecture(namedTarget);
-                    string archName = arch switch { 1 => "arm64", 2 => "universal", _ => "default" };
+                    string archName = arch switch { 1 => "arm64", 2 => "universal", _ => "x86_64" };
                     return new { property, value = archName, raw = arch };
                 default:
                     return null; // Caller should return ErrorResponse
@@ -1264,11 +1264,10 @@ namespace MCPForUnity.Editor.Tools
                     var child = batch.Children[index];
                     var group = BuildTargetMapping.GetTargetGroup(child.Target);
 
-                    // Switch platform if needed
+                    // Switch platform if needed (SwitchActiveBuildTarget requires BuildTargetGroup)
                     if (EditorUserBuildSettings.activeBuildTarget != child.Target)
                     {
-                        var namedTarget = BuildTargetMapping.GetNamedBuildTarget(child.Target);
-                        EditorUserBuildSettings.SwitchActiveBuildTarget(namedTarget, child.Target);
+                        EditorUserBuildSettings.SwitchActiveBuildTarget(group, child.Target);
                     }
 
                     int subtarget = (int)StandaloneBuildSubtarget.Player;
