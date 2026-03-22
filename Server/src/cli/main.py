@@ -267,6 +267,7 @@ def register_commands():
         ("cli.commands.batch", "batch"),
         ("cli.commands.texture", "texture"),
         ("cli.commands.probuilder", "probuilder"),
+        ("cli.commands.build", "build"),
         ("cli.commands.camera", "camera"),
         ("cli.commands.graphics", "graphics"),
         ("cli.commands.packages", "packages"),
