@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Build;
 
@@ -84,7 +85,7 @@ namespace MCPForUnity.Editor.Tools.Build
             }
         }
 
-        public static readonly string[] ValidProperties =
+        public static readonly IReadOnlyList<string> ValidProperties = new[]
         {
             "product_name", "company_name", "version", "bundle_id",
             "scripting_backend", "defines", "architecture"

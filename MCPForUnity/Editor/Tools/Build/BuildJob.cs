@@ -90,7 +90,8 @@ namespace MCPForUnity.Editor.Tools.Build
 
             foreach (var child in Children)
             {
-                if (child.State == BuildJobState.Succeeded || child.State == BuildJobState.Failed)
+                if (child.State == BuildJobState.Succeeded || child.State == BuildJobState.Failed
+                    || child.State == BuildJobState.Skipped || child.State == BuildJobState.Cancelled)
                     completed++;
                 if (child.State == BuildJobState.Building)
                     currentBuild = child.JobId;
@@ -163,12 +164,26 @@ namespace MCPForUnity.Editor.Tools.Build
                     toRemove.Add(kvp.Key);
             }
 
-            // Keep the most recent ones by removing oldest first
             foreach (var key in toRemove)
             {
                 _buildJobs.Remove(key);
                 if (_buildJobs.Count <= MaxRetainedJobs / 2) break;
             }
+
+            // Also prune batch jobs whose children are all terminal
+            var batchesToRemove = new List<string>();
+            foreach (var kvp in _batchJobs)
+            {
+                var batch = kvp.Value;
+                if (batch.State == BuildJobState.Building || batch.State == BuildJobState.Pending)
+                    continue;
+                // Remove child references that were already pruned from _buildJobs
+                batch.Children.RemoveAll(c => !_buildJobs.ContainsKey(c.JobId));
+                if (batch.Children.Count == 0)
+                    batchesToRemove.Add(kvp.Key);
+            }
+            foreach (var key in batchesToRemove)
+                _batchJobs.Remove(key);
         }
     }
 }
