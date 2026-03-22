@@ -82,6 +82,10 @@
       "description": "Create, modify, search, and organize Unity assets"
     },
     {
+      "name": "manage_build",
+      "description": "Manage player builds: trigger builds, switch platforms, configure settings, batch builds"
+    },
+    {
       "name": "manage_components",
       "description": "Add, remove, and configure GameObject components"
     },
