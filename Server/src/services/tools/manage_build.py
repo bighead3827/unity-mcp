@@ -78,6 +78,9 @@ async def manage_build(
     coerced_development = coerce_bool(development, default=None)
     coerced_activate = coerce_bool(activate, default=None)
     parsed_scenes = parse_json_payload(scenes) if scenes else None
+    # Support comma-separated scene paths as an alternative to JSON array
+    if isinstance(parsed_scenes, str):
+        parsed_scenes = [s.strip() for s in parsed_scenes.split(",") if s.strip()]
     parsed_options = parse_json_payload(options) if options else None
     parsed_targets = parse_json_payload(targets) if targets else None
     parsed_profiles = parse_json_payload(profiles) if profiles else None

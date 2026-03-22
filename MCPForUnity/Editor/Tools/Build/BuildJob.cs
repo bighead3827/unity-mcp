@@ -113,8 +113,9 @@ namespace MCPForUnity.Editor.Tools.Build
     /// Static store for all build jobs. Note: static fields are cleared on domain reload,
     /// but this is acceptable because BuildPipeline.BuildPlayer blocks the editor thread,
     /// preventing domain reload during a build. For batch builds with platform switches,
-    /// the batch scheduling happens after each build completes (via delayCall), so state
-    /// is maintained within a single domain lifecycle.
+    /// the batch scheduling happens after each build completes via EditorApplication.update
+    /// callbacks (ScheduleOnNextUpdate / WaitForCompletion), so state is maintained within
+    /// a single domain lifecycle.
     /// </summary>
     public static class BuildJobStore
     {

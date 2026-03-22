@@ -146,30 +146,38 @@ namespace MCPForUnity.Editor.Tools
 
             if (string.IsNullOrEmpty(jobId))
             {
-                // Return last build report
+                // Prefer active (pending/building) job — needed for polling middleware
                 var last = BuildJobStore.LastCompletedJob;
-                if (last == null)
+                if (last != null && (last.State == BuildJobState.Building || last.State == BuildJobState.Pending))
                 {
-#if UNITY_6000_0_OR_NEWER
-                    var latestReport = BuildReport.GetLatestReport();
-                    if (latestReport != null)
-                    {
-                        var s = latestReport.summary;
-                        return new SuccessResponse("Last build report from Unity.", new
-                        {
-                            result = s.result.ToString().ToLowerInvariant(),
-                            platform = s.platform.ToString(),
-                            output_path = s.outputPath,
-                            total_size_mb = Math.Round(s.totalSize / (1024.0 * 1024.0), 2),
-                            duration_seconds = s.totalTime.TotalSeconds,
-                            errors = s.totalErrors,
-                            warnings = s.totalWarnings
-                        });
-                    }
-#endif
-                    return new ErrorResponse("No build jobs found.");
+                    return new PendingResponse(
+                        $"Build {last.State.ToString().ToLowerInvariant()}...",
+                        pollIntervalSeconds: 5.0,
+                        data: last.ToStatusResponse()
+                    );
                 }
-                return new SuccessResponse("Last completed build.", last.ToStatusResponse());
+
+                if (last != null)
+                    return new SuccessResponse("Last completed build.", last.ToStatusResponse());
+
+#if UNITY_6000_0_OR_NEWER
+                var latestReport = BuildReport.GetLatestReport();
+                if (latestReport != null)
+                {
+                    var s = latestReport.summary;
+                    return new SuccessResponse("Last build report from Unity.", new
+                    {
+                        result = s.result.ToString().ToLowerInvariant(),
+                        platform = s.platform.ToString(),
+                        output_path = s.outputPath,
+                        total_size_mb = Math.Round(s.totalSize / (1024.0 * 1024.0), 2),
+                        duration_seconds = s.totalTime.TotalSeconds,
+                        errors = s.totalErrors,
+                        warnings = s.totalWarnings
+                    });
+                }
+#endif
+                return new ErrorResponse("No build jobs found.");
             }
 
             // Check batch jobs first
@@ -230,16 +238,21 @@ namespace MCPForUnity.Editor.Tools
             string previousTarget = EditorUserBuildSettings.activeBuildTarget.ToString();
 
             string subtargetStr = p.Get("subtarget");
-            if (!string.IsNullOrEmpty(subtargetStr) && subtargetStr.ToLowerInvariant() == "server")
-                EditorUserBuildSettings.standaloneBuildSubtarget = StandaloneBuildSubtarget.Server;
+            if (!string.IsNullOrEmpty(subtargetStr))
+            {
+                string subtargetLower = subtargetStr.ToLowerInvariant();
+                if (subtargetLower == "server")
+                    EditorUserBuildSettings.standaloneBuildSubtarget = StandaloneBuildSubtarget.Server;
+                else if (subtargetLower == "player")
+                    EditorUserBuildSettings.standaloneBuildSubtarget = StandaloneBuildSubtarget.Player;
+            }
 
-            // SwitchActiveBuildTarget requires BuildTargetGroup (no NamedBuildTarget overload)
+            // SwitchActiveBuildTarget is synchronous — blocks until reimport completes
             EditorUserBuildSettings.SwitchActiveBuildTarget(group, target);
 
-            return new PendingResponse(
-                $"Switching to {target}. This reimports all assets and may take several minutes...",
-                pollIntervalSeconds: 10.0,
-                data: new { target = target.ToString(), previous = previousTarget }
+            return new SuccessResponse(
+                $"Switched to {target}. Assets reimported for new platform.",
+                new { target = target.ToString(), previous = previousTarget }
             );
         }
 
@@ -401,6 +414,10 @@ namespace MCPForUnity.Editor.Tools
                 {
                     if (!BuildTargetMapping.TryResolveBuildTarget(t, out var bt))
                         return new ErrorResponse($"Unknown target '{t}' in batch.");
+                    var btGroup = BuildTargetMapping.GetTargetGroup(bt);
+                    if (!BuildPipeline.IsBuildTargetSupported(btGroup, bt))
+                        return new ErrorResponse(
+                            $"Platform '{bt}' is not installed. Install it via Unity Hub.");
                     string defaultPath = BuildTargetMapping.GetDefaultOutputPath(bt, PlayerSettings.productName);
                     string path = defaultPath.StartsWith("Builds/")
                         ? $"{outputDir}/{defaultPath.Substring(7)}"

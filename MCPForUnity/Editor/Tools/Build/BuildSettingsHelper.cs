@@ -25,7 +25,7 @@ namespace MCPForUnity.Editor.Tools.Build
                     return new { property, value = PlayerSettings.GetScriptingDefineSymbols(namedTarget) };
                 case "architecture":
                     var arch = PlayerSettings.GetArchitecture(namedTarget);
-                    string archName = arch switch { 1 => "arm64", 2 => "universal", _ => "x86_64" };
+                    string archName = arch switch { 0 => "x86_64", 1 => "arm64", 2 => "universal", _ => "unknown" };
                     return new { property, value = archName, raw = arch };
                 default:
                     return null;
@@ -51,7 +51,10 @@ namespace MCPForUnity.Editor.Tools.Build
                         PlayerSettings.SetApplicationIdentifier(namedTarget, value);
                         return null;
                     case "scripting_backend":
-                        var impl = value.ToLowerInvariant() == "il2cpp"
+                        var backendValue = value.ToLowerInvariant();
+                        if (backendValue != "il2cpp" && backendValue != "mono")
+                            return $"Unknown scripting_backend '{value}'. Valid: mono, il2cpp";
+                        var impl = backendValue == "il2cpp"
                             ? ScriptingImplementation.IL2CPP
                             : ScriptingImplementation.Mono2x;
                         PlayerSettings.SetScriptingBackend(namedTarget, impl);
@@ -62,13 +65,13 @@ namespace MCPForUnity.Editor.Tools.Build
                     case "architecture":
                         int arch = value.ToLowerInvariant() switch
                         {
+                            "x86_64" or "none" or "default" => 0,
                             "arm64" => 1,
                             "universal" => 2,
-                            "x86_64" or "default" => 0,
                             _ => -1
                         };
                         if (arch < 0)
-                            return $"Unknown architecture '{value}'. Valid: arm64, x86_64, universal";
+                            return $"Unknown architecture '{value}'. Valid: x86_64, arm64, universal";
                         PlayerSettings.SetArchitecture(namedTarget, arch);
                         return null;
                     default:
