@@ -426,6 +426,8 @@ namespace MCPForUnity.Editor.Tools
                     var child = batch.Children[index];
                     var group = BuildTargetMapping.GetTargetGroup(child.Target);
 
+                    // Platform switch is required — ensures correct shader variants,
+                    // asset import settings, and scripting defines for the target
                     if (EditorUserBuildSettings.activeBuildTarget != child.Target)
                         EditorUserBuildSettings.SwitchActiveBuildTarget(group, child.Target);
 

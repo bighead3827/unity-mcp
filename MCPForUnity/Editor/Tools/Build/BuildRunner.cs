@@ -15,10 +15,8 @@ namespace MCPForUnity.Editor.Tools.Build
             job.State = BuildJobState.Pending;
             BuildJobStore.AddBuildJob(job);
 
-            EditorApplication.delayCall += () =>
-                RunBuildCore(job, () => BuildPipeline.BuildPlayer(options));
-            // Nudge the editor loop so the delayCall fires even when commands arrive via WebSocket
-            EditorApplication.QueuePlayerLoopUpdate();
+            ScheduleOnNextUpdate(() =>
+                RunBuildCore(job, () => BuildPipeline.BuildPlayer(options)));
 
             return new PendingResponse(
                 $"Build scheduled for {job.Target}. Polling for completion...",
@@ -33,9 +31,8 @@ namespace MCPForUnity.Editor.Tools.Build
             job.State = BuildJobState.Pending;
             BuildJobStore.AddBuildJob(job);
 
-            EditorApplication.delayCall += () =>
-                RunBuildCore(job, () => BuildPipeline.BuildPlayer(options));
-            EditorApplication.QueuePlayerLoopUpdate();
+            ScheduleOnNextUpdate(() =>
+                RunBuildCore(job, () => BuildPipeline.BuildPlayer(options)));
 
             return new PendingResponse(
                 $"Profile build scheduled for {job.Target}. Polling for completion...",
@@ -129,6 +126,19 @@ namespace MCPForUnity.Editor.Tools.Build
             }
 
             BuildJobStore.SetLastCompleted(job);
+
+            // Emit console signal so the build result is visible in Unity's Console
+            if (job.State == BuildJobState.Succeeded)
+            {
+                UnityEngine.Debug.Log(
+                    $"[MCP Build] Build succeeded: {job.Target} → {job.OutputPath} " +
+                    $"({job.TotalSizeMb} MB, {(job.CompletedAt.Value - job.StartedAt).TotalSeconds:F1}s)");
+            }
+            else
+            {
+                UnityEngine.Debug.LogError(
+                    $"[MCP Build] ✗ Build failed: {job.Target} — {job.ErrorMessage}");
+            }
         }
 
         public static void ScheduleNextBatchBuild(BatchJob batch, Func<int, BuildJob> createChildBuild)
@@ -157,31 +167,45 @@ namespace MCPForUnity.Editor.Tools.Build
             var watchStart = DateTime.UtcNow;
             var maxWait = TimeSpan.FromHours(2);
 
-            EditorApplication.delayCall += () =>
+            void WaitForCompletion()
             {
-                void WaitForCompletion()
+                if (DateTime.UtcNow - watchStart > maxWait)
                 {
-                    if (DateTime.UtcNow - watchStart > maxWait)
-                    {
-                        EditorApplication.update -= WaitForCompletion;
-                        if (child.State == BuildJobState.Building || child.State == BuildJobState.Pending)
-                        {
-                            child.State = BuildJobState.Failed;
-                            child.ErrorMessage = "Build timed out after 2 hours.";
-                        }
-                        ScheduleNextBatchBuild(batch, createChildBuild);
-                        return;
-                    }
-
-                    if (child.State == BuildJobState.Building || child.State == BuildJobState.Pending)
-                        return;
-
                     EditorApplication.update -= WaitForCompletion;
+                    if (child.State == BuildJobState.Building || child.State == BuildJobState.Pending)
+                    {
+                        child.State = BuildJobState.Failed;
+                        child.ErrorMessage = "Build timed out after 2 hours.";
+                    }
                     ScheduleNextBatchBuild(batch, createChildBuild);
+                    return;
                 }
-                EditorApplication.update += WaitForCompletion;
-            };
-            EditorApplication.QueuePlayerLoopUpdate();
+
+                if (child.State == BuildJobState.Building || child.State == BuildJobState.Pending)
+                    return;
+
+                EditorApplication.update -= WaitForCompletion;
+                ScheduleNextBatchBuild(batch, createChildBuild);
+            }
+            EditorApplication.update += WaitForCompletion;
+        }
+
+        /// <summary>
+        /// Schedule an action to run on the next EditorApplication.update tick.
+        /// Unlike delayCall, update callbacks are guaranteed to fire since the
+        /// TransportCommandDispatcher processes commands through the same mechanism.
+        /// </summary>
+        private static void ScheduleOnNextUpdate(Action action)
+        {
+            bool executed = false;
+            void RunOnce()
+            {
+                if (executed) return;
+                executed = true;
+                EditorApplication.update -= RunOnce;
+                action();
+            }
+            EditorApplication.update += RunOnce;
         }
 
         private static string[] GetDefaultScenes()
