@@ -592,7 +592,7 @@ namespace MCPForUnity.Editor.Helpers
             }
         }
 
-        private static bool SetObjectReference(SerializedProperty prop, JToken value, out string error)
+        internal static bool SetObjectReference(SerializedProperty prop, JToken value, out string error)
         {
             error = null;
 
@@ -784,6 +784,43 @@ namespace MCPForUnity.Editor.Helpers
             prop.objectReferenceValue = resolved;
             if (prop.objectReferenceValue != null)
                 return true;
+
+            // Sub-asset fallback: e.g., Texture2D → Sprite
+            string subAssetPath = AssetDatabase.GetAssetPath(resolved);
+            if (!string.IsNullOrEmpty(subAssetPath))
+            {
+                var subAssets = AssetDatabase.LoadAllAssetsAtPath(subAssetPath);
+                UnityEngine.Object match = null;
+                int matchCount = 0;
+                foreach (var sub in subAssets)
+                {
+                    if (sub == null || sub == resolved) continue;
+                    prop.objectReferenceValue = sub;
+                    if (prop.objectReferenceValue != null)
+                    {
+                        match = sub;
+                        matchCount++;
+                        if (matchCount > 1) break;
+                    }
+                }
+
+                if (matchCount == 1)
+                {
+                    prop.objectReferenceValue = match;
+                    return true;
+                }
+
+                // Clean up: probing may have left the property dirty
+                prop.objectReferenceValue = null;
+
+                if (matchCount > 1)
+                {
+                    error = $"Multiple compatible sub-assets found in '{subAssetPath}'. " +
+                            "Use {\"guid\": \"...\", \"spriteName\": \"<name>\"} or " +
+                            "{\"guid\": \"...\", \"fileID\": <id>} for precise selection.";
+                    return false;
+                }
+            }
 
             // If the resolved object is a GameObject but the property expects a Component,
             // try each component on the GameObject until one is accepted.
