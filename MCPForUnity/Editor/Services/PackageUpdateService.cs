@@ -83,6 +83,88 @@ namespace MCPForUnity.Editor.Services
         }
 
         /// <inheritdoc/>
+        public UpdateCheckResult TryGetCachedResult(string currentVersion)
+        {
+            bool isGitInstallation = IsGitInstallation();
+            string gitBranch = isGitInstallation ? GetGitUpdateBranch(currentVersion) : "main";
+            bool useBetaChannel = isGitInstallation && string.Equals(gitBranch, "beta", StringComparison.OrdinalIgnoreCase);
+
+            string lastCheckKey = isGitInstallation
+                ? (useBetaChannel ? LastBetaCheckDateKey : LastCheckDateKey)
+                : LastAssetStoreCheckDateKey;
+            string cachedVersionKey = isGitInstallation
+                ? (useBetaChannel ? CachedBetaVersionKey : CachedVersionKey)
+                : CachedAssetStoreVersionKey;
+
+            string lastCheckDate = EditorPrefs.GetString(lastCheckKey, "");
+            string cachedLatestVersion = EditorPrefs.GetString(cachedVersionKey, "");
+
+            if (lastCheckDate == DateTime.Now.ToString("yyyy-MM-dd") && !string.IsNullOrEmpty(cachedLatestVersion))
+            {
+                return new UpdateCheckResult
+                {
+                    CheckSucceeded = true,
+                    LatestVersion = cachedLatestVersion,
+                    UpdateAvailable = IsNewerVersion(cachedLatestVersion, currentVersion),
+                    Message = "Using cached version check"
+                };
+            }
+
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public UpdateCheckResult FetchAndCompare(string currentVersion)
+        {
+            bool isGitInstallation = IsGitInstallation();
+            string gitBranch = isGitInstallation ? GetGitUpdateBranch(currentVersion) : "main";
+
+            string latestVersion = isGitInstallation
+                ? FetchLatestVersionFromGitHub(gitBranch)
+                : FetchLatestVersionFromAssetStoreJson();
+
+            if (!string.IsNullOrEmpty(latestVersion))
+            {
+                return new UpdateCheckResult
+                {
+                    CheckSucceeded = true,
+                    LatestVersion = latestVersion,
+                    UpdateAvailable = IsNewerVersion(latestVersion, currentVersion),
+                    Message = "Successfully checked for updates"
+                };
+            }
+
+            return new UpdateCheckResult
+            {
+                CheckSucceeded = false,
+                UpdateAvailable = false,
+                Message = isGitInstallation
+                    ? "Failed to check for updates (network issue or offline)"
+                    : "Failed to check for Asset Store updates (network issue or offline)"
+            };
+        }
+
+        /// <inheritdoc/>
+        public void CacheFetchResult(string currentVersion, string fetchedVersion)
+        {
+            if (string.IsNullOrEmpty(fetchedVersion)) return;
+
+            bool isGitInstallation = IsGitInstallation();
+            string gitBranch = isGitInstallation ? GetGitUpdateBranch(currentVersion) : "main";
+            bool useBetaChannel = isGitInstallation && string.Equals(gitBranch, "beta", StringComparison.OrdinalIgnoreCase);
+
+            string lastCheckKey = isGitInstallation
+                ? (useBetaChannel ? LastBetaCheckDateKey : LastCheckDateKey)
+                : LastAssetStoreCheckDateKey;
+            string cachedVersionKey = isGitInstallation
+                ? (useBetaChannel ? CachedBetaVersionKey : CachedVersionKey)
+                : CachedAssetStoreVersionKey;
+
+            EditorPrefs.SetString(lastCheckKey, DateTime.Now.ToString("yyyy-MM-dd"));
+            EditorPrefs.SetString(cachedVersionKey, fetchedVersion);
+        }
+
+        /// <inheritdoc/>
         public bool IsNewerVersion(string version1, string version2)
         {
             if (!TryParseVersion(version1, out var left) || !TryParseVersion(version2, out var right))

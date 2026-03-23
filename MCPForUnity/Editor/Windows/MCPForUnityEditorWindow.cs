@@ -378,12 +378,22 @@ namespace MCPForUnity.Editor.Windows
                 return;
             }
 
+            // Main thread: resolve service + read EditorPrefs cache (both require main thread)
+            var updateService = MCPServiceLocator.Updates;
+            var cachedResult = updateService.TryGetCachedResult(currentVersion);
+            if (cachedResult != null)
+            {
+                ApplyUpdateCheckResult(cachedResult, currentVersion);
+                return;
+            }
+
+            // Background thread: network I/O only (no EditorPrefs access)
             updateCheckInFlight = true;
             Task.Run(() =>
             {
                 try
                 {
-                    return MCPServiceLocator.Updates.CheckForUpdate(currentVersion);
+                    return updateService.FetchAndCompare(currentVersion);
                 }
                 catch (Exception ex)
                 {
@@ -396,24 +406,35 @@ namespace MCPForUnity.Editor.Windows
                 {
                     updateCheckInFlight = false;
 
+                    // Main thread: cache the result in EditorPrefs
+                    var result = t.Status == TaskStatus.RanToCompletion ? t.Result : null;
+                    if (result != null && result.CheckSucceeded && !string.IsNullOrEmpty(result.LatestVersion))
+                    {
+                        updateService.CacheFetchResult(currentVersion, result.LatestVersion);
+                    }
+
                     if (this == null || updateNotification == null || updateNotificationText == null)
                     {
                         return;
                     }
 
-                    var result = t.Status == TaskStatus.RanToCompletion ? t.Result : null;
-                    if (result != null && result.CheckSucceeded && result.UpdateAvailable && !string.IsNullOrEmpty(result.LatestVersion))
-                    {
-                        updateNotificationText.text = $"Update available: v{result.LatestVersion}  (current: v{currentVersion})";
-                        updateNotificationText.tooltip = $"Latest version: v{result.LatestVersion}\nCurrent version: v{currentVersion}";
-                        updateNotification.AddToClassList("visible");
-                    }
-                    else
-                    {
-                        updateNotification.RemoveFromClassList("visible");
-                    }
+                    ApplyUpdateCheckResult(result, currentVersion);
                 };
             }, TaskScheduler.Default);
+        }
+
+        private void ApplyUpdateCheckResult(UpdateCheckResult result, string currentVersion)
+        {
+            if (result != null && result.CheckSucceeded && result.UpdateAvailable && !string.IsNullOrEmpty(result.LatestVersion))
+            {
+                updateNotificationText.text = $"Update available: v{result.LatestVersion}  (current: v{currentVersion})";
+                updateNotificationText.tooltip = $"Latest version: v{result.LatestVersion}\nCurrent version: v{currentVersion}";
+                updateNotification.AddToClassList("visible");
+            }
+            else
+            {
+                updateNotification.RemoveFromClassList("visible");
+            }
         }
 
         private void EnsureToolsLoaded()
