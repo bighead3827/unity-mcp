@@ -20,7 +20,7 @@
 <details>
 <summary><strong>Recent Updates</strong></summary>
 
-* **v9.6.1 (beta)** — New `manage_build` tool: trigger player builds, switch platforms, configure player settings, manage build scenes and profiles (Unity 6+), run batch builds across multiple platforms, and async job tracking with polling. New `MaxPollSeconds` infrastructure for long-running tool operations.
+* **v9.6.1 (beta)** — QoL extensions: `manage_editor` gains undo/redo actions. `manage_scene` gains multi-scene editing (additive load, close, set active, move GO between scenes), `modify_build_settings`, scene templates (3d_basic, 2d_basic, etc.), and scene validation with auto-repair. New `manage_build` tool: trigger player builds, switch platforms, configure player settings, manage build scenes and profiles (Unity 6+), run batch builds across multiple platforms, and async job tracking with polling. New `MaxPollSeconds` infrastructure for long-running tool operations.
 * **v9.5.4** — New `unity_reflect` and `unity_docs` tools for API verification: inspect live C# APIs via reflection and fetch official Unity documentation (ScriptReference, Manual, package docs). New `manage_packages` tool: install, remove, search, and manage Unity packages and scoped registries. Includes input validation, dependency checks on removal, and git URL warnings.
 * **v9.5.3** — New `manage_graphics` tool (33 actions): volume/post-processing, light baking, rendering stats, pipeline settings, URP renderer features. 3 new resources: `volumes`, `rendering_stats`, `renderer_features`.
 * **v9.5.2** — New `manage_camera` tool with Cinemachine support (presets, priority, noise, blending, extensions), `cameras` resource, priority persistence fix via SerializedProperty.
