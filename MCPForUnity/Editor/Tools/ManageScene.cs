@@ -222,9 +222,9 @@ namespace MCPForUnity.Editor.Tools
             switch (action)
             {
                 case "create":
-                    if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(relativePath))
+                    if (string.IsNullOrEmpty(name))
                         return new ErrorResponse(
-                            "'name' and 'path' parameters are required for 'create' action."
+                            "'name' parameter is required for 'create' action. 'path' is optional (defaults to 'Assets/Scenes/')."
                         );
                     if (!string.IsNullOrEmpty(cmd.template))
                         return CreateSceneFromTemplate(fullPath, relativePath, cmd.template);
@@ -1539,8 +1539,10 @@ namespace MCPForUnity.Editor.Tools
 
             string capturedName = scene.Value.name;
             bool remove = cmd.removeScene ?? false;
-            EditorSceneManager.CloseScene(scene.Value, remove);
+            bool closed = EditorSceneManager.CloseScene(scene.Value, remove);
             string verb = remove ? "Removed" : "Unloaded";
+            if (!closed)
+                return new ErrorResponse($"Failed to {verb.ToLowerInvariant()} scene '{capturedName}'.");
             return new SuccessResponse($"{verb} scene '{capturedName}'.", new
             {
                 sceneName = capturedName,
@@ -1558,7 +1560,9 @@ namespace MCPForUnity.Editor.Tools
                 return new ErrorResponse($"Scene '{scene.Value.name}' is not loaded. Open it first.");
 
             string capturedName = scene.Value.name;
-            SceneManager.SetActiveScene(scene.Value);
+            bool success = SceneManager.SetActiveScene(scene.Value);
+            if (!success)
+                return new ErrorResponse($"Failed to set '{capturedName}' as the active scene.");
             return new SuccessResponse($"Set '{capturedName}' as the active scene.");
         }
 
@@ -1741,7 +1745,7 @@ namespace MCPForUnity.Editor.Tools
                 brokenPrefabs,
                 repaired,
                 issues,
-                truncated = issues.Count >= maxIssues,
+                truncated = issues.Count > maxIssues || (totalIssues > issues.Count),
                 note = brokenPrefabs > 0 ? "Broken prefab references are not auto-repaired (too risky). Fix manually." : null
             });
         }

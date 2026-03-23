@@ -23,7 +23,11 @@ namespace MCPForUnity.Tests.EditMode.Tools
         [Test]
         public void CloseScene_LastScene_ReturnsError()
         {
-            if (SceneManager.sceneCount > 1) return;
+            if (SceneManager.sceneCount > 1)
+            {
+                Assert.Ignore("Test requires a single scene; editor has additive scenes open.");
+                return;
+            }
             var active = SceneManager.GetActiveScene();
             var p = new JObject
             {
