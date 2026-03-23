@@ -63,43 +63,18 @@ namespace MCPForUnity.Tests.EditMode.Tools
         }
 
         [Test]
-        public void ModifyBuildSettings_MissingPath_ReturnsError()
-        {
-            var p = new JObject
-            {
-                ["action"] = "modify_build_settings",
-                ["operation"] = "add"
-            };
-            var result = ManageScene.HandleCommand(p);
-            var r = result as JObject ?? JObject.FromObject(result);
-            Assert.IsFalse(r.Value<bool>("success"));
-        }
-
-        [Test]
-        public void ModifyBuildSettings_MissingOperation_ReturnsError()
-        {
-            var p = new JObject
-            {
-                ["action"] = "modify_build_settings",
-                ["scenePath"] = "Assets/Scenes/Test.unity"
-            };
-            var result = ManageScene.HandleCommand(p);
-            var r = result as JObject ?? JObject.FromObject(result);
-            Assert.IsFalse(r.Value<bool>("success"));
-        }
-
-        [Test]
-        public void ModifyBuildSettings_SetEnabled_MissingEnabled_ReturnsError()
+        public void ModifyBuildSettings_RedirectsToManageBuild()
         {
             var p = new JObject
             {
                 ["action"] = "modify_build_settings",
                 ["scenePath"] = "Assets/Scenes/Test.unity",
-                ["operation"] = "set_enabled"
+                ["operation"] = "add"
             };
             var result = ManageScene.HandleCommand(p);
             var r = result as JObject ?? JObject.FromObject(result);
             Assert.IsFalse(r.Value<bool>("success"));
+            Assert.IsTrue(r.Value<string>("message").Contains("manage_build"));
         }
 
         [Test]

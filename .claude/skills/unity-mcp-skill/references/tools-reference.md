@@ -190,11 +190,7 @@ manage_scene(action="close_scene", scene_name="Level2")             # Unload sce
 manage_scene(action="close_scene", scene_name="Level2", remove_scene=True)  # Fully remove
 manage_scene(action="move_to_scene", target="Player", scene_name="Level2")  # Move root GO
 
-# Build settings management (consolidated)
-manage_scene(action="modify_build_settings", scene_path="Assets/Scenes/Level2.unity", operation="add")
-manage_scene(action="modify_build_settings", scene_path="Assets/Scenes/Old.unity", operation="remove")
-manage_scene(action="modify_build_settings", scene_path="Assets/Scenes/Debug.unity",
-             operation="set_enabled", enabled=False)
+# Build settings — use manage_build(action="scenes") instead
 
 # Scene validation
 manage_scene(action="validate")                    # Detect missing scripts, broken prefabs

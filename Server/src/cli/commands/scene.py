@@ -318,36 +318,6 @@ def move_to(target: str, scene_name: str):
         print_success(f"Moved '{target}' to scene '{scene_name}'")
 
 
-@scene.command("build-modify")
-@click.argument("scene_path")
-@click.option("--op", required=True, type=click.Choice(["add", "remove", "set_enabled"]),
-              help="Operation to perform.")
-@click.option("--enable/--disable", "enabled", default=None,
-              help="For set_enabled: enable or disable.")
-@handle_unity_errors
-def build_modify(scene_path: str, op: str, enabled: Optional[bool]):
-    """Add, remove, or enable/disable a scene in build settings.
-
-    \b
-    Examples:
-        unity-mcp scene build-modify "Assets/Scenes/Level2.unity" --op add
-        unity-mcp scene build-modify "Assets/Scenes/OldLevel.unity" --op remove
-        unity-mcp scene build-modify "Assets/Scenes/Debug.unity" --op set_enabled --disable
-    """
-    config = get_config()
-    params: dict[str, Any] = {
-        "action": "modify_build_settings",
-        "scenePath": scene_path,
-        "operation": op,
-    }
-    if enabled is not None:
-        params["enabled"] = enabled
-    result = run_command("manage_scene", params, config)
-    click.echo(format_output(result, config.format))
-    if result.get("success"):
-        print_success(f"Build settings updated: {op} {scene_path}")
-
-
 # ── Scene validation ─────────────────────────────────────────────────
 
 

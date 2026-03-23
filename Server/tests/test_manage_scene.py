@@ -41,7 +41,7 @@ ALL_ACTIONS = [
     "create", "load", "save", "get_hierarchy",
     "get_active", "get_build_settings", "scene_view_frame",
     "close_scene", "set_active_scene", "get_loaded_scenes",
-    "move_to_scene", "modify_build_settings",
+    "move_to_scene",
     "validate",
 ]
 
@@ -84,29 +84,6 @@ def test_move_to_scene_passes_target(mock_unity):
     assert result["success"] is True
     assert mock_unity["params"]["target"] == "Player"
     assert mock_unity["params"]["sceneName"] == "Level2"
-
-
-def test_modify_build_settings_passes_operation_and_path(mock_unity):
-    result = asyncio.run(manage_scene(
-        SimpleNamespace(), action="modify_build_settings",
-        scene_path="Assets/Scenes/Debug.unity",
-        operation="set_enabled", enabled=False,
-    ))
-    assert result["success"] is True
-    assert mock_unity["params"]["operation"] == "set_enabled"
-    assert mock_unity["params"]["scenePath"] == "Assets/Scenes/Debug.unity"
-    assert mock_unity["params"]["enabled"] is False
-
-
-def test_add_to_build_passes_scene_path(mock_unity):
-    result = asyncio.run(manage_scene(
-        SimpleNamespace(), action="modify_build_settings",
-        scene_path="Assets/Scenes/NewLevel.unity",
-        operation="add",
-    ))
-    assert result["success"] is True
-    assert mock_unity["params"]["scenePath"] == "Assets/Scenes/NewLevel.unity"
-    assert mock_unity["params"]["operation"] == "add"
 
 
 # ── Template param passthrough ───────────────────────────────────────
@@ -160,7 +137,5 @@ def test_none_params_omitted(mock_unity):
     assert "target" not in params
     assert "removeScene" not in params
     assert "additive" not in params
-    assert "enabled" not in params
-    assert "operation" not in params
     assert "template" not in params
     assert "autoRepair" not in params

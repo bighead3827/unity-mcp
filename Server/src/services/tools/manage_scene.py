@@ -16,7 +16,8 @@ from services.tools.preflight import preflight
         "Performs CRUD operations on Unity scenes. "
         "Read-only actions: get_hierarchy, get_active, get_build_settings, get_loaded_scenes, scene_view_frame. "
         "Modifying actions: create (with optional template), load (with optional additive flag), save, "
-        "close_scene, set_active_scene, move_to_scene, modify_build_settings, validate (with optional auto_repair). "
+        "close_scene, set_active_scene, move_to_scene, validate (with optional auto_repair). "
+        "For build settings management (add/remove/enable scenes), use manage_build(action='scenes'). "
         "For screenshots, use manage_camera (screenshot, screenshot_multiview actions)."
     ),
     annotations=ToolAnnotations(
@@ -38,7 +39,6 @@ async def manage_scene(
         "set_active_scene",
         "get_loaded_scenes",
         "move_to_scene",
-        "modify_build_settings",
         "validate",
     ], "Perform CRUD operations on Unity scenes and control the Scene View camera."],
     name: Annotated[str, "Scene name."] | None = None,
@@ -74,10 +74,6 @@ async def manage_scene(
                             "For close_scene: true to fully remove, false to just unload."] | None = None,
     additive: Annotated[bool | str,
                         "For load: true to open scene additively (keeps current scene)."] | None = None,
-    enabled: Annotated[bool | str,
-                       "For modify_build_settings set_enabled operation."] | None = None,
-    operation: Annotated[str,
-                         "For modify_build_settings: 'add', 'remove', or 'set_enabled'."] | None = None,
     # --- Scene template ---
     template: Annotated[str,
                         "For create: scene template ('empty', 'default', '3d_basic', '2d_basic'). Omit for empty scene."] | None = None,
@@ -141,12 +137,6 @@ async def manage_scene(
         coerced_additive = coerce_bool(additive, default=None)
         if coerced_additive is not None:
             params["additive"] = coerced_additive
-        coerced_enabled = coerce_bool(enabled, default=None)
-        if coerced_enabled is not None:
-            params["enabled"] = coerced_enabled
-        if operation is not None:
-            params["operation"] = operation
-
         # Scene template
         if template is not None:
             params["template"] = template

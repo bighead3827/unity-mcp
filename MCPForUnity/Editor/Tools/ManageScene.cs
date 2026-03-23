@@ -61,8 +61,6 @@ namespace MCPForUnity.Editor.Tools
             public string target { get; set; }           // GO reference for move_to_scene
             public bool? removeScene { get; set; }       // for close_scene
             public bool? additive { get; set; }          // for load additive mode
-            public bool? enabled { get; set; }           // for modify_build_settings set_enabled
-            public string operation { get; set; }        // for modify_build_settings
             public string template { get; set; }         // for create with template
             public bool? autoRepair { get; set; }        // for validate with auto-repair
         }
@@ -140,8 +138,6 @@ namespace MCPForUnity.Editor.Tools
                 target = (p["target"])?.ToString(),
                 removeScene = ParamCoercion.CoerceBoolNullable(p["removeScene"] ?? p["remove_scene"]),
                 additive = ParamCoercion.CoerceBoolNullable(p["additive"]),
-                enabled = ParamCoercion.CoerceBoolNullable(p["enabled"]),
-                operation = (p["operation"])?.ToString()?.ToLowerInvariant(),
                 template = (p["template"])?.ToString()?.ToLowerInvariant(),
                 autoRepair = ParamCoercion.CoerceBoolNullable(p["autoRepair"] ?? p["auto_repair"]),
             };
@@ -283,7 +279,9 @@ namespace MCPForUnity.Editor.Tools
                 case "move_to_scene":
                     return MoveToScene(cmd);
                 case "modify_build_settings":
-                    return ModifyBuildSettings(cmd);
+                    return new ErrorResponse(
+                        "Build settings management has moved to manage_build (action='scenes'). "
+                        + "Use manage_build to add, remove, or configure scenes in build settings.");
 
                 // Scene validation
                 case "validate":
@@ -291,7 +289,7 @@ namespace MCPForUnity.Editor.Tools
 
                 default:
                     return new ErrorResponse(
-                        $"Unknown action: '{action}'. Valid actions: create, load, save, get_hierarchy, get_active, get_build_settings, screenshot, scene_view_frame, close_scene, set_active_scene, get_loaded_scenes, move_to_scene, modify_build_settings, validate."
+                        $"Unknown action: '{action}'. Valid actions: create, load, save, get_hierarchy, get_active, get_build_settings, screenshot, scene_view_frame, close_scene, set_active_scene, get_loaded_scenes, move_to_scene, validate. For build settings, use manage_build."
                     );
             }
         }
@@ -1606,67 +1604,7 @@ namespace MCPForUnity.Editor.Tools
             return new SuccessResponse($"Moved '{go.name}' to scene '{targetScene.Value.name}'.");
         }
 
-        private static object ModifyBuildSettings(SceneCommand cmd)
-        {
-            string op = cmd.operation;
-            string scenePath = cmd.scenePath;
-
-            if (string.IsNullOrEmpty(scenePath))
-                return new ErrorResponse("'scenePath' is required for modify_build_settings.");
-            if (string.IsNullOrEmpty(op))
-                return new ErrorResponse("'operation' is required. Valid operations: add, remove, set_enabled.");
-
-            var current = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
-
-            switch (op)
-            {
-                case "add":
-                    if (current.Exists(s => s.path == scenePath))
-                        return new ErrorResponse($"Scene '{scenePath}' is already in build settings.");
-                    current.Add(new EditorBuildSettingsScene(scenePath, true));
-                    EditorBuildSettings.scenes = current.ToArray();
-                    return new SuccessResponse($"Added '{scenePath}' to build settings at index {current.Count - 1}.", new
-                    {
-                        scenePath,
-                        buildIndex = current.Count - 1,
-                        totalScenes = current.Count
-                    });
-
-                case "remove":
-                    int removed = current.RemoveAll(s => s.path == scenePath);
-                    if (removed == 0)
-                        return new ErrorResponse($"Scene '{scenePath}' is not in build settings.");
-                    EditorBuildSettings.scenes = current.ToArray();
-                    return new SuccessResponse($"Removed '{scenePath}' from build settings.", new
-                    {
-                        scenePath,
-                        totalScenes = current.Count
-                    });
-
-                case "set_enabled":
-                    if (!cmd.enabled.HasValue)
-                        return new ErrorResponse("'enabled' (true/false) is required for set_enabled operation.");
-                    bool found = false;
-                    var scenes = EditorBuildSettings.scenes;
-                    for (int i = 0; i < scenes.Length; i++)
-                    {
-                        if (scenes[i].path == scenePath)
-                        {
-                            scenes[i].enabled = cmd.enabled.Value;
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found)
-                        return new ErrorResponse($"Scene '{scenePath}' is not in build settings.");
-                    EditorBuildSettings.scenes = scenes;
-                    string state = cmd.enabled.Value ? "enabled" : "disabled";
-                    return new SuccessResponse($"Scene '{scenePath}' is now {state} in build settings.");
-
-                default:
-                    return new ErrorResponse($"Unknown operation: '{op}'. Valid operations: add, remove, set_enabled.");
-            }
-        }
+        // ModifyBuildSettings removed — use manage_build(action="scenes") instead.
 
         // ── Scene templates ────────────────────────────────────────────────
 
