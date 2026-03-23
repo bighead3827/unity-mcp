@@ -20,7 +20,7 @@
 <details>
 <summary><strong>最近更新</strong></summary>
 
-* **v9.6.1 (beta)** — 新增 `manage_build` 工具：触发玩家构建、切换平台、配置玩家设置、管理构建场景和配置文件（Unity 6+）、跨多平台批量构建、异步任务跟踪与轮询。新增 `MaxPollSeconds` 基础设施，支持长时间运行的工具操作。
+* **v9.6.1 (beta)** — QoL 扩展：`manage_editor` 新增撤销/重做操作。`manage_scene` 新增多场景编辑（叠加加载、关闭、设置活动场景、跨场景移动物体）、场景模板（3d_basic、2d_basic 等）、场景验证与自动修复。新增 `manage_build` 工具：触发玩家构建、切换平台、配置玩家设置、管理构建场景和配置文件（Unity 6+）、跨多平台批量构建、异步任务跟踪与轮询。新增 `MaxPollSeconds` 基础设施，支持长时间运行的工具操作。
 * **v9.5.4** — 新增 `unity_reflect` 和 `unity_docs` 工具用于 API 验证：通过反射检查实时 C# API，获取官方 Unity 文档（ScriptReference、Manual、包文档）。新增 `manage_packages` 工具：安装、移除、搜索和管理 Unity 包及作用域注册表。包含输入验证、移除时依赖检查和 git URL 警告。
 * **v9.5.3** — 新增 `manage_graphics` 工具（33个操作）：体积/后处理、光照烘焙、渲染统计、管线设置、URP渲染器特性。3个新资源：`volumes`、`rendering_stats`、`renderer_features`。
 * **v9.5.2** — 新增 `manage_camera` 工具，支持 Cinemachine（预设、优先级、噪声、混合、扩展）、`cameras` 资源、通过 SerializedProperty 修复优先级持久化问题。
