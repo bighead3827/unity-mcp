@@ -83,7 +83,7 @@ namespace MCPForUnity.Editor.Services
         }
 
         /// <inheritdoc/>
-        public UpdateCheckResult TryGetCachedResult(string currentVersion)
+        public UpdateCheckResult? TryGetCachedResult(string currentVersion)
         {
             bool isGitInstallation = IsGitInstallation();
             string gitBranch = isGitInstallation ? GetGitUpdateBranch(currentVersion) : "main";
