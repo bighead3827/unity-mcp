@@ -737,10 +737,17 @@ namespace MCPForUnity.Editor.Tools
 
             if (prop.propertyType == SerializedPropertyType.ObjectReference)
             {
-                // Legacy "ref" key takes precedence for backward compatibility
-                var refObj = patchObj["ref"] as JObject;
+                // Legacy "ref" key takes precedence for backward compatibility.
+                // Use TryGetValue to preserve non-JObject ref tokens (e.g. string GUID).
+                patchObj.TryGetValue("ref", out JToken refToken);
                 var objRefValue = patchObj["value"];
-                JToken resolveToken = refObj ?? objRefValue;
+                JToken resolveToken = refToken ?? objRefValue;
+
+                if (resolveToken == null)
+                {
+                    return new { propertyPath, op = "set", ok = false, resolvedPropertyType = prop.propertyType.ToString(),
+                        message = "ObjectReference patch requires a 'ref' or 'value' key." };
+                }
 
                 if (!ComponentOps.SetObjectReference(prop, resolveToken, out string refError))
                 {

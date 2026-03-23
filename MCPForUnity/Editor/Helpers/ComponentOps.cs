@@ -647,12 +647,18 @@ namespace MCPForUnity.Editor.Helpers
                     {
                         string spriteName = spriteNameToken.ToString();
                         var allAssets = AssetDatabase.LoadAllAssetsAtPath(path);
+                        var originalRef = prop.objectReferenceValue;
                         foreach (var asset in allAssets)
                         {
                             if (asset is Sprite sprite && sprite.name == spriteName)
                             {
                                 prop.objectReferenceValue = sprite;
-                                return true;
+                                if (prop.objectReferenceValue != null)
+                                    return true;
+                                // Unity rejected the type — restore and report
+                                prop.objectReferenceValue = originalRef;
+                                error = $"Sprite '{spriteName}' found but is not compatible with the property type.";
+                                return false;
                             }
                         }
 
@@ -667,6 +673,7 @@ namespace MCPForUnity.Editor.Helpers
                         if (targetFileId != 0)
                         {
                             var allAssets = AssetDatabase.LoadAllAssetsAtPath(path);
+                            var originalRef = prop.objectReferenceValue;
                             foreach (var asset in allAssets)
                             {
                                 if (asset is Sprite sprite)
@@ -675,7 +682,11 @@ namespace MCPForUnity.Editor.Helpers
                                     if (spriteFileId == targetFileId)
                                     {
                                         prop.objectReferenceValue = sprite;
-                                        return true;
+                                        if (prop.objectReferenceValue != null)
+                                            return true;
+                                        prop.objectReferenceValue = originalRef;
+                                        error = $"Sprite with fileID '{targetFileId}' found but is not compatible with the property type.";
+                                        return false;
                                     }
                                 }
                             }
