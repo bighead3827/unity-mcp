@@ -133,7 +133,7 @@ class TestManagePackagesToolValidation:
             mock_send.assert_not_called()
 
     def test_action_matching_is_case_insensitive(self):
-        """Actions must be accepted regardless of capitalisation."""
+        """Actions must be accepted regardless of capitalisation and normalised to lowercase."""
         from services.tools.manage_packages import manage_packages
 
         ctx = MagicMock()
@@ -145,7 +145,10 @@ class TestManagePackagesToolValidation:
         ) as mock_send:
             mock_send.return_value = {"success": True, "message": "OK"}
             result = asyncio.run(manage_packages(ctx, action="LIST_PACKAGES"))
+
         assert result["success"] is True
+        sent_params = mock_send.call_args.args[1]
+        assert sent_params["action"] == "list_packages"
 
 
 # =============================================================================
