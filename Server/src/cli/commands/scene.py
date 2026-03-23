@@ -6,7 +6,7 @@ import click
 from typing import Optional, Any
 
 from cli.utils.config import get_config
-from cli.utils.output import format_output, print_error, print_success
+from cli.utils.output import format_output, print_error, print_success, print_warning
 from cli.utils.connection import run_command, handle_unity_errors
 
 
@@ -346,5 +346,7 @@ def validate(repair: bool):
             print_success("Scene is clean")
         elif repaired > 0:
             print_success(f"Found {total} issue(s), repaired {repaired}")
+        else:
+            print_warning(f"Found {total} issue(s), none repaired")
 
 

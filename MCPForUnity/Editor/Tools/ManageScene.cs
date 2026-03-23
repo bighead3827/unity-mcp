@@ -1516,6 +1516,10 @@ namespace MCPForUnity.Editor.Tools
             if (!File.Exists(Path.Combine(projectRoot, scenePath)))
                 return new ErrorResponse($"Scene not found: '{scenePath}'");
 
+            var existing = SceneManager.GetSceneByPath(scenePath);
+            if (existing.IsValid() && existing.isLoaded)
+                return new ErrorResponse($"Scene '{existing.name}' is already loaded.");
+
             var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
             return new SuccessResponse($"Opened '{scene.name}' additively.", new
             {

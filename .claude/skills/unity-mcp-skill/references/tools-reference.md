@@ -352,6 +352,11 @@ manage_components(
 # - "Assets/Prefabs/My.prefab" → String shorthand for asset paths
 # - "ObjectName"               → String shorthand for scene name lookup
 # - 12345                      → Integer shorthand for instanceID
+#
+# Sprite sub-asset references (for SpriteRenderer.sprite, Image.sprite, etc.):
+# - {"guid": "...", "spriteName": "SubSprite"}  → Sprite sub-asset from atlas
+# - {"guid": "...", "fileID": 12345}             → Sub-asset by fileID
+# Single-sprite textures auto-resolve from guid/path alone.
 ```
 
 ---
@@ -543,6 +548,24 @@ manage_prefabs(
     position=[0, 1, 0],
     components_to_add=["AudioSource"]
 )
+
+# Add child GameObjects to a prefab (single or batch)
+manage_prefabs(
+    action="modify_contents",
+    prefab_path="Assets/Prefabs/Player.prefab",
+    create_child=[
+        {"name": "Child1", "primitive_type": "Sphere", "position": [1, 0, 0]},
+        {"name": "Child2", "primitive_type": "Cube", "parent": "Child1"}
+    ]
+)
+
+# Add a nested prefab instance inside a prefab
+manage_prefabs(
+    action="modify_contents",
+    prefab_path="Assets/Prefabs/Player.prefab",
+    create_child={"name": "Bullet", "source_prefab_path": "Assets/Prefabs/Bullet.prefab", "position": [0, 2, 0]}
+)
+# source_prefab_path and primitive_type are mutually exclusive
 ```
 
 ---
