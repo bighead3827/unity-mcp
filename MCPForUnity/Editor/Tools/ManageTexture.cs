@@ -27,7 +27,8 @@ namespace MCPForUnity.Editor.Tools
             "create_sprite",
             "apply_pattern",
             "apply_gradient",
-            "apply_noise"
+            "apply_noise",
+            "set_import_settings"
         };
 
         private static ErrorResponse ValidateDimensions(int width, int height, List<string> warnings)
@@ -78,6 +79,8 @@ namespace MCPForUnity.Editor.Tools
                         return ApplyGradient(@params);
                     case "apply_noise":
                         return ApplyNoise(@params);
+                    case "set_import_settings":
+                        return SetImportSettings(@params);
                     default:
                         return new ErrorResponse($"Unknown action: '{action}'");
                 }
@@ -311,18 +314,34 @@ namespace MCPForUnity.Editor.Tools
 
                 editableTexture.Apply();
 
-                // Save back to disk
-                byte[] imageData = TextureOps.EncodeTexture(editableTexture, fullPath);
-                if (imageData == null || imageData.Length == 0)
+                // Save back to disk if pixel changes were made
+                if (setPixelsToken != null)
                 {
-                    UnityEngine.Object.DestroyImmediate(editableTexture);
-                    return new ErrorResponse($"Failed to encode texture for '{fullPath}'");
+                    byte[] imageData = TextureOps.EncodeTexture(editableTexture, fullPath);
+                    if (imageData == null || imageData.Length == 0)
+                    {
+                        UnityEngine.Object.DestroyImmediate(editableTexture);
+                        return new ErrorResponse($"Failed to encode texture for '{fullPath}'");
+                    }
+                    File.WriteAllBytes(absolutePath, imageData);
+                    AssetDatabase.ImportAsset(fullPath, ImportAssetOptions.ForceUpdate);
                 }
-                File.WriteAllBytes(absolutePath, imageData);
-
-                AssetDatabase.ImportAsset(fullPath, ImportAssetOptions.ForceUpdate);
 
                 UnityEngine.Object.DestroyImmediate(editableTexture);
+
+                // Apply import settings (textureType, spriteImportMode, compression, etc.)
+                JToken importSettingsToken = @params["import_settings"] ?? @params["importSettings"];
+                if (importSettingsToken != null)
+                {
+                    ConfigureTextureImporter(fullPath, importSettingsToken);
+                }
+
+                // Legacy sprite shorthand
+                JToken asSpriteToken = @params["as_sprite"];
+                if (asSpriteToken != null && (asSpriteToken.Type == JTokenType.Boolean ? asSpriteToken.ToObject<bool>() : true))
+                {
+                    ConfigureAsSprite(fullPath, asSpriteToken.Type == JTokenType.Object ? asSpriteToken : null);
+                }
 
                 return new SuccessResponse($"Texture modified: {fullPath}");
             }
@@ -700,6 +719,42 @@ namespace MCPForUnity.Editor.Tools
                     Color32 color = LerpPalette(palette, t);
                     texture.SetPixel(x, y, color);
                 }
+            }
+        }
+
+        private static object SetImportSettings(JObject @params)
+        {
+            string path = @params["path"]?.ToString();
+            if (string.IsNullOrEmpty(path))
+                return new ErrorResponse("'path' is required for set_import_settings.");
+
+            string fullPath = AssetPathUtility.SanitizeAssetPath(path);
+            if (!AssetExists(fullPath))
+                return new ErrorResponse($"Texture not found at path: {fullPath}");
+
+            try
+            {
+                JToken importSettingsToken = @params["import_settings"] ?? @params["importSettings"];
+                JToken asSpriteToken = @params["as_sprite"];
+
+                if (importSettingsToken != null)
+                {
+                    ConfigureTextureImporter(fullPath, importSettingsToken);
+                }
+                else if (asSpriteToken != null)
+                {
+                    ConfigureAsSprite(fullPath, asSpriteToken.Type == JTokenType.Object ? asSpriteToken : null);
+                }
+                else
+                {
+                    return new ErrorResponse("Either 'import_settings' or 'as_sprite' is required.");
+                }
+
+                return new SuccessResponse($"Import settings updated for: {fullPath}", new { path = fullPath });
+            }
+            catch (Exception e)
+            {
+                return new ErrorResponse($"Failed to set import settings: {e.Message}");
             }
         }
 
