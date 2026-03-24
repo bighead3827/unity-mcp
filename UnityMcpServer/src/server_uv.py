@@ -43,8 +43,8 @@ mcp = FastMCP(
     "unity-mcp-server",
     description="Unity Editor integration via Model Context Protocol",
     lifespan=server_lifespan,
-    port = 6600,
-    host = "172.20.66.51"
+    # port = 6600,
+    # host = "172.20.66.51"
 )
 
 # Register all tools
@@ -71,6 +71,6 @@ def asset_creation_strategy() -> str:
 
 # Run the server
 if __name__ == "__main__":
-    # mcp.run(transport='stdio')
+    mcp.run(transport='stdio')
     # mcp.run(transport="streamable-http")
-    mcp.run(transport='sse')
+    # mcp.run(transport='sse')
