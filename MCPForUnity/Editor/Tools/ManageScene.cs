@@ -29,10 +29,11 @@ namespace MCPForUnity.Editor.Tools
 
             // screenshot: camera selection, inline image, batch, view positioning
             public string camera { get; set; }
+            public string captureSource { get; set; }   // "game_view" (default) or "scene_view"
             public bool? includeImage { get; set; }
             public int? maxResolution { get; set; }
             public string batch { get; set; }           // "surround" or "orbit" for multi-angle batch capture
-            public JToken lookAt { get; set; }          // GO reference or [x,y,z] to aim at before capture
+            public JToken viewTarget { get; set; }       // GO reference or [x,y,z] to focus on before capture
             public Vector3? viewPosition { get; set; }  // camera position for view-based capture
             public Vector3? viewRotation { get; set; }  // euler rotation for view-based capture
 
@@ -53,6 +54,15 @@ namespace MCPForUnity.Editor.Tools
             public int? maxDepth { get; set; }
             public int? maxChildrenPerNode { get; set; }
             public bool? includeTransform { get; set; }
+
+            // Multi-scene editing
+            public string sceneName { get; set; }
+            public string scenePath { get; set; }
+            public string target { get; set; }           // GO reference for move_to_scene
+            public bool? removeScene { get; set; }       // for close_scene
+            public bool? additive { get; set; }          // for load additive mode
+            public string template { get; set; }         // for create with template
+            public bool? autoRepair { get; set; }        // for validate with auto-repair
         }
 
         private static float[] ParseFloatArray(JToken token)
@@ -84,6 +94,7 @@ namespace MCPForUnity.Editor.Tools
         private static SceneCommand ToSceneCommand(JObject p)
         {
             if (p == null) return new SceneCommand();
+            var toolParams = new ToolParams(p);
             return new SceneCommand
             {
                 action = (p["action"]?.ToString() ?? string.Empty).Trim().ToLowerInvariant(),
@@ -95,10 +106,11 @@ namespace MCPForUnity.Editor.Tools
 
                 // screenshot: camera selection, inline image, batch, view positioning
                 camera = (p["camera"])?.ToString(),
+                captureSource = toolParams.Get("capture_source"),
                 includeImage = ParamCoercion.CoerceBoolNullable(p["includeImage"] ?? p["include_image"]),
                 maxResolution = ParamCoercion.CoerceIntNullable(p["maxResolution"] ?? p["max_resolution"]),
                 batch = (p["batch"])?.ToString(),
-                lookAt = p["lookAt"] ?? p["look_at"],
+                viewTarget = p["viewTarget"] ?? p["view_target"],
                 viewPosition = VectorParsing.ParseVector3(p["viewPosition"] ?? p["view_position"]),
                 viewRotation = VectorParsing.ParseVector3(p["viewRotation"] ?? p["view_rotation"]),
 
@@ -109,7 +121,7 @@ namespace MCPForUnity.Editor.Tools
                 orbitFov = ParamCoercion.CoerceFloatNullable(p["orbitFov"] ?? p["orbit_fov"]),
 
                 // scene_view_frame
-                sceneViewTarget = p["sceneViewTarget"] ?? p["scene_view_target"],
+                sceneViewTarget = toolParams.GetRaw("scene_view_target"),
 
                 // get_hierarchy paging + safety
                 parent = p["parent"],
@@ -119,7 +131,29 @@ namespace MCPForUnity.Editor.Tools
                 maxDepth = ParamCoercion.CoerceIntNullable(p["maxDepth"] ?? p["max_depth"]),
                 maxChildrenPerNode = ParamCoercion.CoerceIntNullable(p["maxChildrenPerNode"] ?? p["max_children_per_node"]),
                 includeTransform = ParamCoercion.CoerceBoolNullable(p["includeTransform"] ?? p["include_transform"]),
+
+                // Multi-scene editing
+                sceneName = (p["sceneName"] ?? p["scene_name"])?.ToString(),
+                scenePath = (p["scenePath"] ?? p["scene_path"])?.ToString(),
+                target = (p["target"])?.ToString(),
+                removeScene = ParamCoercion.CoerceBoolNullable(p["removeScene"] ?? p["remove_scene"]),
+                additive = ParamCoercion.CoerceBoolNullable(p["additive"]),
+                template = (p["template"])?.ToString()?.ToLowerInvariant(),
+                autoRepair = ParamCoercion.CoerceBoolNullable(p["autoRepair"] ?? p["auto_repair"]),
             };
+        }
+
+        private static Scene? FindLoadedScene(string sceneName, string scenePath)
+        {
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                var scene = SceneManager.GetSceneAt(i);
+                if (!string.IsNullOrEmpty(scenePath) && scene.path == scenePath)
+                    return scene;
+                if (!string.IsNullOrEmpty(sceneName) && scene.name == sceneName)
+                    return scene;
+            }
+            return null;
         }
 
         /// <summary>
@@ -188,15 +222,27 @@ namespace MCPForUnity.Editor.Tools
             switch (action)
             {
                 case "create":
-                    if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(relativePath))
+                    if (string.IsNullOrEmpty(name))
                         return new ErrorResponse(
-                            "'name' and 'path' parameters are required for 'create' action."
+                            "'name' parameter is required for 'create' action. 'path' is optional (defaults to 'Assets/Scenes/')."
                         );
+                    if (!string.IsNullOrEmpty(cmd.template))
+                        return CreateSceneFromTemplate(fullPath, relativePath, cmd.template);
                     return CreateScene(fullPath, relativePath);
                 case "load":
                     // Loading can be done by path/name or build index
-                    if (!string.IsNullOrEmpty(relativePath))
-                        return LoadScene(relativePath);
+                    // When path ends with .unity and no name is given, use path directly as the scene path
+                    string loadPath = relativePath;
+                    if (string.IsNullOrEmpty(loadPath) && !string.IsNullOrEmpty(path))
+                        loadPath = AssetPathUtility.NormalizeSeparators(
+                            path.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase)
+                                ? path : "Assets/" + path);
+                    if (!string.IsNullOrEmpty(loadPath))
+                    {
+                        if (cmd.additive == true)
+                            return LoadSceneAdditive(loadPath);
+                        return LoadScene(loadPath);
+                    }
                     else if (buildIndex.HasValue)
                         return LoadScene(buildIndex.Value);
                     else
@@ -222,9 +268,28 @@ namespace MCPForUnity.Editor.Tools
                     return CaptureScreenshot(cmd);
                 case "scene_view_frame":
                     return FrameSceneView(cmd);
+
+                // Multi-scene editing
+                case "close_scene":
+                    return CloseScene(cmd);
+                case "set_active_scene":
+                    return SetActiveScene(cmd);
+                case "get_loaded_scenes":
+                    return GetLoadedScenes();
+                case "move_to_scene":
+                    return MoveToScene(cmd);
+                case "modify_build_settings":
+                    return new ErrorResponse(
+                        "Build settings management has moved to manage_build (action='scenes'). "
+                        + "Use manage_build to add, remove, or configure scenes in build settings.");
+
+                // Scene validation
+                case "validate":
+                    return ValidateScene(cmd.autoRepair == true);
+
                 default:
                     return new ErrorResponse(
-                        $"Unknown action: '{action}'. Valid actions: create, load, save, get_hierarchy, get_active, get_build_settings, screenshot, scene_view_frame."
+                        $"Unknown action: '{action}'. Valid actions: create, load, save, get_hierarchy, get_active, get_build_settings, screenshot, scene_view_frame, close_scene, set_active_scene, get_loaded_scenes, move_to_scene, validate. For build settings, use manage_build."
                     );
             }
         }
@@ -244,6 +309,16 @@ namespace MCPForUnity.Editor.Tools
         /// Captures a 6-angle contact-sheet around the scene bounds centre.
         /// Public so the tools UI can reuse the same logic.
         /// </summary>
+        /// <summary>
+        /// Captures the active Scene View viewport to a PNG asset.
+        /// Public so the tools UI can reuse the same logic.
+        /// </summary>
+        public static object ExecuteSceneViewScreenshot(string fileName = null)
+        {
+            var cmd = new SceneCommand { fileName = fileName ?? string.Empty };
+            return CaptureSceneViewScreenshot(cmd, cmd.fileName, 1, false, 0);
+        }
+
         public static object ExecuteMultiviewScreenshot(int maxResolution = 480)
         {
             var cmd = new SceneCommand { maxResolution = maxResolution };
@@ -433,6 +508,46 @@ namespace MCPForUnity.Editor.Tools
         {
             try
             {
+                string fileName = cmd.fileName;
+                int resolvedSuperSize = (cmd.superSize.HasValue && cmd.superSize.Value > 0) ? cmd.superSize.Value : 1;
+                bool includeImage = cmd.includeImage ?? false;
+                int maxResolution = cmd.maxResolution ?? 0; // 0 = let ScreenshotUtility default to 640
+                string cameraRef = cmd.camera;
+                string captureSource = string.IsNullOrWhiteSpace(cmd.captureSource)
+                    ? "game_view"
+                    : cmd.captureSource.Trim().ToLowerInvariant();
+
+                if (captureSource != "game_view" && captureSource != "scene_view")
+                {
+                    return new ErrorResponse(
+                        $"Invalid capture_source '{cmd.captureSource}'. Valid values: 'game_view', 'scene_view'.");
+                }
+
+                if (captureSource == "scene_view")
+                {
+                    if (resolvedSuperSize > 1)
+                    {
+                        return new ErrorResponse(
+                            "capture_source='scene_view' does not support super_size above 1. Remove 'super_size' or use capture_source='game_view'.");
+                    }
+                    if (!string.IsNullOrEmpty(cmd.batch))
+                    {
+                        return new ErrorResponse(
+                            "capture_source='scene_view' does not support batch modes. Use capture_source='game_view' for batch capture.");
+                    }
+                    if (cmd.viewPosition.HasValue || cmd.viewRotation.HasValue)
+                    {
+                        return new ErrorResponse(
+                            "capture_source='scene_view' does not support view_position/view_rotation. Use view_target to frame a Scene View object.");
+                    }
+                    if (!string.IsNullOrEmpty(cameraRef))
+                    {
+                        return new ErrorResponse(
+                            "capture_source='scene_view' does not support camera selection. Remove 'camera' or use capture_source='game_view'.");
+                    }
+                    return CaptureSceneViewScreenshot(cmd, fileName, resolvedSuperSize, includeImage, maxResolution);
+                }
+
                 // Batch capture (e.g., "surround" for 6 angles around the scene)
                 if (!string.IsNullOrEmpty(cmd.batch))
                 {
@@ -443,17 +558,11 @@ namespace MCPForUnity.Editor.Tools
                     return new ErrorResponse($"Unknown batch mode: '{cmd.batch}'. Valid modes: 'surround', 'orbit'.");
                 }
 
-                // Positioned view-based capture (creates temp camera at view_position, aimed at look_at)
-                if ((cmd.lookAt != null && cmd.lookAt.Type != JTokenType.Null) || cmd.viewPosition.HasValue)
+                // Positioned view-based capture (creates temp camera at view_position, aimed at view_target)
+                if ((cmd.viewTarget != null && cmd.viewTarget.Type != JTokenType.Null) || cmd.viewPosition.HasValue)
                 {
                     return CapturePositionedScreenshot(cmd);
                 }
-
-                string fileName = cmd.fileName;
-                int resolvedSuperSize = (cmd.superSize.HasValue && cmd.superSize.Value > 0) ? cmd.superSize.Value : 1;
-                bool includeImage = cmd.includeImage ?? false;
-                int maxResolution = cmd.maxResolution ?? 0; // 0 = let ScreenshotUtility default to 640
-                string cameraRef = cmd.camera;
 
                 // Batch mode warning
                 if (Application.isBatchMode)
@@ -510,6 +619,7 @@ namespace MCPForUnity.Editor.Tools
                         { "superSize", result.SuperSize },
                         { "isAsync", false },
                         { "camera", targetCamera.name },
+                        { "captureSource", "game_view" },
                     };
                     if (includeImage && result.ImageBase64 != null)
                     {
@@ -568,6 +678,7 @@ namespace MCPForUnity.Editor.Tools
                         fullPath = defaultResult.FullPath,
                         superSize = defaultResult.SuperSize,
                         isAsync = defaultResult.IsAsync,
+                        captureSource = "game_view",
                     }
                 );
             }
@@ -577,8 +688,87 @@ namespace MCPForUnity.Editor.Tools
             }
         }
 
+        private static object CaptureSceneViewScreenshot(
+            SceneCommand cmd,
+            string fileName,
+            int resolvedSuperSize,
+            bool includeImage,
+            int maxResolution)
+        {
+            if (Application.isBatchMode)
+            {
+                return new ErrorResponse("capture_source='scene_view' is not supported in batch mode.");
+            }
+
+            var sceneView = SceneView.lastActiveSceneView;
+            if (sceneView == null)
+            {
+                return new ErrorResponse(
+                    "No active Scene View found. Open a Scene View window first, then retry screenshot with capture_source='scene_view'.");
+            }
+
+            if (cmd.viewTarget != null && cmd.viewTarget.Type != JTokenType.Null)
+            {
+                var frameResult = FrameSceneView(new SceneCommand { sceneViewTarget = cmd.viewTarget });
+                if (frameResult is ErrorResponse)
+                {
+                    return frameResult;
+                }
+            }
+
+            try
+            {
+                ScreenshotCaptureResult result = EditorWindowScreenshotUtility.CaptureSceneViewViewportToAssets(
+                    sceneView,
+                    fileName,
+                    resolvedSuperSize,
+                    ensureUniqueFileName: true,
+                    includeImage: includeImage,
+                    maxResolution: maxResolution,
+                    out int viewportWidth,
+                    out int viewportHeight);
+
+                AssetDatabase.ImportAsset(result.AssetsRelativePath, ImportAssetOptions.ForceSynchronousImport);
+                string sceneViewName = sceneView.titleContent?.text ?? "Scene";
+
+                var data = new Dictionary<string, object>
+                {
+                    { "path", result.AssetsRelativePath },
+                    { "fullPath", result.FullPath },
+                    { "superSize", result.SuperSize },
+                    { "isAsync", false },
+                    { "camera", sceneView.camera != null ? sceneView.camera.name : "SceneCamera" },
+                    { "captureSource", "scene_view" },
+                    { "captureMode", "scene_view_viewport" },
+                    { "sceneViewName", sceneViewName },
+                    { "viewportWidth", viewportWidth },
+                    { "viewportHeight", viewportHeight },
+                };
+
+                if (cmd.viewTarget != null && cmd.viewTarget.Type != JTokenType.Null)
+                {
+                    data["viewTarget"] = cmd.viewTarget;
+                }
+
+                if (includeImage && result.ImageBase64 != null)
+                {
+                    data["imageBase64"] = result.ImageBase64;
+                    data["imageWidth"] = result.ImageWidth;
+                    data["imageHeight"] = result.ImageHeight;
+                }
+
+                return new SuccessResponse(
+                    $"Scene View screenshot captured to '{result.AssetsRelativePath}' (scene view: {sceneViewName}).",
+                    data);
+            }
+            catch (Exception e)
+            {
+                return new ErrorResponse($"Error capturing Scene View screenshot: {e.Message}");
+            }
+        }
+
         /// <summary>
-        /// Captures screenshots from 6 angles around scene bounds (or a look_at target) for AI scene understanding.
+        /// Captures screenshots from 6 angles around scene bounds (or a view_target) for AI scene understanding.
         /// Does NOT save to disk — returns all images as inline base64 PNGs. Always uses camera-based capture.
         /// </summary>
         private static object CaptureSurroundBatch(SceneCommand cmd)
@@ -590,24 +780,24 @@ namespace MCPForUnity.Editor.Tools
                 Vector3 center;
                 float radius;
 
-                // If look_at is provided, center on that target instead of scene bounds
-                if (cmd.lookAt != null && cmd.lookAt.Type != JTokenType.Null)
+                // If view_target is provided, center on that target instead of scene bounds
+                if (cmd.viewTarget != null && cmd.viewTarget.Type != JTokenType.Null)
                 {
-                    var lookAtPos = VectorParsing.ParseVector3(cmd.lookAt);
-                    if (lookAtPos.HasValue)
+                    var targetPos3 = VectorParsing.ParseVector3(cmd.viewTarget);
+                    if (targetPos3.HasValue)
                     {
-                        center = lookAtPos.Value;
+                        center = targetPos3.Value;
                         radius = 5f;
                     }
                     else
                     {
-                        Scene lookAtScene = EditorSceneManager.GetActiveScene();
-                        var lookAtGo = ResolveGameObject(cmd.lookAt, lookAtScene);
-                        if (lookAtGo == null)
-                            return new ErrorResponse($"look_at target '{cmd.lookAt}' not found for batch capture.");
+                        Scene targetScene = EditorSceneManager.GetActiveScene();
+                        var targetGo = ResolveGameObject(cmd.viewTarget, targetScene);
+                        if (targetGo == null)
+                            return new ErrorResponse($"view_target '{cmd.viewTarget}' not found for batch capture.");
 
-                        Bounds targetBounds = new Bounds(lookAtGo.transform.position, Vector3.zero);
-                        foreach (var r in lookAtGo.GetComponentsInChildren<Renderer>())
+                        Bounds targetBounds = new Bounds(targetGo.transform.position, Vector3.zero);
+                        foreach (var r in targetGo.GetComponentsInChildren<Renderer>())
                         {
                             if (r != null && r.gameObject.activeInHierarchy) targetBounds.Encapsulate(r.bounds);
                         }
@@ -736,24 +926,24 @@ namespace MCPForUnity.Editor.Tools
                 Vector3 center;
                 float radius;
 
-                // Resolve center and radius from look_at target or scene bounds
-                if (cmd.lookAt != null && cmd.lookAt.Type != JTokenType.Null)
+                // Resolve center and radius from view_target or scene bounds
+                if (cmd.viewTarget != null && cmd.viewTarget.Type != JTokenType.Null)
                 {
-                    var lookAtPos = VectorParsing.ParseVector3(cmd.lookAt);
-                    if (lookAtPos.HasValue)
+                    var targetPos3 = VectorParsing.ParseVector3(cmd.viewTarget);
+                    if (targetPos3.HasValue)
                     {
-                        center = lookAtPos.Value;
+                        center = targetPos3.Value;
                         radius = cmd.orbitDistance ?? 5f;
                     }
                     else
                     {
-                        Scene lookAtScene = EditorSceneManager.GetActiveScene();
-                        var lookAtGo = ResolveGameObject(cmd.lookAt, lookAtScene);
-                        if (lookAtGo == null)
-                            return new ErrorResponse($"look_at target '{cmd.lookAt}' not found for orbit capture.");
+                        Scene targetScene = EditorSceneManager.GetActiveScene();
+                        var targetGo = ResolveGameObject(cmd.viewTarget, targetScene);
+                        if (targetGo == null)
+                            return new ErrorResponse($"view_target '{cmd.viewTarget}' not found for orbit capture.");
 
-                        Bounds targetBounds = new Bounds(lookAtGo.transform.position, Vector3.zero);
-                        foreach (var r in lookAtGo.GetComponentsInChildren<Renderer>())
+                        Bounds targetBounds = new Bounds(targetGo.transform.position, Vector3.zero);
+                        foreach (var r in targetGo.GetComponentsInChildren<Renderer>())
                         {
                             if (r != null && r.gameObject.activeInHierarchy) targetBounds.Encapsulate(r.bounds);
                         }
@@ -874,7 +1064,7 @@ namespace MCPForUnity.Editor.Tools
         }
 
         /// <summary>
-        /// Captures a single screenshot from a temporary camera placed at view_position and aimed at look_at.
+        /// Captures a single screenshot from a temporary camera placed at view_position and aimed at view_target.
         /// Returns inline base64 PNG and also saves the image to Assets/Screenshots/.
         /// </summary>
         private static object CapturePositionedScreenshot(SceneCommand cmd)
@@ -885,9 +1075,9 @@ namespace MCPForUnity.Editor.Tools
 
                 // Resolve where to aim
                 Vector3? targetPos = null;
-                if (cmd.lookAt != null && cmd.lookAt.Type != JTokenType.Null)
+                if (cmd.viewTarget != null && cmd.viewTarget.Type != JTokenType.Null)
                 {
-                    var parsedPos = VectorParsing.ParseVector3(cmd.lookAt);
+                    var parsedPos = VectorParsing.ParseVector3(cmd.viewTarget);
                     if (parsedPos.HasValue)
                     {
                         targetPos = parsedPos.Value;
@@ -895,10 +1085,10 @@ namespace MCPForUnity.Editor.Tools
                     else
                     {
                         Scene activeScene = EditorSceneManager.GetActiveScene();
-                        var lookAtGo = ResolveGameObject(cmd.lookAt, activeScene);
-                        if (lookAtGo == null)
-                            return new ErrorResponse($"look_at target '{cmd.lookAt}' not found.");
-                        targetPos = lookAtGo.transform.position;
+                        var resolvedGo = ResolveGameObject(cmd.viewTarget, activeScene);
+                        if (resolvedGo == null)
+                            return new ErrorResponse($"view_target '{cmd.viewTarget}' not found.");
+                        targetPos = resolvedGo.transform.position;
                     }
                 }
 
@@ -910,12 +1100,12 @@ namespace MCPForUnity.Editor.Tools
                 }
                 else if (targetPos.HasValue)
                 {
-                    // Default: offset from look_at target
+                    // Default: offset from view_target
                     camPos = targetPos.Value + new Vector3(0, 2, -5);
                 }
                 else
                 {
-                    return new ErrorResponse("Provide 'look_at' or 'view_position' for a positioned screenshot.");
+                    return new ErrorResponse("Provide 'view_target' or 'view_position' for a positioned screenshot.");
                 }
 
                 // Create temporary camera
@@ -971,7 +1161,7 @@ namespace MCPForUnity.Editor.Tools
                         { "path", assetsRelativePath },
                     };
                     if (targetPos.HasValue)
-                        data["lookAt"] = new[] { targetPos.Value.x, targetPos.Value.y, targetPos.Value.z };
+                        data["viewTarget"] = new[] { targetPos.Value.x, targetPos.Value.y, targetPos.Value.z };
 
                     return new SuccessResponse(
                         $"Positioned screenshot captured (max {maxRes}px) and saved to '{assetsRelativePath}'.",
@@ -1065,30 +1255,7 @@ namespace MCPForUnity.Editor.Tools
                         return new ErrorResponse($"Target GameObject '{cmd.sceneViewTarget}' not found for scene_view_frame.");
                     }
 
-                    // Calculate bounds from renderers, colliders, or transform
-                    Bounds bounds = new Bounds(target.transform.position, Vector3.zero);
-                    var renderers = target.GetComponentsInChildren<Renderer>();
-                    if (renderers.Length > 0)
-                    {
-                        bounds = renderers[0].bounds;
-                        for (int i = 1; i < renderers.Length; i++)
-                            bounds.Encapsulate(renderers[i].bounds);
-                    }
-                    else
-                    {
-                        var colliders = target.GetComponentsInChildren<Collider>();
-                        if (colliders.Length > 0)
-                        {
-                            bounds = colliders[0].bounds;
-                            for (int i = 1; i < colliders.Length; i++)
-                                bounds.Encapsulate(colliders[i].bounds);
-                        }
-                        else
-                        {
-                            bounds = new Bounds(target.transform.position, Vector3.one);
-                        }
-                    }
-
+                    Bounds bounds = CalculateFrameBounds(target);
                     sceneView.Frame(bounds, false);
                     return new SuccessResponse($"Scene View framed on '{target.name}'.", new { target = target.name });
                 }
@@ -1116,6 +1283,124 @@ namespace MCPForUnity.Editor.Tools
             {
                 return new ErrorResponse($"Error framing Scene View: {e.Message}");
             }
+        }
+
+        private static Bounds CalculateFrameBounds(GameObject target)
+        {
+            if (target == null)
+                return new Bounds(Vector3.zero, Vector3.one);
+
+            if (TryGetRectTransformBounds(target, out Bounds rectBounds))
+                return rectBounds;
+
+            if (TryGetRendererBounds(target, out Bounds rendererBounds))
+                return rendererBounds;
+
+            if (TryGetColliderBounds(target, out Bounds colliderBounds))
+                return colliderBounds;
+
+            return new Bounds(target.transform.position, Vector3.one);
+        }
+
+        private static bool TryGetRectTransformBounds(GameObject target, out Bounds bounds)
+        {
+            bounds = default(Bounds);
+            var rectTransforms = target.GetComponentsInChildren<RectTransform>(true);
+            bool hasBounds = false;
+            var corners = new Vector3[4];
+
+            foreach (var rectTransform in rectTransforms)
+            {
+                if (rectTransform == null || !rectTransform.gameObject.activeInHierarchy)
+                    continue;
+
+                rectTransform.GetWorldCorners(corners);
+                for (int i = 0; i < corners.Length; i++)
+                {
+                    if (!hasBounds)
+                    {
+                        bounds = new Bounds(corners[i], Vector3.zero);
+                        hasBounds = true;
+                    }
+                    else
+                    {
+                        bounds.Encapsulate(corners[i]);
+                    }
+                }
+            }
+
+            if (!hasBounds)
+                return false;
+
+            if (bounds.size.sqrMagnitude < 0.0001f)
+                bounds.Expand(1f);
+
+            return true;
+        }
+
+        private static bool TryGetRendererBounds(GameObject target, out Bounds bounds)
+        {
+            bounds = default(Bounds);
+            var renderers = target.GetComponentsInChildren<Renderer>(true);
+            bool hasBounds = false;
+            foreach (var renderer in renderers)
+            {
+                if (renderer == null || !renderer.gameObject.activeInHierarchy)
+                    continue;
+
+                if (!hasBounds)
+                {
+                    bounds = renderer.bounds;
+                    hasBounds = true;
+                }
+                else
+                {
+                    bounds.Encapsulate(renderer.bounds);
+                }
+            }
+
+            return hasBounds;
+        }
+
+        private static bool TryGetColliderBounds(GameObject target, out Bounds bounds)
+        {
+            bounds = default(Bounds);
+            var colliders = target.GetComponentsInChildren<Collider>(true);
+            bool hasBounds = false;
+            foreach (var collider in colliders)
+            {
+                if (collider == null || !collider.gameObject.activeInHierarchy)
+                    continue;
+
+                if (!hasBounds)
+                {
+                    bounds = collider.bounds;
+                    hasBounds = true;
+                }
+                else
+                {
+                    bounds.Encapsulate(collider.bounds);
+                }
+            }
+
+            var colliders2D = target.GetComponentsInChildren<Collider2D>(true);
+            foreach (var collider in colliders2D)
+            {
+                if (collider == null || !collider.gameObject.activeInHierarchy)
+                    continue;
+
+                if (!hasBounds)
+                {
+                    bounds = collider.bounds;
+                    hasBounds = true;
+                }
+                else
+                {
+                    bounds.Encapsulate(collider.bounds);
+                }
+            }
+
+            return hasBounds;
         }
 
         private static void EnsureGameView()
@@ -1221,6 +1506,251 @@ namespace MCPForUnity.Editor.Tools
             };
 
             EditorApplication.update += tick;
+        }
+
+        // ── Multi-scene editing ────────────────────────────────────────────
+
+        private static object LoadSceneAdditive(string scenePath)
+        {
+            string projectRoot = Application.dataPath.Substring(0, Application.dataPath.Length - "Assets".Length);
+            if (!File.Exists(Path.Combine(projectRoot, scenePath)))
+                return new ErrorResponse($"Scene not found: '{scenePath}'");
+
+            var existing = SceneManager.GetSceneByPath(scenePath);
+            if (existing.IsValid() && existing.isLoaded)
+                return new ErrorResponse($"Scene '{existing.name}' is already loaded.");
+
+            var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
+            return new SuccessResponse($"Opened '{scene.name}' additively.", new
+            {
+                sceneName = scene.name,
+                scenePath = scene.path,
+                loadedSceneCount = SceneManager.sceneCount
+            });
+        }
+
+        private static object CloseScene(SceneCommand cmd)
+        {
+            var scene = FindLoadedScene(cmd.sceneName ?? cmd.name, cmd.scenePath);
+            if (!scene.HasValue)
+                return new ErrorResponse("Scene not found among loaded scenes. Provide 'sceneName' or 'scenePath'.");
+
+            if (SceneManager.sceneCount <= 1)
+                return new ErrorResponse("Cannot close the last loaded scene.");
+
+            if (scene.Value.isDirty)
+                return new ErrorResponse($"Scene '{scene.Value.name}' has unsaved changes. Save first or data will be lost.");
+
+            string capturedName = scene.Value.name;
+            bool remove = cmd.removeScene ?? false;
+            bool closed = EditorSceneManager.CloseScene(scene.Value, remove);
+            string verb = remove ? "Removed" : "Unloaded";
+            if (!closed)
+                return new ErrorResponse($"Failed to {verb.ToLowerInvariant()} scene '{capturedName}'.");
+            return new SuccessResponse($"{verb} scene '{capturedName}'.", new
+            {
+                sceneName = capturedName,
+                removed = remove,
+                loadedSceneCount = SceneManager.sceneCount
+            });
+        }
+
+        private static object SetActiveScene(SceneCommand cmd)
+        {
+            var scene = FindLoadedScene(cmd.sceneName ?? cmd.name, cmd.scenePath);
+            if (!scene.HasValue)
+                return new ErrorResponse("Scene not found among loaded scenes. Provide 'sceneName' or 'scenePath'.");
+            if (!scene.Value.isLoaded)
+                return new ErrorResponse($"Scene '{scene.Value.name}' is not loaded. Open it first.");
+
+            string capturedName = scene.Value.name;
+            bool success = SceneManager.SetActiveScene(scene.Value);
+            if (!success)
+                return new ErrorResponse($"Failed to set '{capturedName}' as the active scene.");
+            return new SuccessResponse($"Set '{capturedName}' as the active scene.");
+        }
+
+        private static object GetLoadedScenes()
+        {
+            var activeScene = SceneManager.GetActiveScene();
+            var scenes = new List<object>();
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                var s = SceneManager.GetSceneAt(i);
+                scenes.Add(new
+                {
+                    name = s.name,
+                    path = s.path,
+                    buildIndex = s.buildIndex,
+                    isLoaded = s.isLoaded,
+                    isDirty = s.isDirty,
+                    isActive = s == activeScene,
+                    rootCount = s.isLoaded ? s.rootCount : 0
+                });
+            }
+            return new SuccessResponse($"{scenes.Count} scene(s) loaded.", new { scenes });
+        }
+
+        private static object MoveToScene(SceneCommand cmd)
+        {
+            if (string.IsNullOrEmpty(cmd.target))
+                return new ErrorResponse("'target' (GameObject name/path/instanceID) is required for move_to_scene.");
+
+            var go = ResolveGameObject(new JValue(cmd.target), SceneManager.GetActiveScene());
+            if (go == null)
+                return new ErrorResponse($"GameObject not found: '{cmd.target}'");
+            if (go.transform.parent != null)
+                return new ErrorResponse($"'{go.name}' is not a root GameObject. Only root objects can be moved between scenes.");
+
+            var targetScene = FindLoadedScene(cmd.sceneName ?? cmd.name, cmd.scenePath);
+            if (!targetScene.HasValue)
+                return new ErrorResponse("Target scene not found. Provide 'sceneName' or 'scenePath'.");
+            if (!targetScene.Value.isLoaded)
+                return new ErrorResponse($"Target scene '{targetScene.Value.name}' is not loaded.");
+
+            SceneManager.MoveGameObjectToScene(go, targetScene.Value);
+            return new SuccessResponse($"Moved '{go.name}' to scene '{targetScene.Value.name}'.");
+        }
+
+        // ModifyBuildSettings removed — use manage_build(action="scenes") instead.
+
+        // ── Scene templates ────────────────────────────────────────────────
+
+        private static object CreateSceneFromTemplate(string fullPath, string relativePath, string template)
+        {
+            NewSceneSetup setup;
+            switch (template)
+            {
+                case "empty":
+                    setup = NewSceneSetup.EmptyScene;
+                    break;
+                case "default":
+                case "3d_basic":
+                case "2d_basic":
+                    setup = NewSceneSetup.DefaultGameObjects;
+                    break;
+                default:
+                    return new ErrorResponse(
+                        $"Unknown template: '{template}'. Valid: empty, default, 3d_basic, 2d_basic.");
+            }
+
+            if (!string.IsNullOrEmpty(fullPath) && File.Exists(fullPath))
+                return new ErrorResponse($"Scene already exists at '{relativePath}'. Delete it first or use a different name.");
+
+            var scene = EditorSceneManager.NewScene(setup, NewSceneMode.Single);
+
+            if (template == "3d_basic")
+            {
+                var plane = GameObject.CreatePrimitive(PrimitiveType.Plane);
+                plane.name = "Ground";
+                plane.transform.position = Vector3.zero;
+            }
+            else if (template == "2d_basic")
+            {
+                var cam = Camera.main;
+                if (cam != null)
+                    cam.orthographic = true;
+            }
+
+            if (!string.IsNullOrEmpty(fullPath) && !string.IsNullOrEmpty(relativePath))
+            {
+                string dir = Path.GetDirectoryName(fullPath);
+                if (!string.IsNullOrEmpty(dir))
+                    Directory.CreateDirectory(dir);
+                if (!EditorSceneManager.SaveScene(scene, relativePath))
+                    return new ErrorResponse($"Scene created in memory but failed to save to '{relativePath}'.");
+            }
+
+            return new SuccessResponse($"Created scene from template '{template}'.", new
+            {
+                sceneName = scene.name,
+                scenePath = scene.path,
+                template,
+                rootObjectCount = scene.rootCount
+            });
+        }
+
+        // ── Scene validation ───────────────────────────────────────────────
+
+        private static object ValidateScene(bool autoRepair)
+        {
+            var activeScene = SceneManager.GetActiveScene();
+            var rootObjects = activeScene.GetRootGameObjects();
+
+            int missingScripts = 0;
+            int brokenPrefabs = 0;
+            int repaired = 0;
+            var issues = new List<object>();
+            const int maxIssues = 200;
+
+            foreach (var root in rootObjects)
+            {
+                var allTransforms = root.GetComponentsInChildren<Transform>(true);
+                foreach (var t in allTransforms)
+                {
+                    var go = t.gameObject;
+
+                    int missing = GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(go);
+                    if (missing > 0)
+                    {
+                        missingScripts += missing;
+                        if (issues.Count < maxIssues)
+                        {
+                            issues.Add(new
+                            {
+                                type = "missing_script",
+                                gameObject = go.name,
+                                path = GetGameObjectPath(go),
+                                count = missing
+                            });
+                        }
+
+                        if (autoRepair)
+                        {
+                            Undo.RegisterCompleteObjectUndo(go, "Remove Missing Scripts");
+                            repaired += GameObjectUtility.RemoveMonoBehavioursWithMissingScript(go);
+                        }
+                    }
+
+                    var prefabStatus = PrefabUtility.GetPrefabInstanceStatus(go);
+                    if (prefabStatus == PrefabInstanceStatus.MissingAsset)
+                    {
+                        brokenPrefabs++;
+                        if (issues.Count < maxIssues)
+                        {
+                            issues.Add(new
+                            {
+                                type = "broken_prefab",
+                                gameObject = go.name,
+                                path = GetGameObjectPath(go),
+                                status = prefabStatus.ToString()
+                            });
+                        }
+                    }
+                }
+            }
+
+            if (repaired > 0)
+                EditorSceneManager.MarkSceneDirty(activeScene);
+
+            int totalIssues = missingScripts + brokenPrefabs;
+            string message = totalIssues == 0
+                ? $"Scene '{activeScene.name}' is clean — no issues found."
+                : $"Scene '{activeScene.name}' has {totalIssues} issue(s).";
+            if (repaired > 0)
+                message += $" Auto-repaired {repaired} missing script(s). Use undo to revert.";
+
+            return new SuccessResponse(message, new
+            {
+                sceneName = activeScene.name,
+                totalIssues,
+                missingScripts,
+                brokenPrefabs,
+                repaired,
+                issues,
+                truncated = issues.Count > maxIssues || (totalIssues > issues.Count),
+                note = brokenPrefabs > 0 ? "Broken prefab references are not auto-repaired (too risky). Fix manually." : null
+            });
         }
 
         private static object GetActiveSceneInfo()

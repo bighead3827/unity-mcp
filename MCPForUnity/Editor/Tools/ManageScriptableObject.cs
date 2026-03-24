@@ -737,64 +737,27 @@ namespace MCPForUnity.Editor.Tools
 
             if (prop.propertyType == SerializedPropertyType.ObjectReference)
             {
-                var refObj = patchObj["ref"] as JObject;
+                // Legacy "ref" key takes precedence for backward compatibility.
+                // Use TryGetValue to preserve non-JObject ref tokens (e.g. string GUID).
+                patchObj.TryGetValue("ref", out JToken refToken);
                 var objRefValue = patchObj["value"];
-                UnityEngine.Object newRef = null;
-                string refGuid = refObj?["guid"]?.ToString();
-                string refPath = refObj?["path"]?.ToString();
-                string resolveMethod = "explicit";
+                JToken resolveToken = refToken ?? objRefValue;
 
-                if (refObj == null && objRefValue?.Type == JTokenType.Null)
+                if (resolveToken == null)
                 {
-                    // Explicit null - clear the reference
-                    newRef = null;
-                    resolveMethod = "cleared";
-                }
-                else if (!string.IsNullOrEmpty(refGuid) || !string.IsNullOrEmpty(refPath))
-                {
-                    // Traditional ref object with guid or path
-                    string resolvedPath = !string.IsNullOrEmpty(refGuid)
-                        ? AssetDatabase.GUIDToAssetPath(refGuid)
-                        : AssetPathUtility.SanitizeAssetPath(refPath);
-
-                    if (!string.IsNullOrEmpty(resolvedPath))
-                    {
-                        newRef = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(resolvedPath);
-                    }
-                    resolveMethod = !string.IsNullOrEmpty(refGuid) ? "ref.guid" : "ref.path";
-                }
-                else if (objRefValue?.Type == JTokenType.String)
-                {
-                    // Phase 4: GUID shorthand - allow plain string value
-                    string strVal = objRefValue.ToString();
-                    
-                    // Check if it's a GUID (32 hex characters, no dashes)
-                    if (Regex.IsMatch(strVal, @"^[0-9a-fA-F]{32}$"))
-                    {
-                        string guidPath = AssetDatabase.GUIDToAssetPath(strVal);
-                        if (!string.IsNullOrEmpty(guidPath))
-                        {
-                            newRef = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(guidPath);
-                            resolveMethod = "guid-shorthand";
-                        }
-                    }
-                    // Check if it looks like an asset path
-                    else if (strVal.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase) || 
-                             strVal.Contains("/"))
-                    {
-                        string sanitizedPath = AssetPathUtility.SanitizeAssetPath(strVal);
-                        newRef = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(sanitizedPath);
-                        resolveMethod = "path-shorthand";
-                    }
+                    return new { propertyPath, op = "set", ok = false, resolvedPropertyType = prop.propertyType.ToString(),
+                        message = "ObjectReference patch requires a 'ref' or 'value' key." };
                 }
 
-                if (prop.objectReferenceValue != newRef)
+                if (!ComponentOps.SetObjectReference(prop, resolveToken, out string refError))
                 {
-                    prop.objectReferenceValue = newRef;
-                    changed = true;
+                    return new { propertyPath, op = "set", ok = false, resolvedPropertyType = prop.propertyType.ToString(), message = refError };
                 }
 
-                string refMessage = newRef == null ? "Cleared reference." : $"Set reference ({resolveMethod}).";
+                changed = true;
+                string refMessage = prop.objectReferenceValue == null
+                    ? "Cleared reference."
+                    : $"Set reference to '{prop.objectReferenceValue.name}'.";
                 return new { propertyPath, op = "set", ok = true, resolvedPropertyType = prop.propertyType.ToString(), message = refMessage };
             }
 
@@ -919,25 +882,41 @@ namespace MCPForUnity.Editor.Tools
                     return true;
                 }
 
+                // ObjectReference - delegate to shared handler
+                if (prop.propertyType == SerializedPropertyType.ObjectReference)
+                {
+                    if (!ComponentOps.SetObjectReference(prop, valueToken, out string refError))
+                    {
+                        message = refError;
+                        return false;
+                    }
+                    message = prop.objectReferenceValue == null
+                        ? "Cleared reference."
+                        : $"Set reference to '{prop.objectReferenceValue.name}'.";
+                    return true;
+                }
+
                 // Supported Types: Integer, Boolean, Float, String, Enum, Vector2, Vector3, Vector4, Color
                 // Using shared helpers from ParamCoercion and VectorParsing
                 switch (prop.propertyType)
                 {
                     case SerializedPropertyType.Integer:
-                        // Use ParamCoercion for robust int parsing
-                        int intVal = ParamCoercion.CoerceInt(valueToken, int.MinValue);
-                        if (intVal == int.MinValue && valueToken?.Type != JTokenType.Integer)
+                        if (valueToken == null || valueToken.Type == JTokenType.Null)
                         {
-                            // Double-check: if it's actually int.MinValue or failed to parse
-                            if (valueToken == null || valueToken.Type == JTokenType.Null ||
-                                (valueToken.Type == JTokenType.String && !int.TryParse(valueToken.ToString(), out _)))
-                            {
-                                message = "Expected integer value.";
-                                return false;
-                            }
+                            message = "Expected integer value.";
+                            return false;
                         }
-                        prop.intValue = intVal;
-                        message = "Set int.";
+                        if (valueToken.Type != JTokenType.Integer && valueToken.Type != JTokenType.Float
+                            && !long.TryParse(valueToken.ToString(), out _))
+                        {
+                            message = "Expected integer value.";
+                            return false;
+                        }
+                        if (prop.type == "long")
+                            prop.longValue = ParamCoercion.CoerceLong(valueToken, 0);
+                        else
+                            prop.intValue = ParamCoercion.CoerceInt(valueToken, 0);
+                        message = prop.type == "long" ? "Set long." : "Set int.";
                         return true;
 
                     case SerializedPropertyType.Boolean:

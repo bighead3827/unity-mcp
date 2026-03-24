@@ -466,6 +466,25 @@ namespace MCPForUnity.Editor.Helpers
                 return false;
 
             so.ApplyModifiedProperties();
+
+            // Readback verification for ObjectReference — these can silently fail
+            if (prop.propertyType == SerializedPropertyType.ObjectReference
+                && value != null
+                && !(value is JValue jv && jv.Type == JTokenType.Null))
+            {
+                so.Update();
+                var verifyProp = so.FindProperty(propertyName)
+                              ?? so.FindProperty(normalizedName);
+                if (verifyProp != null
+                    && verifyProp.propertyType == SerializedPropertyType.ObjectReference
+                    && verifyProp.objectReferenceValue == null)
+                {
+                    error = $"Property '{propertyName}' was set but the object reference did not persist. " +
+                            "Check that the referenced object exists and is the correct type.";
+                    return false;
+                }
+            }
+
             return true;
         }
 
@@ -522,17 +541,17 @@ namespace MCPForUnity.Editor.Helpers
                 switch (prop.propertyType)
                 {
                     case SerializedPropertyType.Integer:
-                        int intVal = ParamCoercion.CoerceInt(value, int.MinValue);
-                        if (intVal == int.MinValue && value?.Type != JTokenType.Integer)
+                        if (value == null || value.Type == JTokenType.Null
+                            || (value.Type != JTokenType.Integer && value.Type != JTokenType.Float
+                                && !long.TryParse(value.ToString(), out _)))
                         {
-                            if (value == null || value.Type == JTokenType.Null ||
-                                (value.Type == JTokenType.String && !int.TryParse(value.ToString(), out _)))
-                            {
-                                error = "Expected integer value.";
-                                return false;
-                            }
+                            error = "Expected integer value.";
+                            return false;
                         }
-                        prop.intValue = intVal;
+                        if (prop.type == "long")
+                            prop.longValue = ParamCoercion.CoerceLong(value, 0);
+                        else
+                            prop.intValue = ParamCoercion.CoerceInt(value, 0);
                         return true;
 
                     case SerializedPropertyType.Boolean:
@@ -573,7 +592,7 @@ namespace MCPForUnity.Editor.Helpers
             }
         }
 
-        private static bool SetObjectReference(SerializedProperty prop, JToken value, out string error)
+        internal static bool SetObjectReference(SerializedProperty prop, JToken value, out string error)
         {
             error = null;
 
@@ -628,12 +647,18 @@ namespace MCPForUnity.Editor.Helpers
                     {
                         string spriteName = spriteNameToken.ToString();
                         var allAssets = AssetDatabase.LoadAllAssetsAtPath(path);
+                        var originalRef = prop.objectReferenceValue;
                         foreach (var asset in allAssets)
                         {
                             if (asset is Sprite sprite && sprite.name == spriteName)
                             {
                                 prop.objectReferenceValue = sprite;
-                                return true;
+                                if (prop.objectReferenceValue != null)
+                                    return true;
+                                // Unity rejected the type — restore and report
+                                prop.objectReferenceValue = originalRef;
+                                error = $"Sprite '{spriteName}' found but is not compatible with the property type.";
+                                return false;
                             }
                         }
 
@@ -648,6 +673,7 @@ namespace MCPForUnity.Editor.Helpers
                         if (targetFileId != 0)
                         {
                             var allAssets = AssetDatabase.LoadAllAssetsAtPath(path);
+                            var originalRef = prop.objectReferenceValue;
                             foreach (var asset in allAssets)
                             {
                                 if (asset is Sprite sprite)
@@ -656,7 +682,11 @@ namespace MCPForUnity.Editor.Helpers
                                     if (spriteFileId == targetFileId)
                                     {
                                         prop.objectReferenceValue = sprite;
-                                        return true;
+                                        if (prop.objectReferenceValue != null)
+                                            return true;
+                                        prop.objectReferenceValue = originalRef;
+                                        error = $"Sprite with fileID '{targetFileId}' found but is not compatible with the property type.";
+                                        return false;
                                     }
                                 }
                             }
@@ -765,6 +795,43 @@ namespace MCPForUnity.Editor.Helpers
             prop.objectReferenceValue = resolved;
             if (prop.objectReferenceValue != null)
                 return true;
+
+            // Sub-asset fallback: e.g., Texture2D → Sprite
+            string subAssetPath = AssetDatabase.GetAssetPath(resolved);
+            if (!string.IsNullOrEmpty(subAssetPath))
+            {
+                var subAssets = AssetDatabase.LoadAllAssetsAtPath(subAssetPath);
+                UnityEngine.Object match = null;
+                int matchCount = 0;
+                foreach (var sub in subAssets)
+                {
+                    if (sub == null || sub == resolved) continue;
+                    prop.objectReferenceValue = sub;
+                    if (prop.objectReferenceValue != null)
+                    {
+                        match = sub;
+                        matchCount++;
+                        if (matchCount > 1) break;
+                    }
+                }
+
+                if (matchCount == 1)
+                {
+                    prop.objectReferenceValue = match;
+                    return true;
+                }
+
+                // Clean up: probing may have left the property dirty
+                prop.objectReferenceValue = null;
+
+                if (matchCount > 1)
+                {
+                    error = $"Multiple compatible sub-assets found in '{subAssetPath}'. " +
+                            "Use {\"guid\": \"...\", \"spriteName\": \"<name>\"} or " +
+                            "{\"guid\": \"...\", \"fileID\": <id>} for precise selection.";
+                    return false;
+                }
+            }
 
             // If the resolved object is a GameObject but the property expects a Component,
             // try each component on the GameObject until one is accepted.
