@@ -79,7 +79,11 @@ namespace MCPForUnity.Editor.Tools.Physics
                 ["isKinematic"] = rb.isKinematic,
                 ["position"] = new[] { rb.position.x, rb.position.y, rb.position.z },
                 ["rotation"] = new[] { rb.rotation.x, rb.rotation.y, rb.rotation.z, rb.rotation.w },
+#if UNITY_6000_0_OR_NEWER
                 ["velocity"] = new[] { rb.linearVelocity.x, rb.linearVelocity.y, rb.linearVelocity.z },
+#else
+                ["velocity"] = new[] { rb.velocity.x, rb.velocity.y, rb.velocity.z },
+#endif
                 ["angularVelocity"] = new[] { rb.angularVelocity.x, rb.angularVelocity.y, rb.angularVelocity.z },
                 ["interpolation"] = rb.interpolation.ToString(),
                 ["collisionDetectionMode"] = rb.collisionDetectionMode.ToString(),
@@ -124,7 +128,11 @@ namespace MCPForUnity.Editor.Tools.Physics
                 ["simulated"] = rb2d.simulated,
                 ["position"] = new[] { rb2d.position.x, rb2d.position.y },
                 ["rotation"] = rb2d.rotation,
+#if UNITY_6000_0_OR_NEWER
                 ["velocity"] = new[] { rb2d.linearVelocity.x, rb2d.linearVelocity.y },
+#else
+                ["velocity"] = new[] { rb2d.velocity.x, rb2d.velocity.y },
+#endif
                 ["angularVelocity"] = rb2d.angularVelocity,
                 ["collisionDetectionMode"] = rb2d.collisionDetectionMode.ToString(),
                 ["constraints"] = rb2d.constraints.ToString(),

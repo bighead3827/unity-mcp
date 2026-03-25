@@ -1223,7 +1223,7 @@ Manage 3D and 2D physics: settings, collision matrix, materials, joints, queries
 - **Joints:** `add_joint`, `configure_joint`, `remove_joint`
 - **Queries:** `raycast`, `raycast_all`, `linecast`, `shapecast`, `overlap`
 - **Forces:** `apply_force`
-- **Rigidbody:** `configure_rigidbody`
+- **Rigidbody:** `get_rigidbody`, `configure_rigidbody`
 - **Validation:** `validate`
 - **Simulation:** `simulate_step`
 

@@ -158,6 +158,9 @@ namespace MCPForUnity.Editor.Tools.Physics
 
             string assetPath = $"{folder}/{name}.physicMaterial";
 
+            if (AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath) != null)
+                return new ErrorResponse($"A physics material already exists at '{assetPath}'. Use configure_physics_material to modify it.");
+
 #if UNITY_6000_0_OR_NEWER
             var mat = new PhysicsMaterial(name)
             {
@@ -216,6 +219,9 @@ namespace MCPForUnity.Editor.Tools.Physics
             float bounciness = p.GetFloat("bounciness") ?? 0f;
 
             string assetPath = $"{folder}/{name}.physicsMaterial2D";
+
+            if (AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath) != null)
+                return new ErrorResponse($"A 2D physics material already exists at '{assetPath}'. Use configure_physics_material to modify it.");
 
             var mat = new PhysicsMaterial2D(name)
             {
@@ -294,34 +300,30 @@ namespace MCPForUnity.Editor.Tools.Physics
                     case "frictioncombine":
                     {
 #if UNITY_6000_0_OR_NEWER
-                        if (Enum.TryParse<PhysicsMaterialCombine>(prop.Value.ToString(), true, out var fc))
-                        {
-                            mat.frictionCombine = fc;
-                            changed.Add("frictionCombine");
-                        }
+                        if (!Enum.TryParse<PhysicsMaterialCombine>(prop.Value.ToString(), true, out var fc))
+                            return new ErrorResponse($"Invalid friction_combine value: '{prop.Value}'. Valid values: Average, Minimum, Maximum, Multiply.");
+                        mat.frictionCombine = fc;
+                        changed.Add("frictionCombine");
 #else
-                        if (Enum.TryParse<PhysicMaterialCombine>(prop.Value.ToString(), true, out var fc))
-                        {
-                            mat.frictionCombine = fc;
-                            changed.Add("frictionCombine");
-                        }
+                        if (!Enum.TryParse<PhysicMaterialCombine>(prop.Value.ToString(), true, out var fc))
+                            return new ErrorResponse($"Invalid friction_combine value: '{prop.Value}'. Valid values: Average, Minimum, Maximum, Multiply.");
+                        mat.frictionCombine = fc;
+                        changed.Add("frictionCombine");
 #endif
                         break;
                     }
                     case "bouncecombine":
                     {
 #if UNITY_6000_0_OR_NEWER
-                        if (Enum.TryParse<PhysicsMaterialCombine>(prop.Value.ToString(), true, out var bc))
-                        {
-                            mat.bounceCombine = bc;
-                            changed.Add("bounceCombine");
-                        }
+                        if (!Enum.TryParse<PhysicsMaterialCombine>(prop.Value.ToString(), true, out var bc))
+                            return new ErrorResponse($"Invalid bounce_combine value: '{prop.Value}'. Valid values: Average, Minimum, Maximum, Multiply.");
+                        mat.bounceCombine = bc;
+                        changed.Add("bounceCombine");
 #else
-                        if (Enum.TryParse<PhysicMaterialCombine>(prop.Value.ToString(), true, out var bc))
-                        {
-                            mat.bounceCombine = bc;
-                            changed.Add("bounceCombine");
-                        }
+                        if (!Enum.TryParse<PhysicMaterialCombine>(prop.Value.ToString(), true, out var bc))
+                            return new ErrorResponse($"Invalid bounce_combine value: '{prop.Value}'. Valid values: Average, Minimum, Maximum, Multiply.");
+                        mat.bounceCombine = bc;
+                        changed.Add("bounceCombine");
 #endif
                         break;
                     }

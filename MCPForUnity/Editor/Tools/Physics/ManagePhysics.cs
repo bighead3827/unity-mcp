@@ -98,7 +98,10 @@ namespace MCPForUnity.Editor.Tools.Physics
             catch (Exception ex)
             {
                 McpLog.Error($"[ManagePhysics] Action '{action}' failed: {ex}");
-                return new ErrorResponse($"Error in action '{action}': {ex.Message}");
+                return new ErrorResponse(
+                    $"Error in action '{action}': {ex.Message}",
+                    new { stackTrace = ex.StackTrace }
+                );
             }
         }
     }

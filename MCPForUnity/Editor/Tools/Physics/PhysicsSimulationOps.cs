@@ -87,7 +87,11 @@ namespace MCPForUnity.Editor.Tools.Physics
                         name = go.name,
                         instanceID = go.GetInstanceID(),
                         position = new[] { rb2d.position.x, rb2d.position.y },
+#if UNITY_6000_0_OR_NEWER
                         velocity = new[] { rb2d.linearVelocity.x, rb2d.linearVelocity.y },
+#else
+                        velocity = new[] { rb2d.velocity.x, rb2d.velocity.y },
+#endif
                         angularVelocity = rb2d.angularVelocity
                     });
                 }
@@ -102,7 +106,11 @@ namespace MCPForUnity.Editor.Tools.Physics
                         name = go.name,
                         instanceID = go.GetInstanceID(),
                         position = new[] { rb.position.x, rb.position.y, rb.position.z },
+#if UNITY_6000_0_OR_NEWER
                         velocity = new[] { rb.linearVelocity.x, rb.linearVelocity.y, rb.linearVelocity.z },
+#else
+                        velocity = new[] { rb.velocity.x, rb.velocity.y, rb.velocity.z },
+#endif
                         angularVelocity = new[] { rb.angularVelocity.x, rb.angularVelocity.y, rb.angularVelocity.z }
                     });
                 }
@@ -118,7 +126,11 @@ namespace MCPForUnity.Editor.Tools.Physics
 
             if (dimension == "2d")
             {
+#if UNITY_2022_2_OR_NEWER
                 var allRb2d = Object.FindObjectsByType<Rigidbody2D>(FindObjectsSortMode.None);
+#else
+                var allRb2d = Object.FindObjectsOfType<Rigidbody2D>();
+#endif
                 foreach (var rb2d in allRb2d)
                 {
                     if (results.Count >= maxResults) break;
@@ -130,14 +142,22 @@ namespace MCPForUnity.Editor.Tools.Physics
                         name = rb2d.gameObject.name,
                         instanceID = rb2d.gameObject.GetInstanceID(),
                         position = new[] { rb2d.position.x, rb2d.position.y },
+#if UNITY_6000_0_OR_NEWER
                         velocity = new[] { rb2d.linearVelocity.x, rb2d.linearVelocity.y },
+#else
+                        velocity = new[] { rb2d.velocity.x, rb2d.velocity.y },
+#endif
                         angularVelocity = rb2d.angularVelocity
                     });
                 }
             }
             else
             {
+#if UNITY_2022_2_OR_NEWER
                 var allRb = Object.FindObjectsByType<Rigidbody>(FindObjectsSortMode.None);
+#else
+                var allRb = Object.FindObjectsOfType<Rigidbody>();
+#endif
                 foreach (var rb in allRb)
                 {
                     if (results.Count >= maxResults) break;
@@ -149,7 +169,11 @@ namespace MCPForUnity.Editor.Tools.Physics
                         name = rb.gameObject.name,
                         instanceID = rb.gameObject.GetInstanceID(),
                         position = new[] { rb.position.x, rb.position.y, rb.position.z },
+#if UNITY_6000_0_OR_NEWER
                         velocity = new[] { rb.linearVelocity.x, rb.linearVelocity.y, rb.linearVelocity.z },
+#else
+                        velocity = new[] { rb.velocity.x, rb.velocity.y, rb.velocity.z },
+#endif
                         angularVelocity = new[] { rb.angularVelocity.x, rb.angularVelocity.y, rb.angularVelocity.z }
                     });
                 }

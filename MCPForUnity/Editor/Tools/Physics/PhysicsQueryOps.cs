@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -799,7 +800,7 @@ namespace MCPForUnity.Editor.Tools.Physics
             if (layer >= 0)
                 return 1 << layer;
 
-            return ~0;
+            throw new ArgumentException($"Unknown layer name: '{layerMaskStr}'. Use a valid layer name or integer mask.");
         }
     }
 }

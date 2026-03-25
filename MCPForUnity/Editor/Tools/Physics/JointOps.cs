@@ -56,9 +56,21 @@ namespace MCPForUnity.Editor.Tools.Physics
             bool is2D;
 
             if (dimensionParam == "2d")
-                is2D = has2DRb;
+            {
+                if (!has2DRb)
+                    return new ErrorResponse($"Target '{go.name}' has no Rigidbody2D.");
+                is2D = true;
+            }
             else if (dimensionParam == "3d")
+            {
+                if (!is3D)
+                    return new ErrorResponse($"Target '{go.name}' has no Rigidbody.");
                 is2D = false;
+            }
+            else if (!string.IsNullOrEmpty(dimensionParam))
+            {
+                return new ErrorResponse($"Invalid dimension: '{dimensionParam}'. Use '3d' or '2d'.");
+            }
             else
             {
                 // Auto-detect; if both, prefer 3D (3D is the default physics)
@@ -78,32 +90,38 @@ namespace MCPForUnity.Editor.Tools.Physics
                 return new ErrorResponse($"Unknown {dimension} joint type: '{jointTypeStr}'. Valid types: {validTypes}.");
             }
 
-            var joint = Undo.AddComponent(go, jointComponentType);
-            if (joint == null)
-                return new ErrorResponse($"Failed to add {jointComponentType.Name} to '{go.name}'.");
-
-            // Set connected body if specified
+            // Validate connected body before mutating the scene
             string connectedBodyTarget = p.Get("connected_body");
+            GameObject connectedGo = null;
             if (!string.IsNullOrEmpty(connectedBodyTarget))
             {
-                GameObject connectedGo = FindTarget(new JValue(connectedBodyTarget), searchMethod);
+                connectedGo = FindTarget(new JValue(connectedBodyTarget), searchMethod);
                 if (connectedGo == null)
                     return new ErrorResponse($"Connected body GameObject '{connectedBodyTarget}' not found.");
 
                 if (is2D)
                 {
-                    var rb2d = connectedGo.GetComponent<Rigidbody2D>();
-                    if (rb2d == null)
+                    if (connectedGo.GetComponent<Rigidbody2D>() == null)
                         return new ErrorResponse($"Connected body '{connectedGo.name}' has no Rigidbody2D.");
-                    ((Joint2D)joint).connectedBody = rb2d;
                 }
                 else
                 {
-                    var rb = connectedGo.GetComponent<Rigidbody>();
-                    if (rb == null)
+                    if (connectedGo.GetComponent<Rigidbody>() == null)
                         return new ErrorResponse($"Connected body '{connectedGo.name}' has no Rigidbody.");
-                    ((Joint)joint).connectedBody = rb;
                 }
+            }
+
+            var joint = Undo.AddComponent(go, jointComponentType);
+            if (joint == null)
+                return new ErrorResponse($"Failed to add {jointComponentType.Name} to '{go.name}'.");
+
+            // Set connected body now that the joint is created
+            if (connectedGo != null)
+            {
+                if (is2D)
+                    ((Joint2D)joint).connectedBody = connectedGo.GetComponent<Rigidbody2D>();
+                else
+                    ((Joint)joint).connectedBody = connectedGo.GetComponent<Rigidbody>();
             }
 
             // Set properties via reflection if provided
