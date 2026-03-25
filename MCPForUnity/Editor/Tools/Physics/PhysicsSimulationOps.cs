@@ -32,16 +32,28 @@ namespace MCPForUnity.Editor.Tools.Physics
                 var prevMode = UnityEngine.Physics.simulationMode;
                 if (prevMode != SimulationMode.Script)
                     UnityEngine.Physics.simulationMode = SimulationMode.Script;
-                for (int i = 0; i < steps; i++)
-                    UnityEngine.Physics.Simulate(stepSize);
-                UnityEngine.Physics.simulationMode = prevMode;
+                try
+                {
+                    for (int i = 0; i < steps; i++)
+                        UnityEngine.Physics.Simulate(stepSize);
+                }
+                finally
+                {
+                    UnityEngine.Physics.simulationMode = prevMode;
+                }
 #else
                 bool wasAuto = UnityEngine.Physics.autoSimulation;
                 if (wasAuto)
                     UnityEngine.Physics.autoSimulation = false;
-                for (int i = 0; i < steps; i++)
-                    UnityEngine.Physics.Simulate(stepSize);
-                UnityEngine.Physics.autoSimulation = wasAuto;
+                try
+                {
+                    for (int i = 0; i < steps; i++)
+                        UnityEngine.Physics.Simulate(stepSize);
+                }
+                finally
+                {
+                    UnityEngine.Physics.autoSimulation = wasAuto;
+                }
 #endif
             }
 
