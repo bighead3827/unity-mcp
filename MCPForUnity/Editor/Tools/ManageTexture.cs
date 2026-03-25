@@ -721,13 +721,13 @@ namespace MCPForUnity.Editor.Tools
         private static bool HasImportSettingsParams(JObject @params)
         {
             return (@params["import_settings"] ?? @params["importSettings"]) != null
-                || @params["as_sprite"] != null;
+                || (@params["as_sprite"] ?? @params["spriteSettings"]) != null;
         }
 
         private static object ApplyImportSettingsParams(string fullPath, JObject @params)
         {
             JToken importSettingsToken = @params["import_settings"] ?? @params["importSettings"];
-            JToken asSpriteToken = @params["as_sprite"];
+            JToken asSpriteToken = @params["as_sprite"] ?? @params["spriteSettings"];
 
             if (importSettingsToken != null && asSpriteToken != null)
             {

@@ -538,3 +538,67 @@ def delete(path: str, force: bool):
     click.echo(format_output(result, config.format))
     if result.get("success"):
         print_success(f"Deleted texture: {path}")
+
+
+@texture.command("set-import-settings")
+@click.argument("path")
+@click.option("--texture-type", type=click.Choice(list(_TEXTURE_TYPES.keys())), help="Texture type")
+@click.option("--sprite-mode", type=click.Choice(list(_SPRITE_MODES.keys())), help="Sprite import mode")
+@click.option("--sprite-ppu", type=float, help="Sprite pixels per unit")
+@click.option("--max-size", type=click.Choice(["32", "64", "128", "256", "512", "1024", "2048", "4096", "8192"]), help="Max texture size")
+@click.option("--compression", type=click.Choice(list(_COMPRESSIONS.keys())), help="Compression quality")
+@click.option("--generate-mipmaps/--no-mipmaps", default=None, help="Generate mipmaps")
+@click.option("--srgb/--linear", default=None, help="sRGB color texture")
+@click.option("--readable/--no-readable", default=None, help="Read/Write enabled")
+@click.option("--as-sprite", is_flag=True, help="Shorthand: set texture type to Sprite with defaults")
+@handle_unity_errors
+def set_import_settings(path: str, texture_type: str, sprite_mode: str, sprite_ppu: float,
+                        max_size: str, compression: str, generate_mipmaps: bool,
+                        srgb: bool, readable: bool, as_sprite: bool):
+    """Change import settings on an existing texture.
+
+    \b
+    Examples:
+        unity-mcp texture set-import-settings Assets/UI/icon.png --texture-type sprite
+        unity-mcp texture set-import-settings Assets/UI/icon.png --as-sprite
+        unity-mcp texture set-import-settings Assets/UI/icon.png --texture-type sprite --sprite-mode single --sprite-ppu 100
+        unity-mcp texture set-import-settings Assets/UI/bg.png --max-size 2048 --compression high_quality
+    """
+    config = get_config()
+
+    params: dict[str, Any] = {
+        "action": "set_import_settings",
+        "path": path,
+    }
+
+    if as_sprite:
+        params["spriteSettings"] = {"pivot": [0.5, 0.5], "pixelsPerUnit": 100}
+    else:
+        import_settings = {}
+        if texture_type:
+            import_settings["textureType"] = _TEXTURE_TYPES[texture_type]
+        if sprite_mode:
+            import_settings["spriteImportMode"] = _SPRITE_MODES[sprite_mode]
+        if sprite_ppu is not None:
+            import_settings["spritePixelsPerUnit"] = sprite_ppu
+        if max_size:
+            import_settings["maxTextureSize"] = int(max_size)
+        if compression:
+            import_settings["textureCompression"] = _COMPRESSIONS[compression]
+        if generate_mipmaps is not None:
+            import_settings["mipmapEnabled"] = generate_mipmaps
+        if srgb is not None:
+            import_settings["sRGBTexture"] = srgb
+        if readable is not None:
+            import_settings["isReadable"] = readable
+
+        if not import_settings:
+            print_error("At least one import setting must be specified")
+            sys.exit(1)
+
+        params["importSettings"] = import_settings
+
+    result = run_command("manage_texture", params, config)
+    click.echo(format_output(result, config.format))
+    if result.get("success"):
+        print_success(f"Import settings updated: {path}")
