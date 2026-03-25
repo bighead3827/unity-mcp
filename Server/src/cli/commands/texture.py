@@ -601,9 +601,10 @@ def delete(path: str, force: bool):
 @click.option("--readable/--no-readable", default=None, help="Read/Write enabled")
 @click.option("--as-sprite", is_flag=True, help="Shorthand: set texture type to Sprite with defaults")
 @handle_unity_errors
-def set_import_settings(path: str, texture_type: str, sprite_mode: str, sprite_ppu: float,
-                        max_size: str, compression: str, generate_mipmaps: bool,
-                        srgb: bool, readable: bool, as_sprite: bool):
+def set_import_settings(path: str, texture_type: Optional[str], sprite_mode: Optional[str],
+                        sprite_ppu: Optional[float], max_size: Optional[str],
+                        compression: Optional[str], generate_mipmaps: Optional[bool],
+                        srgb: Optional[bool], readable: Optional[bool], as_sprite: bool):
     """Change import settings on an existing texture.
 
     \b
