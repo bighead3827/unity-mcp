@@ -57,8 +57,24 @@ namespace MCPForUnity.Editor.Tools.Physics
                     // --- Query actions ---
                     case "raycast":
                         return PhysicsQueryOps.Raycast(@params);
+                    case "raycast_all":
+                        return PhysicsQueryOps.RaycastAll(@params);
+                    case "linecast":
+                        return PhysicsQueryOps.Linecast(@params);
+                    case "shapecast":
+                        return PhysicsQueryOps.Shapecast(@params);
                     case "overlap":
                         return PhysicsQueryOps.Overlap(@params);
+
+                    // --- Force actions ---
+                    case "apply_force":
+                        return PhysicsForceOps.ApplyForce(@params);
+
+                    // --- Rigidbody actions ---
+                    case "get_rigidbody":
+                        return PhysicsRigidbodyOps.GetRigidbody(@params);
+                    case "configure_rigidbody":
+                        return PhysicsRigidbodyOps.ConfigureRigidbody(@params);
 
                     // --- Validation ---
                     case "validate":
@@ -75,7 +91,8 @@ namespace MCPForUnity.Editor.Tools.Physics
                             + "get_collision_matrix, set_collision_matrix, "
                             + "create_physics_material, configure_physics_material, assign_physics_material, "
                             + "add_joint, configure_joint, remove_joint, "
-                            + "raycast, overlap, validate, simulate_step.");
+                            + "raycast, raycast_all, linecast, shapecast, overlap, "
+                            + "apply_force, get_rigidbody, configure_rigidbody, validate, simulate_step.");
                 }
             }
             catch (Exception ex)

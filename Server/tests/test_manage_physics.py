@@ -28,7 +28,7 @@ def mock_unity(monkeypatch):
     return captured
 
 
-def test_unknown_action():
+def test_unknown_action(mock_unity):
     result = asyncio.run(
         manage_physics(SimpleNamespace(), action="nonexistent")
     )
@@ -159,10 +159,105 @@ def test_simulate_forwards(mock_unity):
 
 
 def test_all_actions_list():
+    assert len(ALL_ACTIONS) == 21
     assert "ping" in ALL_ACTIONS
     assert "validate" in ALL_ACTIONS
     assert "simulate_step" in ALL_ACTIONS
-    assert len(ALL_ACTIONS) == 15
+    assert "raycast" in ALL_ACTIONS
+    assert "raycast_all" in ALL_ACTIONS
+    assert "linecast" in ALL_ACTIONS
+    assert "shapecast" in ALL_ACTIONS
+    assert "overlap" in ALL_ACTIONS
+    assert "add_joint" in ALL_ACTIONS
+    assert "create_physics_material" in ALL_ACTIONS
+    assert "apply_force" in ALL_ACTIONS
+    assert "get_rigidbody" in ALL_ACTIONS
+    assert "configure_rigidbody" in ALL_ACTIONS
+
+
+def test_shapecast_forwards(mock_unity):
+    result = asyncio.run(
+        manage_physics(
+            SimpleNamespace(),
+            action="shapecast",
+            shape="sphere",
+            origin=[0, 5, 0],
+            direction=[0, -1, 0],
+            size=1.0,
+        )
+    )
+    assert result["success"] is True
+    assert mock_unity["params"]["shape"] == "sphere"
+    assert mock_unity["params"]["origin"] == [0, 5, 0]
+
+
+def test_raycast_all_forwards(mock_unity):
+    result = asyncio.run(
+        manage_physics(
+            SimpleNamespace(),
+            action="raycast_all",
+            origin=[0, 0, 0],
+            direction=[0, 0, 1],
+        )
+    )
+    assert result["success"] is True
+    assert mock_unity["params"]["action"] == "raycast_all"
+
+
+def test_linecast_forwards(mock_unity):
+    result = asyncio.run(
+        manage_physics(
+            SimpleNamespace(),
+            action="linecast",
+            start=[0, 0, 0],
+            end=[10, 0, 0],
+        )
+    )
+    assert result["success"] is True
+    assert mock_unity["params"]["start"] == [0, 0, 0]
+    assert mock_unity["params"]["end"] == [10, 0, 0]
+
+
+def test_apply_force_forwards(mock_unity):
+    result = asyncio.run(
+        manage_physics(
+            SimpleNamespace(),
+            action="apply_force",
+            target="Player",
+            force=[0, 100, 0],
+            force_mode="Impulse",
+        )
+    )
+    assert result["success"] is True
+    assert mock_unity["params"]["force"] == [0, 100, 0]
+    assert mock_unity["params"]["force_mode"] == "Impulse"
+
+
+def test_configure_rigidbody_forwards(mock_unity):
+    result = asyncio.run(
+        manage_physics(
+            SimpleNamespace(),
+            action="configure_rigidbody",
+            target="Player",
+            properties={"mass": 5.0, "useGravity": True},
+        )
+    )
+    assert result["success"] is True
+    assert mock_unity["params"]["properties"] == {"mass": 5.0, "useGravity": True}
+
+
+def test_get_rigidbody_forwards(mock_unity):
+    result = asyncio.run(
+        manage_physics(
+            SimpleNamespace(),
+            action="get_rigidbody",
+            target="Player",
+            dimension="3d",
+        )
+    )
+    assert result["success"] is True
+    assert mock_unity["params"]["action"] == "get_rigidbody"
+    assert mock_unity["params"]["target"] == "Player"
 
 
 def test_none_params_not_forwarded(mock_unity):

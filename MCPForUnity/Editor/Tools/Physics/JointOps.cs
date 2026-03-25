@@ -50,8 +50,20 @@ namespace MCPForUnity.Editor.Tools.Physics
             if (go == null)
                 return new ErrorResponse($"Target GameObject '{targetStr}' not found.");
 
-            bool is2D = go.GetComponent<Rigidbody2D>() != null;
+            string dimensionParam = p.Get("dimension")?.ToLowerInvariant();
             bool is3D = go.GetComponent<Rigidbody>() != null;
+            bool has2DRb = go.GetComponent<Rigidbody2D>() != null;
+            bool is2D;
+
+            if (dimensionParam == "2d")
+                is2D = has2DRb;
+            else if (dimensionParam == "3d")
+                is2D = false;
+            else
+            {
+                // Auto-detect; if both, prefer 3D (3D is the default physics)
+                is2D = has2DRb && !is3D;
+            }
 
             if (!is2D && !is3D)
                 return new ErrorResponse($"Target '{go.name}' has no Rigidbody or Rigidbody2D. Add one before adding a joint.");
@@ -136,6 +148,14 @@ namespace MCPForUnity.Editor.Tools.Physics
             {
                 if (!string.IsNullOrEmpty(jointTypeStr))
                     return new ErrorResponse($"No joint of type '{jointTypeStr}' found on '{go.name}'.");
+
+                // Check if multiple joints exist to give a better error
+                var joints3D = go.GetComponents<Joint>();
+                var joints2D = go.GetComponents<Joint2D>();
+                int total = joints3D.Length + joints2D.Length;
+                if (total > 1)
+                    return new ErrorResponse($"Multiple joints found on '{go.name}' ({total} total). Specify 'joint_type' to target a specific joint.");
+
                 return new ErrorResponse($"No joint found on '{go.name}'.");
             }
 

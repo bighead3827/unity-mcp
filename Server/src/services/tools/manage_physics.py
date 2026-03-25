@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any, Literal, Optional, get_args
 
 from fastmcp import Context
 from mcp.types import ToolAnnotations
@@ -8,33 +8,31 @@ from services.tools import get_unity_instance_from_context
 from transport.unity_transport import send_with_unity_instance
 from transport.legacy.unity_connection import async_send_command_with_retry
 
-SETTINGS_ACTIONS = ["ping", "get_settings", "set_settings"]
-
-COLLISION_MATRIX_ACTIONS = ["get_collision_matrix", "set_collision_matrix"]
-
-MATERIAL_ACTIONS = [
+PhysicsAction = Literal[
+    "ping",
+    "get_settings",
+    "set_settings",
+    "get_collision_matrix",
+    "set_collision_matrix",
     "create_physics_material",
     "configure_physics_material",
     "assign_physics_material",
+    "add_joint",
+    "configure_joint",
+    "remove_joint",
+    "raycast",
+    "raycast_all",
+    "linecast",
+    "shapecast",
+    "overlap",
+    "validate",
+    "simulate_step",
+    "apply_force",
+    "get_rigidbody",
+    "configure_rigidbody",
 ]
 
-JOINT_ACTIONS = ["add_joint", "configure_joint", "remove_joint"]
-
-QUERY_ACTIONS = ["raycast", "overlap"]
-
-VALIDATION_ACTIONS = ["validate"]
-
-SIMULATION_ACTIONS = ["simulate_step"]
-
-ALL_ACTIONS = (
-    SETTINGS_ACTIONS
-    + COLLISION_MATRIX_ACTIONS
-    + MATERIAL_ACTIONS
-    + JOINT_ACTIONS
-    + QUERY_ACTIONS
-    + VALIDATION_ACTIONS
-    + SIMULATION_ACTIONS
-)
+ALL_ACTIONS: list[str] = list(get_args(PhysicsAction))
 
 
 @mcp_for_unity_tool(
@@ -45,7 +43,9 @@ ALL_ACTIONS = (
         "COLLISION MATRIX: get_collision_matrix, set_collision_matrix\n"
         "MATERIALS: create_physics_material, configure_physics_material, assign_physics_material\n"
         "JOINTS: add_joint, configure_joint, remove_joint\n"
-        "QUERIES: raycast, overlap\n"
+        "QUERIES: raycast, raycast_all, linecast, shapecast, overlap\n"
+        "FORCES: apply_force\n"
+        "RIGIDBODY: get_rigidbody, configure_rigidbody\n"
         "VALIDATION: validate\n"
         "SIMULATION: simulate_step\n"
     ),
@@ -53,7 +53,7 @@ ALL_ACTIONS = (
 )
 async def manage_physics(
     ctx: Context,
-    action: Annotated[str, "The physics action to perform."],
+    action: Annotated[PhysicsAction, "The physics action to perform."],
     dimension: Annotated[Optional[str], "Physics dimension: '3d' (default) or '2d'."] = None,
     settings: Annotated[
         Optional[dict[str, Any]], "Key-value settings for set_settings."
@@ -139,8 +139,45 @@ async def manage_physics(
     size: Annotated[
         Optional[Any], "Overlap size: float (radius) or [x,y,z] (half-extents)."
     ] = None,
+    start: Annotated[
+        Optional[list[float]], "Linecast start point [x,y,z] or [x,y]."
+    ] = None,
+    end: Annotated[
+        Optional[list[float]], "Linecast end point [x,y,z] or [x,y]."
+    ] = None,
+    point1: Annotated[
+        Optional[list[float]], "Capsule shapecast point1 [x,y,z]."
+    ] = None,
+    point2: Annotated[
+        Optional[list[float]], "Capsule shapecast point2 [x,y,z]."
+    ] = None,
+    height: Annotated[Optional[float], "Capsule height for shapecast."] = None,
+    capsule_direction: Annotated[
+        Optional[int], "Capsule direction: 0=X, 1=Y (default), 2=Z."
+    ] = None,
+    angle: Annotated[Optional[float], "Rotation angle for 2D shape casts."] = None,
+    force: Annotated[
+        Optional[list[float]], "Force vector [x,y,z] or [x,y] for apply_force."
+    ] = None,
+    force_mode: Annotated[
+        Optional[str], "Force mode: Force, Impulse, Acceleration, VelocityChange (3D); Force, Impulse (2D)."
+    ] = None,
+    force_type: Annotated[
+        Optional[str], "Force type: 'normal' (default) or 'explosion' (3D only)."
+    ] = None,
+    torque: Annotated[
+        Optional[list[float]], "Torque vector [x,y,z] (3D) or [z] (2D)."
+    ] = None,
+    explosion_position: Annotated[
+        Optional[list[float]], "Explosion center [x,y,z]."
+    ] = None,
+    explosion_radius: Annotated[Optional[float], "Explosion radius."] = None,
+    explosion_force: Annotated[Optional[float], "Explosion force magnitude."] = None,
+    upwards_modifier: Annotated[Optional[float], "Explosion upwards modifier."] = None,
     steps: Annotated[Optional[int], "Number of simulation steps (max 100)."] = None,
     step_size: Annotated[Optional[float], "Step size in seconds."] = None,
+    page_size: Annotated[Optional[int], "Page size for validate results (default 50)."] = None,
+    cursor: Annotated[Optional[int], "Cursor offset for validate pagination."] = None,
 ) -> dict[str, Any]:
     """Manage 3D and 2D physics: settings, collision matrix, materials, joints, queries, validation, simulation."""
 
@@ -188,8 +225,25 @@ async def manage_physics(
         "shape": shape,
         "position": position,
         "size": size,
+        "start": start,
+        "end": end,
+        "point1": point1,
+        "point2": point2,
+        "height": height,
+        "capsule_direction": capsule_direction,
+        "angle": angle,
+        "force": force,
+        "force_mode": force_mode,
+        "force_type": force_type,
+        "torque": torque,
+        "explosion_position": explosion_position,
+        "explosion_radius": explosion_radius,
+        "explosion_force": explosion_force,
+        "upwards_modifier": upwards_modifier,
         "steps": steps,
         "step_size": step_size,
+        "page_size": page_size,
+        "cursor": cursor,
     }
     for key, val in param_map.items():
         if val is not None:
