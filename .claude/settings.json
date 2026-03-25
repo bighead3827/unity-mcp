@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__unity",
+      "Edit(reports/**)",
+      "MultiEdit(reports/**)"
+    ],
+    "deny": [
+    ]
+  }
+}
