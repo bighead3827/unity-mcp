@@ -260,6 +260,13 @@ namespace MCPForUnity.Editor.Tools
                 var setPixelsToken = @params["setPixels"] as JObject;
                 bool hasImportSettings = HasImportSettingsParams(@params);
 
+                // Validate import settings before any writes
+                if (hasImportSettings)
+                {
+                    var validationError = ValidateImportSettingsParams(@params);
+                    if (validationError != null) return validationError;
+                }
+
                 // Fast path: only import settings, no pixel changes
                 if (setPixelsToken == null && hasImportSettings)
                 {
@@ -720,8 +727,26 @@ namespace MCPForUnity.Editor.Tools
 
         private static bool HasImportSettingsParams(JObject @params)
         {
-            return (@params["import_settings"] ?? @params["importSettings"]) != null
-                || (@params["as_sprite"] ?? @params["spriteSettings"]) != null;
+            JToken importSettingsToken = @params["import_settings"] ?? @params["importSettings"];
+            JToken asSpriteToken = @params["as_sprite"] ?? @params["spriteSettings"];
+
+            bool hasImportSettings = importSettingsToken is JObject importObject && importObject.HasValues;
+            bool hasSpriteSettings = (asSpriteToken is JObject spriteObject && spriteObject.HasValues)
+                || (asSpriteToken?.Type == JTokenType.Boolean && asSpriteToken.ToObject<bool>());
+
+            return hasImportSettings || hasSpriteSettings;
+        }
+
+        private static object ValidateImportSettingsParams(JObject @params)
+        {
+            JToken importSettingsToken = @params["import_settings"] ?? @params["importSettings"];
+            JToken asSpriteToken = @params["as_sprite"] ?? @params["spriteSettings"];
+
+            if (importSettingsToken != null && asSpriteToken != null)
+            {
+                return new ErrorResponse("Cannot specify both 'import_settings' and 'as_sprite'.");
+            }
+            return null;
         }
 
         private static object ApplyImportSettingsParams(string fullPath, JObject @params)
@@ -751,9 +776,11 @@ namespace MCPForUnity.Editor.Tools
 
         private static object SetImportSettings(JObject @params)
         {
-            string path = @params["path"]?.ToString();
-            if (string.IsNullOrEmpty(path))
-                return new ErrorResponse("'path' is required for set_import_settings.");
+            var toolParams = new MCPForUnity.Editor.Helpers.ToolParams(@params);
+            var pathResult = toolParams.GetRequired("path", "'path' is required for set_import_settings.");
+            if (!pathResult.IsSuccess)
+                return new ErrorResponse(pathResult.ErrorMessage);
+            string path = pathResult.Value;
 
             string fullPath = AssetPathUtility.SanitizeAssetPath(path);
             if (!AssetExists(fullPath))

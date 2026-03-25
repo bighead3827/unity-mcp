@@ -483,28 +483,77 @@ def sprite(path: str, width: int, height: int, image_path: Optional[str], color:
 
 @texture.command("modify")
 @click.argument("path")
-@click.option("--set-pixels", required=True, help="Modification args as JSON")
+@click.option("--set-pixels", default=None, help="Modification args as JSON")
+@click.option("--texture-type", type=click.Choice(list(_TEXTURE_TYPES.keys())), help="Texture type")
+@click.option("--sprite-mode", type=click.Choice(list(_SPRITE_MODES.keys())), help="Sprite import mode")
+@click.option("--sprite-ppu", type=float, help="Sprite pixels per unit")
+@click.option("--max-size", type=click.Choice(["32", "64", "128", "256", "512", "1024", "2048", "4096", "8192"]), help="Max texture size")
+@click.option("--compression", type=click.Choice(list(_COMPRESSIONS.keys())), help="Compression quality")
+@click.option("--generate-mipmaps/--no-mipmaps", default=None, help="Generate mipmaps")
+@click.option("--srgb/--linear", default=None, help="sRGB color texture")
+@click.option("--readable/--no-readable", default=None, help="Read/Write enabled")
+@click.option("--as-sprite", is_flag=True, help="Shorthand: set texture type to Sprite with defaults")
 @handle_unity_errors
-def modify(path: str, set_pixels: str):
+def modify(path: str, set_pixels: Optional[str], texture_type: Optional[str], sprite_mode: Optional[str],
+           sprite_ppu: Optional[float], max_size: Optional[str], compression: Optional[str],
+           generate_mipmaps: Optional[bool], srgb: Optional[bool], readable: Optional[bool],
+           as_sprite: bool):
     """Modify an existing texture.
 
     \b
     Examples:
         unity-mcp texture modify Assets/Tex.png --set-pixels '{"x":0,"y":0,"width":10,"height":10,"color":[255,0,0]}'
         unity-mcp texture modify Assets/Tex.png --set-pixels '{"x":0,"y":0,"width":2,"height":2,"pixels":[[255,0,0,255],[0,255,0,255],[0,0,255,255],[255,255,0,255]]}'
+        unity-mcp texture modify Assets/UI/icon.png --as-sprite
+        unity-mcp texture modify Assets/UI/bg.png --texture-type sprite --max-size 2048
     """
     config = get_config()
+
+    has_import_setting = any(v is not None for v in (texture_type, sprite_mode, sprite_ppu, max_size, compression, generate_mipmaps, srgb, readable)) or as_sprite
+
+    if set_pixels is None and not has_import_setting:
+        print_error("At least one of --set-pixels or an import-setting flag must be provided")
+        sys.exit(1)
+
+    if as_sprite:
+        if any(v is not None for v in (texture_type, sprite_mode, sprite_ppu, max_size, compression, generate_mipmaps, srgb, readable)):
+            print_error("--as-sprite cannot be combined with other import-setting flags")
+            sys.exit(1)
 
     params: dict[str, Any] = {
         "action": "modify",
         "path": path,
     }
 
-    try:
-        params["setPixels"] = _normalize_set_pixels(set_pixels)
-    except ValueError as e:
-        print_error(str(e))
-        sys.exit(1)
+    if set_pixels is not None:
+        try:
+            params["setPixels"] = _normalize_set_pixels(set_pixels)
+        except ValueError as e:
+            print_error(str(e))
+            sys.exit(1)
+
+    if as_sprite:
+        params["spriteSettings"] = {"pivot": [0.5, 0.5], "pixelsPerUnit": 100}
+    elif has_import_setting:
+        import_settings: dict[str, Any] = {}
+        if texture_type:
+            import_settings["textureType"] = _TEXTURE_TYPES[texture_type]
+        if sprite_mode:
+            import_settings["spriteImportMode"] = _SPRITE_MODES[sprite_mode]
+        if sprite_ppu is not None:
+            import_settings["spritePixelsPerUnit"] = sprite_ppu
+        if max_size:
+            import_settings["maxTextureSize"] = int(max_size)
+        if compression:
+            import_settings["textureCompression"] = _COMPRESSIONS[compression]
+        if generate_mipmaps is not None:
+            import_settings["mipmapEnabled"] = generate_mipmaps
+        if srgb is not None:
+            import_settings["sRGBTexture"] = srgb
+        if readable is not None:
+            import_settings["isReadable"] = readable
+        if import_settings:
+            params["importSettings"] = import_settings
 
     result = run_command("manage_texture", params, config)
     click.echo(format_output(result, config.format))
@@ -572,6 +621,9 @@ def set_import_settings(path: str, texture_type: str, sprite_mode: str, sprite_p
     }
 
     if as_sprite:
+        if any(v is not None for v in (texture_type, sprite_mode, sprite_ppu, max_size, compression, generate_mipmaps, srgb, readable)):
+            print_error("--as-sprite cannot be combined with other import-setting flags")
+            sys.exit(1)
         params["spriteSettings"] = {"pivot": [0.5, 0.5], "pixelsPerUnit": 100}
     else:
         import_settings = {}
