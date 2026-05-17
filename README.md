@@ -3,13 +3,12 @@
 | [English](README.md) | [简体中文](docs/i18n/README-zh.md) |
 |----------------------|---------------------------------|
 
-#### Proudly sponsored and maintained by [Coplay](https://www.coplay.dev/?ref=unity-mcp) -- the best AI assistant for Unity.
-##### And don't miss [Godot A](https://github.com/hi-godot/godot-ai)I 🤖, the new free MCP/AI project from the makers of MCP for Unity!
+#### Proudly sponsored and maintained by [Aura](https://www.tryaura.dev/) -- the AI assistant for Unreal & Unity.
+##### And don't miss [Godot A](https://github.com/hi-godot/godot-ai)I 🤖, the new open source MCP/AI project from the makers of MCP for Unity!
 
 [![Discord](https://img.shields.io/badge/discord-join-red.svg?logo=discord&logoColor=white)](https://discord.gg/y4p8KfzrN4)
 [![](https://img.shields.io/badge/Website-Visit-purple)](https://www.coplay.dev/?ref=unity-mcp)
 [![](https://img.shields.io/badge/Unity-000000?style=flat&logo=unity&logoColor=blue 'Unity')](https://unity.com/releases/editor/archive)
-[![Unity Asset Store](https://img.shields.io/badge/Unity%20Asset%20Store-Get%20Package-FF6A00?style=flat&logo=unity&logoColor=white)](https://assetstore.unity.com/packages/tools/generative-ai/mcp-for-unity-ai-driven-development-329908)
 [![python](https://img.shields.io/badge/Python-3.10+-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 [![](https://badge.mcpx.dev?status=on 'MCP Enabled')](https://modelcontextprotocol.io/introduction)
 [![](https://img.shields.io/badge/License-MIT-red.svg 'MIT License')](https://opensource.org/licenses/MIT)
@@ -271,16 +270,11 @@ series = {SA Technical Communications '25}
 ```
 </details>
 
-## Unity AI Tools by Coplay
+## Unity AI Tools by Aura
 
-Coplay offers 3 AI tools for Unity:
+Aura offers 2 AI tools for Unity:
 - **MCP for Unity** is available freely under the MIT license.
-- **Coplay** is a premium Unity AI assistant that sits within Unity and is more than the MCP for Unity.
-- **Coplay MCP** a free-for-now MCP for Coplay tools.
-
-(These tools have different tech stacks. See this blog post [comparing Coplay to MCP for Unity](https://coplay.dev/blog/coplay-vs-coplay-mcp-vs-unity-mcp).)
-
-<img alt="Coplay" src="docs/images/coplay-logo.png" />
+- **Aura for Unity** is a premium Unity/Unreal AI assistant that is built for game devs.
 
 ## Disclaimer
 
