@@ -3,12 +3,12 @@
 | [English](../../README.md) | [简体中文](README-zh.md) |
 |----------------------|---------------------------------|
 
-#### 由 [Coplay](https://www.coplay.dev/?ref=unity-mcp) 荣誉赞助并维护 —— Unity 最好的 AI 助手。
+#### 由 [Aura](https://www.tryaura.dev/) 荣誉赞助并维护 —— 面向 Unreal 与 Unity 的 AI 助手。
+##### 别错过 [Godot A](https://github.com/hi-godot/godot-ai)I 🤖，MCP for Unity 团队推出的全新开源 MCP/AI 项目！
 
 [![Discord](https://img.shields.io/badge/discord-join-red.svg?logo=discord&logoColor=white)](https://discord.gg/y4p8KfzrN4)
 [![](https://img.shields.io/badge/Website-Visit-purple)](https://www.coplay.dev/?ref=unity-mcp)
 [![](https://img.shields.io/badge/Unity-000000?style=flat&logo=unity&logoColor=blue 'Unity')](https://unity.com/releases/editor/archive)
-[![Unity Asset Store](https://img.shields.io/badge/Unity%20Asset%20Store-Get%20Package-FF6A00?style=flat&logo=unity&logoColor=white)](https://assetstore.unity.com/packages/tools/generative-ai/mcp-for-unity-ai-driven-development-329908)
 [![python](https://img.shields.io/badge/Python-3.10+-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 [![](https://badge.mcpx.dev?status=on 'MCP Enabled')](https://modelcontextprotocol.io/introduction)
 [![](https://img.shields.io/badge/License-MIT-red.svg 'MIT License')](https://opensource.org/licenses/MIT)
@@ -252,16 +252,11 @@ series = {SA Technical Communications '25}
 ```
 </details>
 
-## Coplay 的 Unity AI 工具
+## Aura 的 Unity AI 工具
 
-Coplay 提供 3 个 Unity AI 工具：
+Aura 提供 3 个 Unity AI 工具：
 - **MCP for Unity** 在 MIT 许可证下免费提供。
-- **Coplay** 是一个运行在 Unity 内的高级 Unity AI 助手，功能超过 MCP for Unity。
-- **Coplay MCP** 是 Coplay 工具的“目前免费”版 MCP。
-
-（这些工具有不同的技术栈。参见这篇博客文章：[comparing Coplay to MCP for Unity](https://coplay.dev/blog/coplay-vs-coplay-mcp-vs-unity-mcp)。）
-
-<img alt="Coplay" src="../images/coplay-logo.png" />
+- **Aura for Unity** 是一款面向游戏开发者打造的高级 Unity/Unreal AI 助手。
 
 ## 免责声明
 
