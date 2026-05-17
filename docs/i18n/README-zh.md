@@ -254,7 +254,7 @@ series = {SA Technical Communications '25}
 
 ## Aura 的 Unity AI 工具
 
-Aura 提供 3 个 Unity AI 工具：
+Aura 提供 2 个 Unity AI 工具：
 - **MCP for Unity** 在 MIT 许可证下免费提供。
 - **Aura for Unity** 是一款面向游戏开发者打造的高级 Unity/Unreal AI 助手。
 

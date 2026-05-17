@@ -272,7 +272,7 @@ series = {SA Technical Communications '25}
 
 ## Unity AI Tools by Aura
 
-Aura offers 3 AI tools for Unity:
+Aura offers 2 AI tools for Unity:
 - **MCP for Unity** is available freely under the MIT license.
 - **Aura for Unity** is a premium Unity/Unreal AI assistant that is built for game devs.
 
