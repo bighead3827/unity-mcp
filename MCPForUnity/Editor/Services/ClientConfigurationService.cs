@@ -30,16 +30,7 @@ namespace MCPForUnity.Editor.Services
                 AssetPathUtility.CleanLocalServerBuildArtifacts();
             }
 
-            bool originalHttp = EditorConfigurationCache.Instance.UseHttpTransport;
-            try
-            {
-                CoerceTransportFor(configurator);
-                configurator.Configure();
-            }
-            finally
-            {
-                EditorConfigurationCache.Instance.SetUseHttpTransport(originalHttp);
-            }
+            ConfigureWithTransportCoercion(configurator);
         }
 
         public ClientConfigurationSummary ConfigureAllDetectedClients()
@@ -57,7 +48,7 @@ namespace MCPForUnity.Editor.Services
                 {
                     // Always re-run configuration so core fields stay current
                     configurator.CheckStatus(attemptAutoRewrite: false);
-                    configurator.Configure();
+                    ConfigureWithTransportCoercion(configurator);
                     summary.SuccessCount++;
                     summary.Messages.Add($"✓ {configurator.DisplayName}: Configured successfully");
                 }
@@ -69,6 +60,20 @@ namespace MCPForUnity.Editor.Services
             }
 
             return summary;
+        }
+
+        private static void ConfigureWithTransportCoercion(IMcpClientConfigurator configurator)
+        {
+            bool originalHttp = EditorConfigurationCache.Instance.UseHttpTransport;
+            try
+            {
+                CoerceTransportFor(configurator);
+                configurator.Configure();
+            }
+            finally
+            {
+                EditorConfigurationCache.Instance.SetUseHttpTransport(originalHttp);
+            }
         }
 
         public bool CheckClientStatus(IMcpClientConfigurator configurator, bool attemptAutoRewrite = true)

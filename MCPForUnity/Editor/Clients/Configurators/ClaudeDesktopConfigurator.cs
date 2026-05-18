@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using MCPForUnity.Editor.Constants;
 using MCPForUnity.Editor.Models;
-using MCPForUnity.Editor.Services;
 using UnityEditor;
 
 namespace MCPForUnity.Editor.Clients.Configurators
@@ -41,17 +39,5 @@ namespace MCPForUnity.Editor.Clients.Configurators
 
         private static readonly ConfiguredTransport[] StdioOnly = { ConfiguredTransport.Stdio };
         public override IReadOnlyList<ConfiguredTransport> SupportedTransports => StdioOnly;
-
-        public override string GetManualSnippet()
-        {
-            bool useHttp = EditorConfigurationCache.Instance.UseHttpTransport;
-            if (useHttp)
-            {
-                return "# Claude Desktop does not support HTTP transport.\n" +
-                       "# In Connect tab, change the Transport option from HTTP to stdio, then regenerate.";
-            }
-
-            return base.GetManualSnippet();
-        }
     }
 }
