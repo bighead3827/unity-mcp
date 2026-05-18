@@ -31,6 +31,9 @@ namespace MCPForUnity.Editor.Clients
         public ConfiguredTransport ConfiguredTransport => client.configuredTransport;
         public virtual bool SupportsAutoConfigure => true;
         public virtual bool IsInstalled => true;
+        private static readonly ConfiguredTransport[] DefaultTransports =
+            { ConfiguredTransport.Stdio, ConfiguredTransport.Http };
+        public virtual IReadOnlyList<ConfiguredTransport> SupportedTransports => DefaultTransports;
         public virtual bool SupportsSkills => false;
         public virtual string GetConfigureActionLabel() => "Configure";
         public virtual string GetSkillInstallPath() => null;

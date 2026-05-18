@@ -30,7 +30,16 @@ namespace MCPForUnity.Editor.Services
                 AssetPathUtility.CleanLocalServerBuildArtifacts();
             }
 
-            configurator.Configure();
+            bool originalHttp = EditorConfigurationCache.Instance.UseHttpTransport;
+            try
+            {
+                CoerceTransportFor(configurator);
+                configurator.Configure();
+            }
+            finally
+            {
+                EditorConfigurationCache.Instance.SetUseHttpTransport(originalHttp);
+            }
         }
 
         public ClientConfigurationSummary ConfigureAllDetectedClients()
@@ -69,5 +78,24 @@ namespace MCPForUnity.Editor.Services
             return current != previous;
         }
 
+        private static void CoerceTransportFor(IMcpClientConfigurator configurator)
+        {
+            var supported = configurator.SupportedTransports;
+            if (supported == null || supported.Count == 0) return;
+
+            bool currentlyHttp = EditorConfigurationCache.Instance.UseHttpTransport;
+            var requested = currentlyHttp ? ConfiguredTransport.Http : ConfiguredTransport.Stdio;
+
+            if (supported.Contains(requested)) return; // user preference is supported, no change
+
+            var chosen = supported[0];
+            bool needHttp = chosen == ConfiguredTransport.Http;
+            if (EditorConfigurationCache.Instance.UseHttpTransport != needHttp)
+            {
+                EditorConfigurationCache.Instance.SetUseHttpTransport(needHttp);
+                McpLog.Info(
+                    $"[{configurator.DisplayName}] auto-selected {chosen} transport (client does not support {requested}).");
+            }
+        }
     }
 }

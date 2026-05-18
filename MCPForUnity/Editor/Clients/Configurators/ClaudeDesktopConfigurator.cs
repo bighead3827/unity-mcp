@@ -39,16 +39,8 @@ namespace MCPForUnity.Editor.Clients.Configurators
             "Save and restart Claude Desktop"
         };
 
-        public override void Configure()
-        {
-            bool useHttp = EditorConfigurationCache.Instance.UseHttpTransport;
-            if (useHttp)
-            {
-                throw new InvalidOperationException("Claude Desktop does not support HTTP transport. Switch to stdio in settings before configuring.");
-            }
-
-            base.Configure();
-        }
+        private static readonly ConfiguredTransport[] StdioOnly = { ConfiguredTransport.Stdio };
+        public override IReadOnlyList<ConfiguredTransport> SupportedTransports => StdioOnly;
 
         public override string GetManualSnippet()
         {

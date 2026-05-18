@@ -33,6 +33,12 @@ namespace MCPForUnity.Editor.Clients
         /// </summary>
         bool IsInstalled { get; }
 
+        /// <summary>
+        /// Transports this client can be configured with. Order is "preference if user has no opinion";
+        /// the configure path picks the user's global preference if present in this list, else falls back to the first entry.
+        /// </summary>
+        System.Collections.Generic.IReadOnlyList<ConfiguredTransport> SupportedTransports { get; }
+
         /// <summary>Label to show on the configure button for the current state.</summary>
         string GetConfigureActionLabel();
 
