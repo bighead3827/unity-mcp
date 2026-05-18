@@ -30,6 +30,7 @@ namespace MCPForUnity.Editor.Clients
         public McpStatus Status => client.status;
         public ConfiguredTransport ConfiguredTransport => client.configuredTransport;
         public virtual bool SupportsAutoConfigure => true;
+        public virtual bool IsInstalled => true;
         public virtual bool SupportsSkills => false;
         public virtual string GetConfigureActionLabel() => "Configure";
         public virtual string GetSkillInstallPath() => null;
@@ -130,6 +131,21 @@ namespace MCPForUnity.Editor.Clients
         public JsonFileMcpConfigurator(McpClient client) : base(client) { }
 
         public override string GetConfigPath() => CurrentOsPath();
+
+        public override bool IsInstalled
+        {
+            get
+            {
+                try
+                {
+                    string path = GetConfigPath();
+                    if (string.IsNullOrEmpty(path)) return false;
+                    string parent = Path.GetDirectoryName(path);
+                    return !string.IsNullOrEmpty(parent) && Directory.Exists(parent);
+                }
+                catch { return false; }
+            }
+        }
 
         public override McpStatus CheckStatus(bool attemptAutoRewrite = true)
         {
@@ -357,6 +373,21 @@ namespace MCPForUnity.Editor.Clients
 
         public override string GetConfigPath() => CurrentOsPath();
 
+        public override bool IsInstalled
+        {
+            get
+            {
+                try
+                {
+                    string path = GetConfigPath();
+                    if (string.IsNullOrEmpty(path)) return false;
+                    string parent = Path.GetDirectoryName(path);
+                    return !string.IsNullOrEmpty(parent) && Directory.Exists(parent);
+                }
+                catch { return false; }
+            }
+        }
+
         public override McpStatus CheckStatus(bool attemptAutoRewrite = true)
         {
             try
@@ -541,6 +572,18 @@ namespace MCPForUnity.Editor.Clients
         public override string GetConfigureActionLabel() => client.status == McpStatus.Configured ? "Unregister" : "Configure";
 
         public override string GetConfigPath() => "Managed via Claude CLI";
+
+        public override bool IsInstalled
+        {
+            get
+            {
+                try
+                {
+                    return !string.IsNullOrEmpty(MCPServiceLocator.Paths.GetClaudeCliPath());
+                }
+                catch { return false; }
+            }
+        }
 
         /// <summary>
         /// Returns the project directory that CLI-based configurators will use as the working directory

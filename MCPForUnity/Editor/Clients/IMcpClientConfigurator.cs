@@ -26,6 +26,13 @@ namespace MCPForUnity.Editor.Clients
         /// <summary>True if this client supports auto-configure.</summary>
         bool SupportsAutoConfigure { get; }
 
+        /// <summary>
+        /// True if this client appears installed on the user's machine. Used to filter
+        /// "configure all detected" so we don't write configs for apps the user doesn't have.
+        /// Implementations should be cheap (filesystem stat or cached path lookup).
+        /// </summary>
+        bool IsInstalled { get; }
+
         /// <summary>Label to show on the configure button for the current state.</summary>
         string GetConfigureActionLabel();
 
