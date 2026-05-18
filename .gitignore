@@ -5,6 +5,9 @@
 .codeiumignore
 .kiro
 
+# Local worktrees for parallel feature work
+.worktrees/
+
 # Code-copy related files
 .clipignore
 
