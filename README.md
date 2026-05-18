@@ -84,7 +84,7 @@ openupm add com.coplaydev.unity-mcp
 
 **Manually (anytime):** `Window > MCP for Unity` opens the main panel.
 - Click **Start Server** if it's not already running (launches HTTP server on `localhost:8080`).
-- In the **Clients** tab, click **Configure Detected Clients** to set up every client found on your machine in one shot, or pick a single client from the dropdown and click **Configure**.
+- In the **Clients** tab, click **Configure All Detected Clients** to set up every client found on your machine in one shot, or pick a single client from the dropdown and click **Configure**.
 - Look for 🟢 "Connected ✓".
 
 **Per-client gotchas:** Some clients (Cursor, Antigravity, OpenClaw) still require enabling an MCP toggle or plugin in their own settings. OpenClaw also needs the `openclaw-mcp-bridge` plugin enabled and follows the currently selected MCP for Unity transport (`HTTP` or `stdio`). Claude Desktop only supports stdio — MCP for Unity will silently configure it that way even if you've selected HTTP elsewhere. Claude Code, VS Code, Windsurf, Cline, and the various CLI clients auto-connect after configuration.

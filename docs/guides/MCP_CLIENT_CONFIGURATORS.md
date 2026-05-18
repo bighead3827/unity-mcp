@@ -161,7 +161,7 @@ Some clients cannot be handled by the generic JSON configurator alone.
 - Uses **`JsonFileMcpConfigurator`**, but only supports **stdio transport**.
 - `ClaudeDesktopConfigurator`:
   - Sets `SupportsHttpTransport = false` in `McpClient`.
-  - Overrides `Configure` / `GetManualSnippet` to **silently coerce to stdio** when the user has HTTP transport selected globally. The configurator writes a stdio entry and logs an informational line rather than throwing — so bulk "Configure Detected Clients" flows succeed even on mixed-transport setups.
+  - Declares `SupportedTransports => StdioOnly`. `ClientConfigurationService` reads `SupportedTransports` and, via `ConfigureWithTransportCoercion` / `CoerceTransportFor`, temporarily coerces the transport pref to stdio before calling `Configure()` — so users with HTTP toggled globally still get a working stdio entry written without a thrown error. The coercion applies to any configurator whose `SupportedTransports` excludes the user's current transport; Claude Desktop is just the only one declaring stdio-only today.
 
 ### OpenClaw (plugin-based)
 
