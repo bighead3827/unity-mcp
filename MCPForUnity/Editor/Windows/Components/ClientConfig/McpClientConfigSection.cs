@@ -284,13 +284,16 @@ namespace MCPForUnity.Editor.Windows.Components.ClientConfig
             {
                 var summary = MCPServiceLocator.Client.ConfigureAllDetectedClients();
 
-                string message = summary.GetSummaryMessage() + "\n\n";
+                string headline = summary.SkippedCount > 0
+                    ? $"{summary.SuccessCount + summary.FailureCount} detected client(s) processed. ({summary.SkippedCount} not installed, skipped.)"
+                    : summary.GetSummaryMessage();
+                string message = headline + "\n\n";
                 foreach (var msg in summary.Messages)
                 {
                     message += msg + "\n";
                 }
 
-                EditorUtility.DisplayDialog("Configure All Clients", message, "OK");
+                EditorUtility.DisplayDialog("Configure Detected Clients", message, "OK");
 
                 if (selectedClientIndex >= 0 && selectedClientIndex < configurators.Count)
                 {

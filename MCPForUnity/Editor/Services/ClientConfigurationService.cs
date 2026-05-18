@@ -44,6 +44,11 @@ namespace MCPForUnity.Editor.Services
             var summary = new ClientConfigurationSummary();
             foreach (var configurator in configurators)
             {
+                if (!configurator.IsInstalled)
+                {
+                    summary.SkippedCount++;
+                    continue;
+                }
                 try
                 {
                     // Always re-run configuration so core fields stay current
