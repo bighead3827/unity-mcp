@@ -60,6 +60,17 @@ namespace MCPForUnity.Editor.Clients
             return client.linuxConfigPath;
         }
 
+        protected static bool ParentDirectoryExists(string configPath)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(configPath)) return false;
+                string parent = Path.GetDirectoryName(configPath);
+                return !string.IsNullOrEmpty(parent) && Directory.Exists(parent);
+            }
+            catch { return false; }
+        }
+
         protected bool UrlsEqual(string a, string b)
         {
             if (string.IsNullOrWhiteSpace(a) || string.IsNullOrWhiteSpace(b))
@@ -132,20 +143,7 @@ namespace MCPForUnity.Editor.Clients
 
         public override string GetConfigPath() => CurrentOsPath();
 
-        public override bool IsInstalled
-        {
-            get
-            {
-                try
-                {
-                    string path = GetConfigPath();
-                    if (string.IsNullOrEmpty(path)) return false;
-                    string parent = Path.GetDirectoryName(path);
-                    return !string.IsNullOrEmpty(parent) && Directory.Exists(parent);
-                }
-                catch { return false; }
-            }
-        }
+        public override bool IsInstalled => ParentDirectoryExists(GetConfigPath());
 
         public override McpStatus CheckStatus(bool attemptAutoRewrite = true)
         {
@@ -373,20 +371,7 @@ namespace MCPForUnity.Editor.Clients
 
         public override string GetConfigPath() => CurrentOsPath();
 
-        public override bool IsInstalled
-        {
-            get
-            {
-                try
-                {
-                    string path = GetConfigPath();
-                    if (string.IsNullOrEmpty(path)) return false;
-                    string parent = Path.GetDirectoryName(path);
-                    return !string.IsNullOrEmpty(parent) && Directory.Exists(parent);
-                }
-                catch { return false; }
-            }
-        }
+        public override bool IsInstalled => ParentDirectoryExists(GetConfigPath());
 
         public override McpStatus CheckStatus(bool attemptAutoRewrite = true)
         {
@@ -573,17 +558,7 @@ namespace MCPForUnity.Editor.Clients
 
         public override string GetConfigPath() => "Managed via Claude CLI";
 
-        public override bool IsInstalled
-        {
-            get
-            {
-                try
-                {
-                    return !string.IsNullOrEmpty(MCPServiceLocator.Paths.GetClaudeCliPath());
-                }
-                catch { return false; }
-            }
-        }
+        public override bool IsInstalled => MCPServiceLocator.Paths.IsClaudeCliDetected();
 
         /// <summary>
         /// Returns the project directory that CLI-based configurators will use as the working directory
