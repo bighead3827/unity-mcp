@@ -165,41 +165,35 @@ namespace MCPForUnity.Editor.Clients
                 string configuredUrl = null;
                 bool configExists = false;
 
-                if (client.IsVsCodeLayout)
                 {
-                    var vsConfig = JsonConvert.DeserializeObject<JToken>(configJson) as JObject;
-                    if (vsConfig != null)
+                    var rootConfig = JsonConvert.DeserializeObject<JToken>(configJson) as JObject;
+                    JToken unityToken = null;
+                    if (rootConfig != null)
                     {
-                        var unityToken =
-                            vsConfig["servers"]?["unityMCP"]
-                            ?? vsConfig["mcp"]?["servers"]?["unityMCP"];
-
-                        if (unityToken is JObject unityObj)
-                        {
-                            configExists = true;
-
-                            var argsToken = unityObj["args"];
-                            if (argsToken is JArray)
-                            {
-                                args = argsToken.ToObject<string[]>();
-                            }
-
-                            var urlToken = unityObj["url"] ?? unityObj["serverUrl"];
-                            if (urlToken != null && urlToken.Type != JTokenType.Null)
-                            {
-                                configuredUrl = urlToken.ToString();
-                            }
-                        }
+                        unityToken = client.IsVsCodeLayout
+                            ? rootConfig["servers"]?["unityMCP"]
+                                ?? rootConfig["mcp"]?["servers"]?["unityMCP"]
+                            : rootConfig["mcpServers"]?["unityMCP"];
                     }
-                }
-                else
-                {
-                    McpConfig standardConfig = JsonConvert.DeserializeObject<McpConfig>(configJson);
-                    if (standardConfig?.mcpServers?.unityMCP != null)
+
+                    if (unityToken is JObject unityObj)
                     {
-                        args = standardConfig.mcpServers.unityMCP.args;
-                        configuredUrl = standardConfig.mcpServers.unityMCP.url;
                         configExists = true;
+
+                        var argsToken = unityObj["args"];
+                        if (argsToken is JArray)
+                        {
+                            args = argsToken.ToObject<string[]>();
+                        }
+
+                        // Clients diverge on the HTTP URL property name: "url" (Cursor/VSCode/Claude),
+                        // "serverUrl" (Antigravity/Windsurf), "httpUrl" (Gemini CLI). Accept all three
+                        // so CheckStatus matches what Configure() actually wrote.
+                        var urlToken = unityObj["url"] ?? unityObj["serverUrl"] ?? unityObj["httpUrl"];
+                        if (urlToken != null && urlToken.Type != JTokenType.Null)
+                        {
+                            configuredUrl = urlToken.ToString();
+                        }
                     }
                 }
 
