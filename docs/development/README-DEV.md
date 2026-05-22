@@ -142,16 +142,18 @@ open htmlcov/index.html
 
 CI exercises the package across multiple Unity versions to catch breaks in `#if UNITY_*_OR_NEWER` branches. The matrix is configured in `tools/unity-versions.json` and consumed by `.github/workflows/unity-tests.yml`.
 
+**Every PR gets a unity-tests status check on open** (mirrors `python-tests.yml`). For same-repo PRs the default Unity 6 leg actually runs; for fork PRs the workflow appears but skips with a "missing license secrets" notice until a maintainer applies `safe-to-test` (existing secret-safety gate). The full 4-version matrix is opt-in via the `full-matrix` label.
+
 **When the full matrix runs (all 4 versions in parallel):**
 
 - Push to `beta` (the release gate).
 - `workflow_call` from `beta-release.yml` / `release.yml`.
 - Manual `workflow_dispatch` from the Actions tab.
-- Any PR (in-repo or fork) labeled with **`full-matrix`** — apply this label when your change touches compat shims, conditional compilation, or anything else version-sensitive. The workflow re-runs with the full matrix on the next `pull_request_target` event. Cost is ~6-8 min wall clock vs ~3 min for the default leg.
+- Any PR (in-repo or fork) labeled with **`full-matrix`** — apply when your change touches compat shims, conditional compilation, or anything else version-sensitive. Triggers a full-matrix run on the next `pull_request` or `pull_request_target` event. Cost is ~6-8 min wall clock vs ~3 min for the default leg.
 
-Fork PRs still need `safe-to-test` as the base gate (existing secret-safety pattern); `full-matrix` is layered on top of that for fork-PR full-matrix runs.
+Fork PRs still need `safe-to-test` as the base gate (so secrets are exposed against reviewed-only fork code); `full-matrix` is layered on top for fork-PR full-matrix runs.
 
-**Default (single leg) runs on every other path** — feature-branch pushes and unlabeled in-repo PRs run only against `defaultVersion` from `tools/unity-versions.json` (currently Unity 6.0 LTS, `6000.0.75f1`). The `floor` role (`2021.3.45f2`) still identifies the package minimum and runs as part of the full matrix; it's no longer the default-leg version.
+**Default (single leg)** — every other path runs only against `defaultVersion` from `tools/unity-versions.json` (currently Unity 6.0 LTS, `6000.0.75f1`). The `floor` role (`2021.3.45f2`) still identifies the package minimum and runs as part of the full matrix; it's no longer the default-leg version.
 
 ## Local Unity-version parity check
 

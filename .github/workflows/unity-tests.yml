@@ -16,6 +16,19 @@ on:
       - MCPForUnity/Editor/**
       - MCPForUnity/Runtime/**
       - .github/workflows/unity-tests.yml
+  # Same-repo PRs get a unity-tests status check on every open / push via this trigger
+  # (mirrors python-tests.yml). Fork PRs ALSO fire this trigger but run in the fork's
+  # context without secrets — the detect step downstream writes unity_ok=false and the
+  # job exits clean with a "missing license secrets" notice so the status check still
+  # appears. Maintainers apply 'safe-to-test' to invoke pull_request_target below for
+  # a real fork-PR test run.
+  pull_request:
+    branches: [main, beta]
+    paths:
+      - TestProjects/UnityMCPTests/**
+      - MCPForUnity/Editor/**
+      - MCPForUnity/Runtime/**
+      - .github/workflows/unity-tests.yml
   # Fork PRs: maintainer applies the 'safe-to-test' label after reviewing
   # the diff. The workflow runs with UNITY_LICENSE in scope against the
   # PR's head SHA. Re-pushed commits do NOT auto-trigger — maintainer must
@@ -28,6 +41,13 @@ on:
       - MCPForUnity/Editor/**
       - MCPForUnity/Runtime/**
       - .github/workflows/unity-tests.yml
+
+# Dedup runs for the same branch across push / pull_request / pull_request_target / workflow_call.
+# Same-repo PRs would otherwise fire both push (on the branch SHA) AND pull_request (on the PR);
+# concurrency keeps only the newer in-flight run per branch.
+concurrency:
+  group: unity-tests-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   matrix:
@@ -71,12 +91,12 @@ jobs:
         run: |
           set -euo pipefail
           # Full matrix on: beta push, workflow_call (release pipelines), workflow_dispatch,
-          # or any PR labeled with 'full-matrix'.
+          # or any PR (pull_request OR pull_request_target) labeled with 'full-matrix'.
           # Default (single defaultVersion from tools/unity-versions.json) otherwise — fast PR feedback.
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]] || \
              [[ "$EVENT_NAME" == "workflow_call" ]] || \
              { [[ "$EVENT_NAME" == "push" ]] && [[ "$GH_REF" == "refs/heads/beta" ]]; } || \
-             { [[ "$EVENT_NAME" == "pull_request_target" ]] && [[ "$FULL_MATRIX_LABEL" == "true" ]]; }; then
+             { { [[ "$EVENT_NAME" == "pull_request" ]] || [[ "$EVENT_NAME" == "pull_request_target" ]]; } && [[ "$FULL_MATRIX_LABEL" == "true" ]]; }; then
             versions=$(jq -c '[.versions[].id]' tools/unity-versions.json)
             echo "Trigger '$EVENT_NAME' on ref '$GH_REF' (full_matrix_label=$FULL_MATRIX_LABEL) → full matrix: $versions"
           else
