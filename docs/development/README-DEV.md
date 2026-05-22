@@ -138,9 +138,24 @@ uv run pytest tests/ --cov --cov-report=html
 open htmlcov/index.html
 ```
 
+## Unity-version CI matrix
+
+CI exercises the package across multiple Unity versions to catch breaks in `#if UNITY_*_OR_NEWER` branches. The matrix is configured in `tools/unity-versions.json` and consumed by `.github/workflows/unity-tests.yml`.
+
+**When the wide matrix runs (all 4 versions in parallel):**
+
+- Push to `beta` (the release gate).
+- `workflow_call` from `beta-release.yml` / `release.yml`.
+- Manual `workflow_dispatch` from the Actions tab.
+- Any PR (in-repo or fork) labeled with **`run-wide-matrix`** — apply this label when your change touches compat shims, conditional compilation, or anything else version-sensitive. The workflow re-runs with the full matrix on the next `pull_request_target` event. Cost is ~6-8 min wall clock vs ~3 min for the default leg.
+
+Fork PRs still need `safe-to-test` as the base gate (existing secret-safety pattern); `run-wide-matrix` is layered on top of that for fork-PR wide runs.
+
+**Default (single leg) runs on every other path** — feature-branch pushes and unlabeled in-repo PRs run only against `defaultVersion` from `tools/unity-versions.json` (currently Unity 6.0 LTS, `6000.0.75f1`). The `floor` role (`2021.3.45f2`) still identifies the package minimum and runs as part of the wide matrix; it's no longer the default-leg version.
+
 ## Local Unity-version parity check
 
-CI exercises the package across multiple Unity versions to catch breaks in `#if UNITY_*_OR_NEWER` branches (see `tools/unity-versions.json` for the matrix and `.github/workflows/unity-tests.yml` for how it's consumed). The same list drives a local script so you can reproduce CI behavior before pushing.
+The same `tools/unity-versions.json` drives a local script so you can reproduce CI behavior before pushing.
 
 The script has two runners. Use whichever fits your setup:
 
