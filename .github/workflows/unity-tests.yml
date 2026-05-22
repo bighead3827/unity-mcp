@@ -10,7 +10,13 @@ on:
         required: false
         default: ""
   push:
-    branches: ["**"]
+    # Exclude beta and main: those branches re-trigger this workflow via
+    # workflow_call from beta-release.yml / release.yml. Without the exclusion,
+    # a push to beta that touches MCPForUnity/** fires this workflow twice
+    # for the same SHA, and GitHub's auto-generated concurrency group
+    # (`unity-tests-refs/heads/beta`) cancels the older run with the noisy
+    # "higher priority waiting request" annotation.
+    branches-ignore: [beta, main]
     paths:
       - TestProjects/UnityMCPTests/**
       - MCPForUnity/Editor/**
