@@ -183,13 +183,22 @@ jobs:
           ARTIFACTS_PATH: ${{ steps.tests.outputs.artifactsPath }}
         run: |
           set -euo pipefail
-          RESULTS_XML=$(find "$ARTIFACTS_PATH" -name '*.xml' 2>/dev/null | head -1)
+          # `|| true` so a missing $ARTIFACTS_PATH (Unity crashed before producing any) doesn't trip
+          # `pipefail` and skip the explicit empty-check diagnostic below.
+          RESULTS_XML=$(find "$ARTIFACTS_PATH" -name '*.xml' 2>/dev/null | head -1 || true)
           if [ -z "$RESULTS_XML" ]; then
             echo "::error::No test results XML found — Unity may have crashed"
             exit 1
           fi
           python3 - "$RESULTS_XML" <<'PY'
           import sys, xml.etree.ElementTree as ET
+          # Escape workflow-command payloads so test-controlled XML (under pull_request_target this
+          # is fork-supplied) can't break annotation rendering or inject extra workflow commands.
+          # https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions
+          def esc_data(s):
+              return s.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+          def esc_prop(s):
+              return esc_data(s).replace(":", "%3A").replace(",", "%2C")
           root = ET.parse(sys.argv[1]).getroot()
           totals = root.attrib
           passed = totals.get("passed", "?")
@@ -210,8 +219,8 @@ jobs:
               # First line of the message becomes the GitHub annotation title.
               first_line = msg.splitlines()[0] if msg else "(no message)"
               # GitHub annotations don't render multi-line bodies, so emit the full failure inside a collapsible group.
-              print(f"::error title=Failed: {name}::{first_line}")
-              print(f"::group::Failure details — {name}")
+              print(f"::error title=Failed: {esc_prop(name)}::{esc_data(first_line)}")
+              print(f"::group::Failure details — {esc_data(name)}")
               if msg:
                   print("Message:")
                   print(msg)
