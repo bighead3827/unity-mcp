@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastmcp import Context
 from mcp.types import ToolAnnotations
 from models.models import MCPResponse
@@ -21,7 +23,7 @@ from services.tools import get_unity_instance_from_context
         destructiveHint=True,
     ),
 )
-async def execute_custom_tool(ctx: Context, tool_name: str, parameters: dict | None = None) -> MCPResponse:
+async def execute_custom_tool(ctx: Context, tool_name: str, parameters: dict[str, Any] | None = None) -> MCPResponse:
     unity_instance = await get_unity_instance_from_context(ctx)
     if not unity_instance:
         return MCPResponse(
