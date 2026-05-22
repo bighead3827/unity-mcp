@@ -37,6 +37,7 @@ namespace MCPForUnity.Editor.Windows.Components.ClientConfig
         private TextField clientProjectDirField;
         private Button browseProjectDirButton;
         private Button clearProjectDirButton;
+        private Foldout clientDetailsFoldout;
         private Foldout manualConfigFoldout;
         private TextField configPathField;
         private Button copyPathButton;
@@ -92,6 +93,7 @@ namespace MCPForUnity.Editor.Windows.Components.ClientConfig
             clientProjectDirField = Root.Q<TextField>("client-project-dir");
             browseProjectDirButton = Root.Q<Button>("browse-project-dir-button");
             clearProjectDirButton = Root.Q<Button>("clear-project-dir-button");
+            clientDetailsFoldout = Root.Q<Foldout>("client-details-foldout");
             manualConfigFoldout = Root.Q<Foldout>("manual-config-foldout");
             configPathField = Root.Q<TextField>("config-path");
             copyPathButton = Root.Q<Button>("copy-path-button");
@@ -107,6 +109,17 @@ namespace MCPForUnity.Editor.Windows.Components.ClientConfig
             if (manualConfigFoldout != null)
             {
                 manualConfigFoldout.value = false;
+            }
+
+            // Restore the "Configure a single client" foldout state. Defaults to collapsed
+            // so the prominent "Configure All Detected Clients" path is what users see first.
+            if (clientDetailsFoldout != null)
+            {
+                clientDetailsFoldout.value = EditorPrefs.GetBool(EditorPrefKeys.ClientDetailsFoldoutOpen, false);
+                clientDetailsFoldout.RegisterValueChangedCallback(evt =>
+                {
+                    EditorPrefs.SetBool(EditorPrefKeys.ClientDetailsFoldoutOpen, evt.newValue);
+                });
             }
 
             var clientNames = configurators.Select(c => c.DisplayName).ToList();
@@ -284,13 +297,16 @@ namespace MCPForUnity.Editor.Windows.Components.ClientConfig
             {
                 var summary = MCPServiceLocator.Client.ConfigureAllDetectedClients();
 
-                string message = summary.GetSummaryMessage() + "\n\n";
+                string headline = summary.SkippedCount > 0
+                    ? $"{summary.SuccessCount + summary.FailureCount} detected client(s) processed. ({summary.SkippedCount} not installed, skipped.)"
+                    : summary.GetSummaryMessage();
+                string message = headline + "\n\n";
                 foreach (var msg in summary.Messages)
                 {
                     message += msg + "\n";
                 }
 
-                EditorUtility.DisplayDialog("Configure All Clients", message, "OK");
+                EditorUtility.DisplayDialog("Configure Detected Clients", message, "OK");
 
                 if (selectedClientIndex >= 0 && selectedClientIndex < configurators.Count)
                 {
