@@ -34,12 +34,21 @@ ONLY=""
 PRE_PUSH=0
 USE_DOCKER=0
 
+require_value() {
+  # Validate that a flag taking a value got one (not another flag, not nothing).
+  local flag="$1" value="${2:-}"
+  if [[ -z "$value" || "$value" == --* ]]; then
+    echo "error: $flag requires a value" >&2
+    exit 2
+  fi
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --full|--with-tests) FULL=1 ;;
-    --only) ONLY="${2:-}"; shift ;;
+    --only) require_value "$1" "${2:-}"; ONLY="$2"; shift ;;
     --docker) USE_DOCKER=1 ;;
-    --docker-image-tag) DOCKER_IMAGE_TAG="${2:-}"; shift ;;
+    --docker-image-tag) require_value "$1" "${2:-}"; DOCKER_IMAGE_TAG="$2"; shift ;;
     --pre-push) PRE_PUSH=1 ;;
     -h|--help)
       sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'
@@ -159,9 +168,11 @@ run_local() {
 
   printf "  [ .. ] %s — running...\r" "$version"
 
+  # -quit on both paths so Unity batchmode always exits — without it -runTests can hang waiting
+  # on test framework shutdown on some Unity versions.
   local args
   if [[ $FULL -eq 1 ]]; then
-    args=(-batchmode -nographics -projectPath "$PROJECT_PATH" -runTests -testPlatform editmode -logFile "$log_file")
+    args=(-batchmode -quit -nographics -projectPath "$PROJECT_PATH" -runTests -testPlatform editmode -logFile "$log_file")
   else
     args=(-batchmode -quit -nographics -projectPath "$PROJECT_PATH" -logFile "$log_file")
   fi
@@ -191,9 +202,10 @@ run_docker() {
   # Write the license from env on container start, then run Unity with -logFile /dev/stdout so
   # everything (mkdir output, Unity compile log, errors) streams through docker's stdout into our
   # host log_file via a single `>> "$log_file"` redirection. No bind-mount race.
+  # -quit on both paths (see run_local note).
   local unity_extra
   if [[ $FULL -eq 1 ]]; then
-    unity_extra="-runTests -testPlatform editmode"
+    unity_extra="-quit -runTests -testPlatform editmode"
   else
     unity_extra="-quit"
   fi

@@ -35,6 +35,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    # Mirror the testAllModes gate: skip matrix work on unauthorized fork PRs so we don't waste
+    # CI minutes (or check out fork code) on labels that aren't 'safe-to-test'.
+    if: >
+      github.event_name != 'pull_request_target' ||
+      (github.event.pull_request.head.repo.full_name != github.repository &&
+       github.event.label.name == 'safe-to-test')
     outputs:
       versions: ${{ steps.set.outputs.versions }}
     steps:
@@ -47,18 +53,21 @@ jobs:
           persist-credentials: false
       - name: Select versions for this trigger
         id: set
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          GH_REF: ${{ github.ref }}
         run: |
           set -euo pipefail
           # Wide matrix on beta-push, workflow_call (release pipelines), and manual dispatch.
           # Narrow (floor only) on PRs and feature-branch pushes to keep PR feedback fast.
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || \
-             [[ "${{ github.event_name }}" == "workflow_call" ]] || \
-             { [[ "${{ github.event_name }}" == "push" ]] && [[ "${{ github.ref }}" == "refs/heads/beta" ]]; }; then
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]] || \
+             [[ "$EVENT_NAME" == "workflow_call" ]] || \
+             { [[ "$EVENT_NAME" == "push" ]] && [[ "$GH_REF" == "refs/heads/beta" ]]; }; then
             versions=$(jq -c '[.versions[].id]' tools/unity-versions.json)
-            echo "Trigger '${{ github.event_name }}' on ref '${{ github.ref }}' → wide matrix: $versions"
+            echo "Trigger '$EVENT_NAME' on ref '$GH_REF' → wide matrix: $versions"
           else
             versions=$(jq -c '[.versions[] | select(.role=="floor") | .id]' tools/unity-versions.json)
-            echo "Trigger '${{ github.event_name }}' on ref '${{ github.ref }}' → floor only: $versions"
+            echo "Trigger '$EVENT_NAME' on ref '$GH_REF' → floor only: $versions"
           fi
           echo "versions=$versions" >> "$GITHUB_OUTPUT"
 

@@ -17,14 +17,21 @@ fi
 # the CI workflow uses, so the hook fires for the same scope of changes.
 relevant_paths='^(MCPForUnity/(Editor|Runtime)/|TestProjects/UnityMCPTests/|tools/unity-versions\.json$|\.github/workflows/unity-tests\.yml$)'
 
+# Git's empty-tree SHA — fallback that always exists. Used when we can't find a sensible merge
+# base (shallow clone, fresh fork with no origin/beta or origin/main, etc.) so the hook still
+# runs the check instead of silently skipping it.
+EMPTY_TREE=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+
 # stdin format from git: <local-ref> <local-sha> <remote-ref> <remote-sha> (one line per ref being pushed)
 relevant=0
 while read -r local_ref local_sha remote_ref remote_sha; do
   [[ -z "$local_sha" || "$local_sha" == "0000000000000000000000000000000000000000" ]] && continue
 
   if [[ "$remote_sha" == "0000000000000000000000000000000000000000" ]]; then
-    # New branch on remote — diff against the default branch (or HEAD~ as fallback)
-    base=$(git merge-base "$local_sha" origin/beta 2>/dev/null || git merge-base "$local_sha" origin/main 2>/dev/null || echo "$local_sha~1")
+    # New branch on remote — diff against the default branch, or the empty tree as a guaranteed-valid fallback.
+    base=$(git merge-base "$local_sha" origin/beta 2>/dev/null \
+        || git merge-base "$local_sha" origin/main 2>/dev/null \
+        || echo "$EMPTY_TREE")
   else
     base="$remote_sha"
   fi

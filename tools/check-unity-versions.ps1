@@ -83,7 +83,7 @@ if ($Docker) {
     Write-Host "  4. Re-run this script."
     Write-Host ""
     Write-Host "(The same UNITY_LICENSE secret is what the GitHub Actions workflow uses; one .ulf works across all"
-    Write-Host "matrix versions in practice — Unity Personal activations are tied to the machine, not the editor version.)"
+    Write-Host "matrix versions in practice -- Unity Personal activations are tied to the machine, not the editor version.)"
     exit 2
   }
 } else {
@@ -122,7 +122,7 @@ if ($Only) {
 
 $modeLabel = if ($Full) { "full EditMode test run" } else { "compile-only" }
 $runnerLabel = if ($Docker) { "GameCI Docker ($DockerImageTag)" } else { "local Unity Hub" }
-Write-Host "Unity-version check ($modeLabel, $runnerLabel) — $($Versions.Count) version(s) requested"
+Write-Host "Unity-version check ($modeLabel, $runnerLabel) -- $($Versions.Count) version(s) requested"
 Write-Host "  Project: $ProjectPath"
 Write-Host "  Logs:    $LogDir"
 Write-Host ""
@@ -130,14 +130,15 @@ Write-Host ""
 function Invoke-LocalUnity([string]$Version, [string]$LogFile) {
   $unityBin = Get-UnityBin $Version
   if (-not $unityBin) {
-    Write-Host "  [SKIP] $Version — not installed under any Unity Hub root" -ForegroundColor Yellow
+    Write-Host "  [SKIP] $Version -- not installed under any Unity Hub root" -ForegroundColor Yellow
     return 2  # skip sentinel
   }
 
-  Write-Host -NoNewline "  [ .. ] $Version — running...`r"
+  Write-Host -NoNewline "  [ .. ] $Version -- running...`r"
 
+  # -quit on both paths so Unity batchmode always exits; without it -runTests can hang on test framework shutdown.
   if ($Full) {
-    $unityArgs = @("-batchmode", "-nographics", "-projectPath", $ProjectPath, "-runTests", "-testPlatform", "editmode", "-logFile", $LogFile)
+    $unityArgs = @("-batchmode", "-quit", "-nographics", "-projectPath", $ProjectPath, "-runTests", "-testPlatform", "editmode", "-logFile", $LogFile)
   } else {
     $unityArgs = @("-batchmode", "-quit", "-nographics", "-projectPath", $ProjectPath, "-logFile", $LogFile)
   }
@@ -149,18 +150,19 @@ function Invoke-LocalUnity([string]$Version, [string]$LogFile) {
 function Invoke-DockerUnity([string]$Version, [string]$LogFile) {
   $image = "unityci/editor:ubuntu-$Version-$DockerImageTag"
 
-  Write-Host -NoNewline "  [ .. ] $Version — pulling $image ...`r"
+  Write-Host -NoNewline "  [ .. ] $Version -- pulling $image ...`r"
   & docker pull $image *>> $LogFile
   if ($LASTEXITCODE -ne 0) {
-    Write-Host "  [FAIL] $Version — image pull failed ($image); see $LogFile" -ForegroundColor Red
+    Write-Host "  [FAIL] $Version -- image pull failed ($image); see $LogFile" -ForegroundColor Red
     Write-Host "    Pull errors:"
     Get-Content $LogFile -Tail 5 | ForEach-Object { Write-Host "      $_" }
     return 1
   }
 
-  Write-Host -NoNewline "  [ .. ] $Version — running in container...`r"
+  Write-Host -NoNewline "  [ .. ] $Version -- running in container...`r"
 
-  $unityExtra = if ($Full) { "-runTests -testPlatform editmode" } else { "-quit" }
+  # -quit on both paths (see Invoke-LocalUnity note).
+  $unityExtra = if ($Full) { "-quit -runTests -testPlatform editmode" } else { "-quit" }
 
   # Convert Windows path to Docker-friendly format for -v.
   $projectMount = $ProjectPath.Replace('\', '/')
@@ -199,7 +201,7 @@ foreach ($version in $Versions) {
     0 { Write-Host "  [PASS] $version                    " -ForegroundColor Green; $pass++ }
     2 { $skip++ }
     default {
-      Write-Host "  [FAIL] $version — see $logFile" -ForegroundColor Red
+      Write-Host "  [FAIL] $version -- see $logFile" -ForegroundColor Red
       $compileErrors = Select-String -Path $logFile -Pattern "error CS\d+" -ErrorAction SilentlyContinue
       if ($compileErrors) {
         Write-Host "    Compile errors:"
