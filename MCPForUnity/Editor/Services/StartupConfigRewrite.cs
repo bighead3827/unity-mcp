@@ -1,3 +1,5 @@
+using System;
+using System.Reflection;
 using MCPForUnity.Editor.Clients;
 using MCPForUnity.Editor.Constants;
 using MCPForUnity.Editor.Helpers;
@@ -20,6 +22,10 @@ namespace MCPForUnity.Editor.Services
         static StartupConfigRewrite()
         {
             if (UnityEditorInternal.InternalEditorUtility.inBatchMode) return;
+            // AssetImportWorker subprocesses share [InitializeOnLoad] but don't host MCP and
+            // shouldn't be writing client configs from a half-loaded domain (same surface as
+            // issue #1134 in CommandRegistry).
+            if (IsRunningInAssetImportWorker()) return;
             if (SessionState.GetBool(SESSION_GUARD_KEY, false)) return;
             EditorApplication.delayCall += RunOnce;
         }
@@ -37,8 +43,10 @@ namespace MCPForUnity.Editor.Services
                 try
                 {
                     if (!c.IsInstalled) continue;
+                    // Always let CheckStatus read the current state from disk before deciding —
+                    // the in-memory Status can be NotConfigured on a fresh editor load even
+                    // though the file already has a valid config.
                     var before = c.Status;
-                    if (before == McpStatus.NotConfigured) continue;
                     var after = c.CheckStatus(attemptAutoRewrite: true);
                     if (before != after && after == McpStatus.Configured) rewrote++;
                 }
@@ -49,6 +57,40 @@ namespace MCPForUnity.Editor.Services
             }
             if (rewrote > 0)
                 McpLog.Info($"[StartupConfigRewrite] refreshed {rewrote} client config(s).");
+        }
+
+        private static bool? _cachedIsAssetImportWorker;
+
+        private static bool IsRunningInAssetImportWorker()
+        {
+            if (_cachedIsAssetImportWorker.HasValue)
+                return _cachedIsAssetImportWorker.Value;
+
+            bool result = false;
+            try
+            {
+                var method = typeof(UnityEditor.AssetDatabase).GetMethod(
+                    "IsAssetImportWorkerProcess",
+                    BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                if (method != null && method.GetParameters().Length == 0)
+                    result = method.Invoke(null, null) is bool b && b;
+            }
+            catch { }
+
+            if (!result)
+            {
+                try
+                {
+                    string cmd = Environment.CommandLine ?? string.Empty;
+                    if (cmd.IndexOf("-importWorker", StringComparison.OrdinalIgnoreCase) >= 0
+                        || cmd.IndexOf("AssetImportWorker", StringComparison.OrdinalIgnoreCase) >= 0)
+                        result = true;
+                }
+                catch { }
+            }
+
+            _cachedIsAssetImportWorker = result;
+            return result;
         }
     }
 }
