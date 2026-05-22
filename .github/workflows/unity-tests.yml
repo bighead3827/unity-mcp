@@ -179,22 +179,58 @@ jobs:
 
       - name: Check test results
         if: steps.detect.outputs.unity_ok == 'true'
+        env:
+          ARTIFACTS_PATH: ${{ steps.tests.outputs.artifactsPath }}
         run: |
-          RESULTS_XML=$(find ${{ steps.tests.outputs.artifactsPath }} -name '*.xml' 2>/dev/null | head -1)
+          set -euo pipefail
+          # `|| true` so a missing $ARTIFACTS_PATH (Unity crashed before producing any) doesn't trip
+          # `pipefail` and skip the explicit empty-check diagnostic below.
+          RESULTS_XML=$(find "$ARTIFACTS_PATH" -name '*.xml' 2>/dev/null | head -1 || true)
           if [ -z "$RESULTS_XML" ]; then
             echo "::error::No test results XML found — Unity may have crashed"
             exit 1
           fi
-          FAILED=$(grep -oP 'failed="\K[0-9]+' "$RESULTS_XML" | head -1)
-          PASSED=$(grep -oP 'passed="\K[0-9]+' "$RESULTS_XML" | head -1)
-          TOTAL=$(grep -oP 'total="\K[0-9]+' "$RESULTS_XML" | head -1)
-          INCONCLUSIVE=$(grep -oP 'inconclusive="\K[0-9]+' "$RESULTS_XML" | head -1)
-          SKIPPED=$(grep -oP 'skipped="\K[0-9]+' "$RESULTS_XML" | head -1)
-          echo "Results: $PASSED passed, $FAILED failed, $INCONCLUSIVE inconclusive, $SKIPPED skipped (total: $TOTAL)"
-          if [ "$FAILED" != "0" ]; then
-            echo "::error::$FAILED test(s) failed"
-            exit 1
-          fi
+          python3 - "$RESULTS_XML" <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          # Escape workflow-command payloads so test-controlled XML (under pull_request_target this
+          # is fork-supplied) can't break annotation rendering or inject extra workflow commands.
+          # https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions
+          def esc_data(s):
+              return s.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+          def esc_prop(s):
+              return esc_data(s).replace(":", "%3A").replace(",", "%2C")
+          root = ET.parse(sys.argv[1]).getroot()
+          totals = root.attrib
+          passed = totals.get("passed", "?")
+          failed = totals.get("failed", "?")
+          total  = totals.get("total", "?")
+          incon  = totals.get("inconclusive", "?")
+          skipped = totals.get("skipped", "?")
+          print(f"Results: {passed} passed, {failed} failed, {incon} inconclusive, {skipped} skipped (total: {total})")
+          fails = [tc for tc in root.iter("test-case") if tc.attrib.get("result") == "Failed"]
+          if not fails:
+              sys.exit(0)
+          # Surface every failure inline so a CI watcher doesn't need to download the NUnit XML artifact.
+          for tc in fails:
+              name = tc.attrib.get("fullname") or tc.attrib.get("name") or "<unknown>"
+              f = tc.find("failure")
+              msg = (f.findtext("message") or "").strip() if f is not None else ""
+              stack = (f.findtext("stack-trace") or "").strip() if f is not None else ""
+              # First line of the message becomes the GitHub annotation title.
+              first_line = msg.splitlines()[0] if msg else "(no message)"
+              # GitHub annotations don't render multi-line bodies, so emit the full failure inside a collapsible group.
+              print(f"::error title=Failed: {esc_prop(name)}::{esc_data(first_line)}")
+              print(f"::group::Failure details — {esc_data(name)}")
+              if msg:
+                  print("Message:")
+                  print(msg)
+              if stack:
+                  print("Stack trace:")
+                  print(stack)
+              print("::endgroup::")
+          print(f"::error::{len(fails)} test(s) failed")
+          sys.exit(1)
+          PY
 
       - uses: actions/upload-artifact@v4
         if: always() && steps.detect.outputs.unity_ok == 'true' && steps.tests.outcome != 'skipped'
