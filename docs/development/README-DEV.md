@@ -138,3 +138,106 @@ uv run pytest tests/ --cov --cov-report=html
 open htmlcov/index.html
 ```
 
+## Unity-version CI matrix
+
+CI exercises the package across multiple Unity versions to catch breaks in `#if UNITY_*_OR_NEWER` branches. The matrix is configured in `tools/unity-versions.json` and consumed by `.github/workflows/unity-tests.yml`.
+
+**When the wide matrix runs (all 4 versions in parallel):**
+
+- Push to `beta` (the release gate).
+- `workflow_call` from `beta-release.yml` / `release.yml`.
+- Manual `workflow_dispatch` from the Actions tab.
+- Any PR (in-repo or fork) labeled with **`run-wide-matrix`** — apply this label when your change touches compat shims, conditional compilation, or anything else version-sensitive. The workflow re-runs with the full matrix on the next `pull_request_target` event. Cost is ~6-8 min wall clock vs ~3 min for the default leg.
+
+Fork PRs still need `safe-to-test` as the base gate (existing secret-safety pattern); `run-wide-matrix` is layered on top of that for fork-PR wide runs.
+
+**Default (single leg) runs on every other path** — feature-branch pushes and unlabeled in-repo PRs run only against `defaultVersion` from `tools/unity-versions.json` (currently Unity 6.0 LTS, `6000.0.75f1`). The `floor` role (`2021.3.45f2`) still identifies the package minimum and runs as part of the wide matrix; it's no longer the default-leg version.
+
+## Local Unity-version parity check
+
+The same `tools/unity-versions.json` drives a local script so you can reproduce CI behavior before pushing.
+
+The script has two runners. Use whichever fits your setup:
+
+| Runner | When to use | Cost |
+|---|---|---|
+| **Local Unity Hub** (default) | You already have one or more matrix versions installed via Unity Hub. Fastest. | Disk: each editor is 3-6 GB. |
+| **GameCI Docker** (`--docker`) | You don't want to install every editor locally. Same containers CI uses. | One-time pull is 5-15 GB per version. On Apple Silicon, expect ~5-10× slowdown from amd64 emulation. |
+
+### Local Unity Hub mode
+
+```bash
+# Compile-only check across every locally-installed Unity in the matrix (~30-60s warm per version).
+tools/check-unity-versions.sh
+
+# Full EditMode test run — matches what CI runs end-to-end.
+tools/check-unity-versions.sh --full
+
+# Filter to one version family.
+tools/check-unity-versions.sh --only 6000.0
+```
+
+Windows uses the PowerShell companion:
+
+```powershell
+pwsh .\tools\check-unity-versions.ps1
+pwsh .\tools\check-unity-versions.ps1 -Full
+pwsh .\tools\check-unity-versions.ps1 -Only 6000.0
+```
+
+Versions not installed via Unity Hub are skipped — the script never forces you to install every editor in the matrix. Install the versions you most care about (typically the floor `2021.3.45f2` and your daily-driver Unity 6) and CI / Docker mode cover the rest.
+
+### GameCI Docker mode (no Unity Hub install required)
+
+```bash
+tools/check-unity-versions.sh --docker                # all matrix versions, compile-only
+tools/check-unity-versions.sh --docker --full         # full EditMode run
+tools/check-unity-versions.sh --docker --only 2022.3  # one version family
+```
+
+```powershell
+pwsh .\tools\check-unity-versions.ps1 -Docker
+pwsh .\tools\check-unity-versions.ps1 -Docker -Full
+```
+
+**One-time setup: get a Unity license**
+
+GameCI containers still need an activated Unity license. Free Personal activations work fine and are tied to the machine, not the editor version — so a single `.ulf` covers every version in the matrix.
+
+```bash
+# 1. Generate the request file (.alf) — outputs Unity_v<version>.alf in the current directory.
+docker run --rm -v "$PWD":/work unityci/editor:ubuntu-2021.3.45f2-base-3 \
+  /opt/unity/Editor/Unity -batchmode -nographics -quit \
+  -createManualActivationFile -logFile /dev/stdout
+
+# 2. Upload Unity_v<version>.alf at https://license.unity3d.com/manual
+#    Choose Personal license → save the resulting .ulf file.
+
+# 3. Export the .ulf contents (add to ~/.zshrc or ~/.bashrc to persist):
+export UNITY_LICENSE="$(cat /path/to/Unity_v<version>.ulf)"
+
+# 4. Run the check.
+tools/check-unity-versions.sh --docker
+```
+
+PowerShell equivalent for step 3: `$env:UNITY_LICENSE = Get-Content C:\path\to\Unity_v<version>.ulf -Raw`.
+
+The same `UNITY_LICENSE` secret is what `.github/workflows/unity-tests.yml` uses in CI — once you have it, your local Docker runs and CI behave identically.
+
+**Coverage gap on Apple Silicon Macs**: GameCI publishes only `linux/amd64` images. Docker Desktop runs them under Rosetta/QEMU at ~5-10× the native amd64 speed. A compile that takes 30s on Intel takes 3-5 min on M-series. Still faster than installing four Unity editors, but plan for it.
+
+**Opt-in pre-push hook**
+
+```bash
+tools/install-hooks.sh             # installs .git/hooks/pre-push (idempotent)
+tools/install-hooks.sh --uninstall # removes our hooks
+```
+
+Once installed, `git push` runs the compile-only check first when the push touches `MCPForUnity/Editor/**`, `MCPForUnity/Runtime/**`, `TestProjects/UnityMCPTests/**`, `tools/unity-versions.json`, or `.github/workflows/unity-tests.yml`. Pushes that touch only docs, Server/, or unrelated files skip the check.
+
+To bypass for a single push: `git push --no-verify`.
+
+**Bumping the matrix**
+
+Edit `tools/unity-versions.json` and update CI + local scripts both in one commit. The file is the single source of truth.
+
