@@ -30,7 +30,11 @@ namespace MCPForUnity.Editor.Clients
         public McpStatus Status => client.status;
         public ConfiguredTransport ConfiguredTransport => client.configuredTransport;
         public virtual bool SupportsAutoConfigure => true;
-        public virtual bool IsInstalled => true;
+        // Default to a filesystem check on the configured path. Concrete configurators
+        // whose presence isn't path-based (CLI binaries, etc.) override this. This makes
+        // any future configurator that forgets to override fail-closed rather than be
+        // treated as "detected" by ConfigureAllDetectedClients.
+        public virtual bool IsInstalled => ParentDirectoryExists(GetConfigPath());
         private static readonly ConfiguredTransport[] DefaultTransports =
             { ConfiguredTransport.Stdio, ConfiguredTransport.Http };
         public virtual IReadOnlyList<ConfiguredTransport> SupportedTransports => DefaultTransports;

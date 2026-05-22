@@ -38,7 +38,11 @@ async def execute_custom_tool(ctx: Context, tool_name: str, parameters: dict[str
             message=f"Could not resolve project id for {unity_instance}. Ensure Unity is running and reachable.",
         )
 
-    if not isinstance(parameters, dict):
+    # The signature accepts None (parameter-less custom tools). Treat it as an empty
+    # dict rather than rejecting — the previous behavior contradicted the optional type.
+    if parameters is None:
+        parameters = {}
+    elif not isinstance(parameters, dict):
         return MCPResponse(
             success=False,
             message="parameters must be an object/dictionary",
