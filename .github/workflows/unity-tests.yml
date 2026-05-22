@@ -30,15 +30,78 @@ on:
       - .github/workflows/unity-tests.yml
 
 jobs:
+  matrix:
+    name: Compute Unity version matrix
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    # Gate (mirrored by testAllModes below):
+    #   - Always run for non-PR triggers (push / workflow_call / workflow_dispatch).
+    #   - Fork PRs: require 'safe-to-test' to be applied (existing secret-safety gate);
+    #     'run-wide-matrix' may be added on top to opt into the full 4-version matrix.
+    #   - In-repo PRs: only re-run via pull_request_target when 'run-wide-matrix' is the
+    #     label that just fired (the push-event run already covered the default leg).
+    if: >
+      github.event_name != 'pull_request_target' ||
+      (
+        github.event.pull_request.head.repo.full_name != github.repository &&
+        contains(github.event.pull_request.labels.*.name, 'safe-to-test') &&
+        (github.event.label.name == 'safe-to-test' || github.event.label.name == 'run-wide-matrix')
+      ) ||
+      (
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        github.event.label.name == 'run-wide-matrix'
+      )
+    outputs:
+      versions: ${{ steps.set.outputs.versions }}
+    steps:
+      - name: Checkout version manifest
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.event.pull_request.head.sha || github.ref }}
+          sparse-checkout: tools/unity-versions.json
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - name: Select versions for this trigger
+        id: set
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          GH_REF: ${{ github.ref }}
+          WIDE_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'run-wide-matrix') }}
+        run: |
+          set -euo pipefail
+          # Wide matrix on: beta push, workflow_call (release pipelines), workflow_dispatch,
+          # or any PR labeled with 'run-wide-matrix'.
+          # Narrow (defaultVersion from tools/unity-versions.json) otherwise — fast PR feedback.
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]] || \
+             [[ "$EVENT_NAME" == "workflow_call" ]] || \
+             { [[ "$EVENT_NAME" == "push" ]] && [[ "$GH_REF" == "refs/heads/beta" ]]; } || \
+             { [[ "$EVENT_NAME" == "pull_request_target" ]] && [[ "$WIDE_LABEL" == "true" ]]; }; then
+            versions=$(jq -c '[.versions[].id]' tools/unity-versions.json)
+            echo "Trigger '$EVENT_NAME' on ref '$GH_REF' (wide_label=$WIDE_LABEL) → wide matrix: $versions"
+          else
+            versions=$(jq -c '[.defaultVersion]' tools/unity-versions.json)
+            echo "Trigger '$EVENT_NAME' on ref '$GH_REF' → default only: $versions"
+          fi
+          echo "versions=$versions" >> "$GITHUB_OUTPUT"
+
   testAllModes:
-    name: Test in ${{ matrix.testMode }}
+    name: Test in ${{ matrix.testMode }} on Unity ${{ matrix.unityVersion }}
+    needs: matrix
     runs-on: ubuntu-latest
     permissions:
       contents: read
     if: >
       github.event_name != 'pull_request_target' ||
-      (github.event.pull_request.head.repo.full_name != github.repository &&
-       github.event.label.name == 'safe-to-test')
+      (
+        github.event.pull_request.head.repo.full_name != github.repository &&
+        contains(github.event.pull_request.labels.*.name, 'safe-to-test') &&
+        (github.event.label.name == 'safe-to-test' || github.event.label.name == 'run-wide-matrix')
+      ) ||
+      (
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        github.event.label.name == 'run-wide-matrix'
+      )
     strategy:
       fail-fast: false
       matrix:
@@ -46,8 +109,7 @@ jobs:
           - TestProjects/UnityMCPTests
         testMode:
           - editmode
-        unityVersion:
-          - 2021.3.45f2
+        unityVersion: ${{ fromJson(needs.matrix.outputs.versions) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -137,5 +199,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always() && steps.detect.outputs.unity_ok == 'true' && steps.tests.outcome != 'skipped'
         with:
-          name: Test results for ${{ matrix.testMode }}
+          name: Test results for ${{ matrix.testMode }} on Unity ${{ matrix.unityVersion }}
           path: ${{ steps.tests.outputs.artifactsPath }}
