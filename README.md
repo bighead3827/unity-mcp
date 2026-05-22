@@ -118,7 +118,7 @@ openupm add com.coplaydev.unity-mcp
 
 If auto-setup doesn't work, add this to your MCP client's config file:
 
-**HTTP (default — works with Claude Desktop, Cursor, Windsurf):**
+**HTTP (default — works with Cursor, Windsurf, Antigravity, VS Code, Cline; Claude Desktop is stdio-only, see below):**
 ```json
 {
   "mcpServers": {

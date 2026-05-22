@@ -179,6 +179,14 @@ namespace MCPForUnity.Editor.Windows
                     messages.Add($"⚠ {c.DisplayName}: {ex.Message}");
                 }
             }
+            if (success == 0 && failure == 0)
+            {
+                EditorUtility.DisplayDialog(
+                    "Client Configuration",
+                    "No clients were selected. Tick at least one client to continue, or close the window to skip setup.",
+                    "OK");
+                return;
+            }
             EditorUtility.DisplayDialog(
                 "Client Configuration",
                 $"{success} configured, {failure} failed.\n\n{string.Join("\n", messages)}",

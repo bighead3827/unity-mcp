@@ -11,7 +11,8 @@ namespace MCPForUnityTests.Editor.Services
         public void StartupConfigRewrite_TypeExists()
         {
             var t = System.Type.GetType("MCPForUnity.Editor.Services.StartupConfigRewrite, MCPForUnity.Editor");
-            Assert.IsNotNull(t, "StartupConfigRewrite type must exist and be public");
+            Assert.IsNotNull(t, "StartupConfigRewrite type must exist");
+            Assert.IsTrue(t.IsPublic, "StartupConfigRewrite must be public so the [InitializeOnLoad] attribute fires");
         }
 
         [Test]
