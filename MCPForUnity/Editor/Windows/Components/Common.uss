@@ -273,13 +273,6 @@
     border-color: rgba(70, 100, 85, 0.5);
 }
 
-.primary-button-hint {
-    margin-top: 0;
-    margin-bottom: 8px;
-    -unity-text-align: middle-left;
-    color: rgba(150, 165, 160, 1);
-}
-
 /* Foldout that hides the per-client (single-target) controls. */
 .client-details-foldout {
     margin-top: 4px;
