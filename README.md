@@ -77,11 +77,19 @@ openupm add com.coplaydev.unity-mcp
 
 ### 2. Start the Server & Connect
 
-1. In Unity: `Window > MCP for Unity`
-2. Click **Start Server** (launches HTTP server on `localhost:8080`)
-3. Select your MCP Client from the dropdown and click **Configure**
-4. Look for 🟢 "Connected ✓"
-5. **Connect your client:** Some clients (Cursor, Antigravity, OpenClaw) require enabling an MCP toggle or plugin in settings. OpenClaw also needs the `openclaw-mcp-bridge` plugin enabled and follows the currently selected MCP for Unity transport (`HTTP` or `stdio`). Others (Claude Desktop, Claude Code) auto-connect after configuration.
+**First-run wizard (recommended):** After import, MCP for Unity opens a setup window automatically.
+1. Confirm Python and uv are installed — the window guides you through both if missing.
+2. Click **Done**. Once dependencies are green, you'll see a list of MCP clients detected on your machine.
+3. Pick the clients you want to configure and click **Configure Selected**. Done.
+
+**Manually (anytime):** `Window > MCP for Unity` opens the main panel.
+- Click **Start Server** if it's not already running (launches HTTP server on `localhost:8080`).
+- In the **Clients** tab, click **Configure All Detected Clients** to set up every client found on your machine in one shot, or pick a single client from the dropdown and click **Configure**.
+- Look for 🟢 "Connected ✓".
+
+**Per-client gotchas:** Some clients (Cursor, Antigravity, OpenClaw) still require enabling an MCP toggle or plugin in their own settings. OpenClaw also needs the `openclaw-mcp-bridge` plugin enabled and follows the currently selected MCP for Unity transport (`HTTP` or `stdio`). Claude Desktop only supports stdio — MCP for Unity will silently configure it that way even if you've selected HTTP elsewhere. Claude Code, VS Code, Windsurf, Cline, and the various CLI clients auto-connect after configuration.
+
+**Updates handle themselves.** When you update the package, MCP for Unity rewrites the configs of every detected client on the next Editor open — no need to repeat the Configure step.
 
 **That's it!** Try a prompt like: *"Create a red, blue and yellow cube"* or *"Build a simple player controller"*
 
@@ -110,7 +118,7 @@ openupm add com.coplaydev.unity-mcp
 
 If auto-setup doesn't work, add this to your MCP client's config file:
 
-**HTTP (default — works with Claude Desktop, Cursor, Windsurf):**
+**HTTP (default — works with Cursor, Windsurf, Antigravity, VS Code, Cline; Claude Desktop is stdio-only, see below):**
 ```json
 {
   "mcpServers": {
