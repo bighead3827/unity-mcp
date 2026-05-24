@@ -1,7 +1,7 @@
 ---
 title: manage_tools
 sidebar_label: manage_tools
-description: "Manage which tool groups are visible in this session"
+description: "Manage which tool groups are visible in this session."
 ---
 
 # `manage_tools`

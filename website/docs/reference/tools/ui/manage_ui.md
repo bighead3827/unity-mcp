@@ -1,7 +1,7 @@
 ---
 title: manage_ui
 sidebar_label: manage_ui
-description: "Manages Unity UI Toolkit elements (UXML documents, USS stylesheets, UIDocument components)"
+description: "Manages Unity UI Toolkit elements (UXML documents, USS stylesheets, UIDocument components)."
 ---
 
 # `manage_ui`

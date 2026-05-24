@@ -1,7 +1,7 @@
 ---
 title: manage_script
 sidebar_label: manage_script
-description: "Compatibility router for legacy script operations"
+description: "Compatibility router for legacy script operations."
 ---
 
 # `manage_script`

@@ -1,7 +1,7 @@
 ---
 title: find_in_file
 sidebar_label: find_in_file
-description: "Searches a file with a regex pattern and returns line numbers and excerpts"
+description: "Searches a file with a regex pattern and returns line numbers and excerpts."
 ---
 
 # `find_in_file`

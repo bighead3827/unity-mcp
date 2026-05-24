@@ -1,7 +1,7 @@
 ---
 title: manage_shader
 sidebar_label: manage_shader
-description: "Manages shader scripts in Unity (create, read, update, delete)"
+description: "Manages shader scripts in Unity (create, read, update, delete)."
 ---
 
 # `manage_shader`

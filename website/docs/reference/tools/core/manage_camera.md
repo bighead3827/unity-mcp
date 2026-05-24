@@ -1,7 +1,7 @@
 ---
 title: manage_camera
 sidebar_label: manage_camera
-description: "Manage cameras (Unity Camera + Cinemachine)"
+description: "Manage cameras (Unity Camera + Cinemachine)."
 ---
 
 # `manage_camera`

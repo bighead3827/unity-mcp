@@ -1,7 +1,7 @@
 ---
 title: refresh_unity
 sidebar_label: refresh_unity
-description: "Request a Unity asset database refresh and optionally a script compilation"
+description: "Request a Unity asset database refresh and optionally a script compilation."
 ---
 
 # `refresh_unity`

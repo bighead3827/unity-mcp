@@ -1,7 +1,7 @@
 ---
 title: unity_docs
 sidebar_label: unity_docs
-description: "Fetch official Unity documentation from docs"
+description: "Fetch official Unity documentation from docs.unity3d.com."
 ---
 
 # `unity_docs`

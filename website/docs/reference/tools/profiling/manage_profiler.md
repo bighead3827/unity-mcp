@@ -1,7 +1,7 @@
 ---
 title: manage_profiler
 sidebar_label: manage_profiler
-description: "Unity Profiler session control, counter reads, memory snapshots, and Frame Debugger"
+description: "Unity Profiler session control, counter reads, memory snapshots, and Frame Debugger."
 ---
 
 # `manage_profiler`

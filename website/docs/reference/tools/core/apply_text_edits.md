@@ -1,7 +1,7 @@
 ---
 title: apply_text_edits
 sidebar_label: apply_text_edits
-description: "Apply small text edits to a C# script identified by URI"
+description: "Apply small text edits to a C# script identified by URI."
 ---
 
 # `apply_text_edits`

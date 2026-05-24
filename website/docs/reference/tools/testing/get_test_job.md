@@ -1,7 +1,7 @@
 ---
 title: get_test_job
 sidebar_label: get_test_job
-description: "Polls an async Unity test job by job_id"
+description: "Polls an async Unity test job by job_id."
 ---
 
 # `get_test_job`

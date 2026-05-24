@@ -1,7 +1,7 @@
 ---
 title: manage_probuilder
 sidebar_label: manage_probuilder
-description: "Manage ProBuilder meshes for in-editor 3D modeling"
+description: "Manage ProBuilder meshes for in-editor 3D modeling."
 ---
 
 # `manage_probuilder`

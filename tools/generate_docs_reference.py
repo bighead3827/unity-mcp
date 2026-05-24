@@ -227,6 +227,33 @@ def introspect_params(func: Any) -> list[ParamDoc]:
 # ---------------------------------------------------------------------------
 
 
+_SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?])\s+(?=[A-Z])|\n\s*\n")
+
+
+def _first_sentence(description: str) -> str:
+    """Return the first sentence of a tool description, suitable for
+    frontmatter / catalog blurbs.
+
+    The earlier implementation used `description.split(".")[0]` which
+    cut the string at the first period — including periods inside
+    abbreviations and parenthesized lists (e.g. `etc.) in Unity`),
+    producing truncated frontmatter like `"...modify, delete, etc"`.
+
+    Split on a real sentence boundary instead: a `.`, `!`, or `?`
+    followed by whitespace + a capital letter (or a paragraph break).
+    Fall back to the entire string if no boundary is found, then
+    smart-truncate to keep frontmatter compact.
+    """
+    text = (description or "").strip().replace('"', "'")
+    if not text:
+        return ""
+    first = _SENTENCE_BOUNDARY.split(text, maxsplit=1)[0].strip()
+    # Cap absurdly long single-sentence descriptions
+    if len(first) > 240:
+        first = first[:237].rstrip() + "…"
+    return first
+
+
 def _escape_table_cell(s: str) -> str:
     return s.replace("|", "\\|").replace("\n", " ")
 
@@ -262,7 +289,7 @@ def render_tool_page(tool: dict[str, Any], existing_examples: str) -> str:
     params = introspect_params(func)
 
     # Sidebar/title metadata
-    desc_for_meta = description.split(".")[0].strip().replace('"', "'") or name
+    desc_for_meta = _first_sentence(description) or name
     front_matter = textwrap.dedent(
         f"""\
         ---
@@ -315,7 +342,7 @@ def render_group_index(group: str, tools: list[dict[str, Any]], group_blurb: str
     bullets = []
     for tool in sorted(tools, key=lambda t: t["name"]):
         n = tool["name"]
-        d = (tool.get("description") or "").split(".")[0].strip()
+        d = _first_sentence(tool.get("description") or "")
         bullets.append(f"- **[`{n}`](./{n}.md)** — {d}")
     body = "\n".join(bullets) if bullets else "_No tools in this group._"
 
@@ -354,7 +381,7 @@ def render_catalog_index(tools_by_group: dict[str, list[dict[str, Any]]],
         sections.append(group_blurbs.get(group, ""))
         for tool in sorted(tools, key=lambda t: t["name"]):
             n = tool["name"]
-            d = (tool.get("description") or "").split(".")[0].strip()
+            d = _first_sentence(tool.get("description") or "")
             sections.append(f"- **[`{n}`](./{group}/{n}.md)** — {d}")
         sections.append("")
 

@@ -1,7 +1,7 @@
 ---
 title: manage_texture
 sidebar_label: manage_texture
-description: "Procedural texture generation for Unity"
+description: "Procedural texture generation for Unity."
 ---
 
 # `manage_texture`

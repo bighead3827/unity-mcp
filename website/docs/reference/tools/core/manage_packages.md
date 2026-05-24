@@ -1,7 +1,7 @@
 ---
 title: manage_packages
 sidebar_label: manage_packages
-description: "Manage Unity packages: query, install, remove, embed, and configure registries"
+description: "Manage Unity packages: query, install, remove, embed, and configure registries."
 ---
 
 # `manage_packages`

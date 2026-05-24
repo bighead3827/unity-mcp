@@ -1,7 +1,7 @@
 ---
 title: manage_components
 sidebar_label: manage_components
-description: "Add, remove, or set properties on components attached to GameObjects"
+description: "Add, remove, or set properties on components attached to GameObjects."
 ---
 
 # `manage_components`

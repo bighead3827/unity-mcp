@@ -1,7 +1,7 @@
 ---
 title: manage_material
 sidebar_label: manage_material
-description: "Manages Unity materials (set properties, colors, shaders, etc)"
+description: "Manages Unity materials (set properties, colors, shaders, etc)."
 ---
 
 # `manage_material`

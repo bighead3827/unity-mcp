@@ -1,7 +1,7 @@
 ---
 title: manage_physics
 sidebar_label: manage_physics
-description: "Manage physics settings, collision matrix, materials, joints, queries, and validation"
+description: "Manage physics settings, collision matrix, materials, joints, queries, and validation."
 ---
 
 # `manage_physics`

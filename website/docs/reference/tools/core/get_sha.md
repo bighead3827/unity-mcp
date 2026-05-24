@@ -1,7 +1,7 @@
 ---
 title: get_sha
 sidebar_label: get_sha
-description: "Get SHA256 and basic metadata for a Unity C# script without returning file contents"
+description: "Get SHA256 and basic metadata for a Unity C# script without returning file contents."
 ---
 
 # `get_sha`

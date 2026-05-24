@@ -1,7 +1,7 @@
 ---
 title: delete_script
 sidebar_label: delete_script
-description: "Delete a C# script by URI or Assets-relative path"
+description: "Delete a C# script by URI or Assets-relative path."
 ---
 
 # `delete_script`

@@ -1,7 +1,7 @@
 ---
 title: set_active_instance
 sidebar_label: set_active_instance
-description: "Set the active Unity instance for this client/session"
+description: "Set the active Unity instance for this client/session."
 ---
 
 # `set_active_instance`

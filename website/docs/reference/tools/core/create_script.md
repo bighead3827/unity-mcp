@@ -1,7 +1,7 @@
 ---
 title: create_script
 sidebar_label: create_script
-description: "Create a new C# script at the given project path"
+description: "Create a new C# script at the given project path."
 ---
 
 # `create_script`

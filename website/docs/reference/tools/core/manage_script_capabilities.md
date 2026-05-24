@@ -1,7 +1,7 @@
 ---
 title: manage_script_capabilities
 sidebar_label: manage_script_capabilities
-description: "Get manage_script capabilities (supported ops, limits, and guards)"
+description: "Get manage_script capabilities (supported ops, limits, and guards)."
 ---
 
 # `manage_script_capabilities`

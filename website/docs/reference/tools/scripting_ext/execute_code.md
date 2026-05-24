@@ -1,7 +1,7 @@
 ---
 title: execute_code
 sidebar_label: execute_code
-description: "Execute arbitrary C# code inside the Unity Editor"
+description: "Execute arbitrary C# code inside the Unity Editor."
 ---
 
 # `execute_code`

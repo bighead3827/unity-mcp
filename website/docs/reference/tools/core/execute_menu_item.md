@@ -1,7 +1,7 @@
 ---
 title: execute_menu_item
 sidebar_label: execute_menu_item
-description: "Execute a Unity menu item by path"
+description: "Execute a Unity menu item by path."
 ---
 
 # `execute_menu_item`

@@ -1,7 +1,7 @@
 ---
 title: manage_graphics
 sidebar_label: manage_graphics
-description: "Manage rendering graphics: volumes, post-processing, light baking, rendering stats, pipeline settings, and URP renderer features"
+description: "Manage rendering graphics: volumes, post-processing, light baking, rendering stats, pipeline settings, and URP renderer features."
 ---
 
 # `manage_graphics`

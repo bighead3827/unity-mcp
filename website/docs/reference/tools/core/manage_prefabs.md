@@ -1,7 +1,7 @@
 ---
 title: manage_prefabs
 sidebar_label: manage_prefabs
-description: "Manages Unity Prefab assets"
+description: "Manages Unity Prefab assets."
 ---
 
 # `manage_prefabs`

@@ -1,7 +1,7 @@
 ---
 title: script_apply_edits
 sidebar_label: script_apply_edits
-description: "Structured C# edits (methods/classes) with safer boundaries - prefer this over raw text"
+description: "Structured C# edits (methods/classes) with safer boundaries - prefer this over raw text."
 ---
 
 # `script_apply_edits`

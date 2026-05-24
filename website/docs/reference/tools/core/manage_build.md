@@ -1,7 +1,7 @@
 ---
 title: manage_build
 sidebar_label: manage_build
-description: "Manage Unity player builds — trigger builds, switch platforms, configure settings, manage build scenes and profiles, run batch builds across platforms"
+description: "Manage Unity player builds — trigger builds, switch platforms, configure settings, manage build scenes and profiles, run batch builds across platforms."
 ---
 
 # `manage_build`

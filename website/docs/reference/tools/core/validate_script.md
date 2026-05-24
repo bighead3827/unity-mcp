@@ -1,7 +1,7 @@
 ---
 title: validate_script
 sidebar_label: validate_script
-description: "Validate a C# script and return diagnostics"
+description: "Validate a C# script and return diagnostics."
 ---
 
 # `validate_script`

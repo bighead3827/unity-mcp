@@ -1,7 +1,7 @@
 ---
 title: find_gameobjects
 sidebar_label: find_gameobjects
-description: "Search for GameObjects in the scene by name, tag, layer, component type, or path"
+description: "Search for GameObjects in the scene by name, tag, layer, component type, or path."
 ---
 
 # `find_gameobjects`

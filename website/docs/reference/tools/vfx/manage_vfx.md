@@ -1,7 +1,7 @@
 ---
 title: manage_vfx
 sidebar_label: manage_vfx
-description: "Manage Unity VFX components (ParticleSystem, VisualEffect, LineRenderer, TrailRenderer)"
+description: "Manage Unity VFX components (ParticleSystem, VisualEffect, LineRenderer, TrailRenderer)."
 ---
 
 # `manage_vfx`

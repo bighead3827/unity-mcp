@@ -1,7 +1,7 @@
 ---
 title: manage_editor
 sidebar_label: manage_editor
-description: "Controls and queries the Unity editor's state and settings"
+description: "Controls and queries the Unity editor's state and settings."
 ---
 
 # `manage_editor`

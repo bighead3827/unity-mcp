@@ -1,7 +1,7 @@
 ---
 title: run_tests
 sidebar_label: run_tests
-description: "Starts a Unity test run asynchronously and returns a job_id immediately"
+description: "Starts a Unity test run asynchronously and returns a job_id immediately."
 ---
 
 # `run_tests`

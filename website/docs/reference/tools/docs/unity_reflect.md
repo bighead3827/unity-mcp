@@ -1,7 +1,7 @@
 ---
 title: unity_reflect
 sidebar_label: unity_reflect
-description: "Inspect Unity's live C# API via reflection"
+description: "Inspect Unity's live C# API via reflection."
 ---
 
 # `unity_reflect`

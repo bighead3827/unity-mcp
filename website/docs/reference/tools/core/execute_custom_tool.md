@@ -1,7 +1,7 @@
 ---
 title: execute_custom_tool
 sidebar_label: execute_custom_tool
-description: "Execute a project-scoped custom tool registered by Unity"
+description: "Execute a project-scoped custom tool registered by Unity."
 ---
 
 # `execute_custom_tool`

@@ -1,7 +1,7 @@
 ---
 title: batch_execute
 sidebar_label: batch_execute
-description: "Executes multiple MCP commands in a single batch for dramatically better performance"
+description: "Executes multiple MCP commands in a single batch for dramatically better performance."
 ---
 
 # `batch_execute`

@@ -1,7 +1,7 @@
 ---
 title: manage_asset
 sidebar_label: manage_asset
-description: "Performs asset operations (import, create, modify, delete, etc"
+description: "Performs asset operations (import, create, modify, delete, etc.) in Unity."
 ---
 
 # `manage_asset`

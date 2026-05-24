@@ -1,7 +1,7 @@
 ---
 title: read_console
 sidebar_label: read_console
-description: "Gets messages from or clears the Unity Editor console"
+description: "Gets messages from or clears the Unity Editor console."
 ---
 
 # `read_console`

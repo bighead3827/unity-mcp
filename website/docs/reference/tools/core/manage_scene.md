@@ -1,7 +1,7 @@
 ---
 title: manage_scene
 sidebar_label: manage_scene
-description: "Performs CRUD operations on Unity scenes"
+description: "Performs CRUD operations on Unity scenes."
 ---
 
 # `manage_scene`

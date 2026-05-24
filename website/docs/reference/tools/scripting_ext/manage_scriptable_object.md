@@ -1,7 +1,7 @@
 ---
 title: manage_scriptable_object
 sidebar_label: manage_scriptable_object
-description: "Creates and modifies ScriptableObject assets using Unity SerializedObject property paths"
+description: "Creates and modifies ScriptableObject assets using Unity SerializedObject property paths."
 ---
 
 # `manage_scriptable_object`

@@ -1,7 +1,7 @@
 ---
 title: manage_animation
 sidebar_label: manage_animation
-description: "Manage Unity animation: Animator control and AnimationClip creation"
+description: "Manage Unity animation: Animator control and AnimationClip creation."
 ---
 
 # `manage_animation`

@@ -1,7 +1,7 @@
 ---
 title: manage_gameobject
 sidebar_label: manage_gameobject
-description: "Performs CRUD operations on GameObjects"
+description: "Performs CRUD operations on GameObjects."
 ---
 
 # `manage_gameobject`

@@ -1,7 +1,7 @@
 ---
 title: debug_request_context
 sidebar_label: debug_request_context
-description: "Return the current FastMCP request context details (client_id, session_id, and meta dump)"
+description: "Return the current FastMCP request context details (client_id, session_id, and meta dump)."
 ---
 
 # `debug_request_context`
