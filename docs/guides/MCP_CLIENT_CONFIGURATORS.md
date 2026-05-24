@@ -4,7 +4,7 @@ This guide explains how MCP client configurators work in this repo and how to ad
 
 It covers:
 
-- **Typical JSON-file clients** (Cursor, VSCode GitHub Copilot, VSCode Insiders, GitHub Copilot CLI, Windsurf, Kiro, Trae, Antigravity, etc.).
+- **Typical JSON-file clients** (Cursor, VSCode GitHub Copilot, VSCode Insiders, GitHub Copilot CLI, Windsurf, Kiro, Trae, Antigravity 2.0, Antigravity IDE, etc.).
 - **Special clients** like **Claude CLI**, **Codex**, and **OpenClaw** that require custom logic.
 - **How to add a new configurator class** so it shows up automatically in the MCP for Unity window.
 
@@ -93,7 +93,7 @@ Most MCP clients use a JSON config file that defines one or more MCP servers. Ex
 - **VSCode Insiders GitHub Copilot** – `JsonFileMcpConfigurator` with `IsVsCodeLayout = true` and Insider-specific `Code - Insiders/User/mcp.json` paths.
 - **GitHub Copilot CLI** – `JsonFileMcpConfigurator` with standard HTTP transport.
 - **Windsurf** – `JsonFileMcpConfigurator` with Windsurf-specific flags (`HttpUrlProperty = "serverUrl"`, `DefaultUnityFields["disabled"] = false`, etc.).
-- **Kiro**, **Trae**, **Antigravity (Gemini)** – JSON configs with project-specific paths and flags.
+- **Kiro**, **Trae**, **Antigravity 2.0** (`~/.gemini/config/mcp_config.json` after the 2.x migration), **Antigravity IDE** (separate `~/.gemini/antigravity-ide/mcp_config.json` — the IDE build did not migrate) – JSON configs with project-specific paths and flags.
 
 All of these follow the same pattern:
 
@@ -118,7 +118,7 @@ All of these follow the same pattern:
     - `command` + `args` (stdio with `uvx`).
 - **URL property name**
   - `HttpUrlProperty` (default `"url"`) selects which JSON property to use for HTTP urls.
-  - Example: Windsurf and Antigravity use `"serverUrl"`.
+  - Example: Windsurf and the two Antigravity clients use `"serverUrl"`.
 - **VS Code layout**
   - `IsVsCodeLayout = true` switches config structure to a VS Code compatible layout.
 - **Env object and default fields**
@@ -161,9 +161,7 @@ Some clients cannot be handled by the generic JSON configurator alone.
 - Uses **`JsonFileMcpConfigurator`**, but only supports **stdio transport**.
 - `ClaudeDesktopConfigurator`:
   - Sets `SupportsHttpTransport = false` in `McpClient`.
-  - Overrides `Configure` / `GetManualSnippet` to:
-    - Guard against HTTP mode.
-    - Provide clear error text if HTTP is enabled.
+  - Declares `SupportedTransports => StdioOnly`. `ClientConfigurationService` reads `SupportedTransports` and, via `ConfigureWithTransportCoercion` / `CoerceTransportFor`, temporarily coerces the transport pref to stdio before calling `Configure()` — so users with HTTP toggled globally still get a working stdio entry written without a thrown error. The coercion applies to any configurator whose `SupportedTransports` excludes the user's current transport; Claude Desktop is just the only one declaring stdio-only today.
 
 ### OpenClaw (plugin-based)
 
@@ -230,7 +228,7 @@ Override `GetInstallationSteps` to tell users how to configure the client:
 - Which menu path opens the MCP settings.
 - Whether they should rely on the **Configure** button or copy-paste the manual JSON.
 
-Look at `CursorConfigurator`, `VSCodeConfigurator`, `VSCodeInsidersConfigurator`, `KiroConfigurator`, `TraeConfigurator`, or `AntigravityConfigurator` for phrasing.
+Look at `CursorConfigurator`, `VSCodeConfigurator`, `VSCodeInsidersConfigurator`, `KiroConfigurator`, `TraeConfigurator`, `AntigravityConfigurator`, or `AntigravityIdeConfigurator` for phrasing.
 
 ### 4. Rely on the base JSON logic
 
