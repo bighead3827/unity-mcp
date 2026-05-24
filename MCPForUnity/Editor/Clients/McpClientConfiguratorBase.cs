@@ -45,6 +45,11 @@ namespace MCPForUnity.Editor.Clients
         public abstract string GetConfigPath();
         public abstract McpStatus CheckStatus(bool attemptAutoRewrite = true);
         public abstract void Configure();
+
+        /// <summary>Default Unregister is a no-op. Override in JsonFileMcpConfigurator /
+        /// ClaudeCliMcpConfigurator etc. where removal has a concrete implementation.</summary>
+        public virtual void Unregister() { }
+
         public abstract string GetManualSnippet();
         public abstract IList<string> GetInstallationSteps();
 
@@ -334,6 +339,9 @@ namespace MCPForUnity.Editor.Clients
 
         public override void Configure()
         {
+            // Always idempotent-write. The per-client UI button routes through Unregister
+            // when the user clicks while the client is already Configured; the bulk
+            // "Configure All" path calls this directly and expects an unconditional write.
             string path = GetConfigPath();
             McpConfigurationHelper.EnsureConfigDirectoryExists(path);
             string result = McpConfigurationHelper.WriteMcpConfiguration(path, client);
@@ -345,6 +353,59 @@ namespace MCPForUnity.Editor.Clients
             else
             {
                 throw new InvalidOperationException(result);
+            }
+        }
+
+        public override string GetConfigureActionLabel()
+            => client.status == McpStatus.Configured ? "Unregister" : "Configure";
+
+        /// <summary>
+        /// Removes the unityMCP entry from the client's JSON config (both VS Code-style
+        /// `servers` / `mcp.servers` layouts and the standard `mcpServers` layout). Leaves
+        /// the file in place so we don't clobber other servers the user has configured.
+        /// </summary>
+        public override void Unregister()
+        {
+            string path = GetConfigPath();
+            try
+            {
+                if (!File.Exists(path))
+                {
+                    client.SetStatus(McpStatus.NotConfigured);
+                    client.configuredTransport = Models.ConfiguredTransport.Unknown;
+                    return;
+                }
+
+                var root = JsonConvert.DeserializeObject<JToken>(File.ReadAllText(path)) as JObject;
+                if (root == null)
+                {
+                    client.SetStatus(McpStatus.NotConfigured);
+                    client.configuredTransport = Models.ConfiguredTransport.Unknown;
+                    return;
+                }
+
+                bool removed = false;
+                if (client.IsVsCodeLayout)
+                {
+                    if ((root["servers"] as JObject)?.Remove("unityMCP") == true) removed = true;
+                    if ((root["mcp"]?["servers"] as JObject)?.Remove("unityMCP") == true) removed = true;
+                }
+                else
+                {
+                    if ((root["mcpServers"] as JObject)?.Remove("unityMCP") == true) removed = true;
+                }
+
+                if (removed)
+                {
+                    File.WriteAllText(path, root.ToString(Formatting.Indented));
+                }
+
+                client.SetStatus(McpStatus.NotConfigured);
+                client.configuredTransport = Models.ConfiguredTransport.Unknown;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to unregister: {ex.Message}", ex);
             }
         }
 
@@ -964,7 +1025,7 @@ namespace MCPForUnity.Editor.Clients
             client.configuredTransport = HttpEndpointUtility.GetCurrentServerTransport();
         }
 
-        private void Unregister()
+        public override void Unregister()
         {
             var pathService = MCPServiceLocator.Paths;
             string claudePath = pathService.GetClaudeCliPath();

@@ -4,7 +4,7 @@
         <ui:Label text="Client Configuration" class="section-title" />
         <ui:VisualElement class="section-content">
             <ui:Button name="configure-all-button" text="Configure All Detected Clients" class="primary-button" />
-            <ui:Foldout name="client-details-foldout" text="Per-client setup" value="false" class="client-details-foldout">
+            <ui:Foldout name="client-details-foldout" text="Per-client setup" value="true" class="client-details-foldout">
                 <ui:VisualElement class="setting-row">
                     <ui:Label text="Client:" class="setting-label" />
                     <ui:DropdownField name="client-dropdown" class="setting-dropdown-inline" />

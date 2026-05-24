@@ -81,7 +81,7 @@ openupm add com.coplaydev.unity-mcp
 2. 点击 **Start Server**（会在 `localhost:8080` 启动 HTTP 服务器）
 3. 从下拉菜单选择你的 MCP Client，然后点击 **Configure**
 4. 查找 🟢 "Connected ✓"
-5. **连接你的客户端：** 一些客户端（Cursor、Antigravity、OpenClaw）需要在设置里启用 MCP 开关或插件。OpenClaw 还需要启用 `openclaw-mcp-bridge` 插件，并会跟随 MCP for Unity 当前选择的传输方式（HTTP 或 stdio）；另一些（Claude Desktop、Claude Code）在配置后会自动连接。
+5. **连接你的客户端：** 一些客户端（Cursor、Antigravity 2.0、Antigravity IDE、OpenClaw）需要在设置里启用 MCP 开关或插件。Antigravity 2.0 与 Antigravity IDE 是分开列出的：Antigravity 2.0 已迁移到 `~/.gemini/config/`，而 Antigravity IDE 仍使用 `~/.gemini/antigravity-ide/`；如果两者都在使用，请分别配置。OpenClaw 还需要启用 `openclaw-mcp-bridge` 插件，并会跟随 MCP for Unity 当前选择的传输方式（HTTP 或 stdio）；另一些（Claude Desktop、Claude Code）在配置后会自动连接。
 
 **就这些！** 试试这样的提示词：*"Create a red, blue and yellow cube"* 或 *"Build a simple player controller"*
 
