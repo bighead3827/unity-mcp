@@ -6,7 +6,7 @@
 #### Proudly sponsored and maintained by [Aura](https://www.tryaura.dev/) — the AI assistant for Unreal & Unity.
 ##### And don't miss [Godot AI](https://github.com/hi-godot/godot-ai), the new open source MCP/AI project from the makers of MCP for Unity.
 
-[![Docs](https://img.shields.io/badge/Docs-unity--mcp-4f46e5)](https://scriptwonder.github.io/unity-mcp/)
+[![Docs](https://img.shields.io/badge/Docs-unity--mcp-4f46e5)](https://coplaydev.github.io/unity-mcp/)
 [![Discord](https://img.shields.io/badge/discord-join-red.svg?logo=discord&logoColor=white)](https://discord.gg/y4p8KfzrN4)
 [![](https://img.shields.io/badge/Website-Visit-purple)](https://www.coplay.dev/?ref=unity-mcp)
 [![](https://img.shields.io/badge/Unity-000000?style=flat&logo=unity&logoColor=blue 'Unity')](https://unity.com/releases/editor/archive)
@@ -22,7 +22,7 @@
 
 ## Read the Docs
 
-### **→ [scriptwonder.github.io/unity-mcp](https://scriptwonder.github.io/unity-mcp/)**
+### **→ [coplaydev.github.io/unity-mcp](https://coplaydev.github.io/unity-mcp/)**
 
 ---
 
@@ -34,13 +34,13 @@ In Unity: **Window → Package Manager → + → Add package from git URL**, pas
 https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main
 ```
 
-Beta channel uses `#beta`. Asset Store and OpenUPM paths are documented in the [Install guide](https://scriptwonder.github.io/unity-mcp/getting-started/install).
+Beta channel uses `#beta`. Asset Store and OpenUPM paths are documented in the [Install guide](https://coplaydev.github.io/unity-mcp/getting-started/install).
 
 Then **Window → MCP for Unity → Configure All Detected Clients**. That's it — try a prompt:
 
 > Create a red, blue, and yellow cube in the current scene.
 
-Full walkthrough: [Your First Prompt](https://scriptwonder.github.io/unity-mcp/getting-started/first-prompt).
+Full walkthrough: [Your First Prompt](https://coplaydev.github.io/unity-mcp/getting-started/first-prompt).
 
 ---
 
@@ -54,7 +54,7 @@ Full walkthrough: [Your First Prompt](https://scriptwonder.github.io/unity-mcp/g
 * **[v9.6.5](https://github.com/CoplayDev/unity-mcp/releases/tag/v9.6.5)** (2026-04-03)
 * **[v9.6.4](https://github.com/CoplayDev/unity-mcp/releases/tag/v9.6.4)** (2026-03-31)
 
-Full history: [Release Notes](https://scriptwonder.github.io/unity-mcp/releases).
+Full history: [Release Notes](https://coplaydev.github.io/unity-mcp/releases).
 
 </details>
 <!-- recent-updates:end -->
@@ -70,14 +70,14 @@ Full history: [Release Notes](https://scriptwonder.github.io/unity-mcp/releases)
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Branch off `beta`, not `main`. The full dev setup, testing, and release process live in the [Contributing](https://scriptwonder.github.io/unity-mcp/contributing/dev-setup) docs.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Branch off `beta`, not `main`. The full dev setup, testing, and release process live in the [Contributing](https://coplaydev.github.io/unity-mcp/contributing/dev-setup) docs.
 
 ## Advanced
 
-- **Multiple Unity instances** — [Multi-Instance Routing](https://scriptwonder.github.io/unity-mcp/guides/multi-instance)
-- **Tool groups (vfx / animation / ui / testing / etc.)** — [Tool Groups](https://scriptwonder.github.io/unity-mcp/guides/tool-groups)
-- **Roslyn script validation** — [Roslyn Validation](https://scriptwonder.github.io/unity-mcp/guides/roslyn)
-- **Remote-hosted server with auth** — [Remote Server Auth](https://scriptwonder.github.io/unity-mcp/guides/remote-server-auth)
+- **Multiple Unity instances** — [Multi-Instance Routing](https://coplaydev.github.io/unity-mcp/guides/multi-instance)
+- **Tool groups (vfx / animation / ui / testing / etc.)** — [Tool Groups](https://coplaydev.github.io/unity-mcp/guides/tool-groups)
+- **Roslyn script validation** — [Roslyn Validation](https://coplaydev.github.io/unity-mcp/guides/roslyn)
+- **Remote-hosted server with auth** — [Remote Server Auth](https://coplaydev.github.io/unity-mcp/guides/remote-server-auth)
 
 ## Star History
 

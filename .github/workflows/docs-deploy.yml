@@ -1,11 +1,7 @@
 name: Docs — Build & Deploy
 
-# Builds the Docusaurus site under /website and deploys to GitHub Pages.
-# Currently configured for the Scriptwonder fork preview:
-#   https://scriptwonder.github.io/unity-mcp/
-# When upstream Pages is enabled, change `branches: [docs/v2-wiki-refresh]`
-# to `branches: [beta]` and revert the url/organizationName in
-# docusaurus.config.js back to CoplayDev.
+# Builds the Docusaurus site under /website and, on push to beta, deploys
+# to GitHub Pages at https://coplaydev.github.io/unity-mcp/.
 #
 # PR runs only build (no deploy) as a preview-validation step.
 # Re-deploys also fire when the Python tool/resource registry changes,
@@ -13,7 +9,7 @@ name: Docs — Build & Deploy
 
 on:
   push:
-    branches: [docs/v2-wiki-refresh, beta]
+    branches: [beta]
     paths:
       - website/**
       - docs/**
@@ -66,7 +62,7 @@ jobs:
         run: npm ci
 
       - name: Setup Pages
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/beta' || github.ref == 'refs/heads/docs/v2-wiki-refresh')
+        if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
         uses: actions/configure-pages@v5
 
       - name: Build
@@ -74,7 +70,7 @@ jobs:
         run: npm run build
 
       - name: Upload Pages artifact
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/beta' || github.ref == 'refs/heads/docs/v2-wiki-refresh')
+        if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
         uses: actions/upload-pages-artifact@v3
         with:
           path: website/build
@@ -82,7 +78,7 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     needs: build
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/beta' || github.ref == 'refs/heads/docs/v2-wiki-refresh')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
