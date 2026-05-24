@@ -89,26 +89,23 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Branch off `beta`, not `main`. The full 
 
 [![Star History Chart](https://api.star-history.com/svg?repos=CoplayDev/unity-mcp&type=Date)](https://www.star-history.com/#CoplayDev/unity-mcp&Date)
 
-<details>
-<summary><strong>Citation for Research</strong></summary>
+## Citation
 
-If you are working on research that is related to Unity-MCP, please cite us:
+Using MCP for Unity in research? Please cite our paper — *MCP-Unity: Protocol-Driven Framework for Interactive 3D Authoring* (Wu & Barnett, 2025), [SA Technical Communications '25, ACM](https://doi.org/10.1145/3757376.3771417).
 
 ```bibtex
 @inproceedings{10.1145/3757376.3771417,
-author = {Wu, Shutong and Barnett, Justin P.},
-title = {MCP-Unity: Protocol-Driven Framework for Interactive 3D Authoring},
-year = {2025},
-isbn = {9798400721366},
-publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
-url = {https://doi.org/10.1145/3757376.3771417},
-doi = {10.1145/3757376.3771417},
-series = {SA Technical Communications '25}
+  author    = {Wu, Shutong and Barnett, Justin P.},
+  title     = {MCP-Unity: Protocol-Driven Framework for Interactive 3D Authoring},
+  year      = {2025},
+  isbn      = {9798400721366},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/3757376.3771417},
+  doi       = {10.1145/3757376.3771417},
+  series    = {SA Technical Communications '25}
 }
 ```
-
-</details>
 
 ## Unity AI Tools by Aura
 
