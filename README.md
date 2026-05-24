@@ -87,7 +87,7 @@ openupm add com.coplaydev.unity-mcp
 - In the **Clients** tab, click **Configure All Detected Clients** to set up every client found on your machine in one shot, or pick a single client from the dropdown and click **Configure**.
 - Look for 🟢 "Connected ✓".
 
-**Per-client gotchas:** Some clients (Cursor, Antigravity, OpenClaw) still require enabling an MCP toggle or plugin in their own settings. OpenClaw also needs the `openclaw-mcp-bridge` plugin enabled and follows the currently selected MCP for Unity transport (`HTTP` or `stdio`). Claude Desktop only supports stdio — MCP for Unity will silently configure it that way even if you've selected HTTP elsewhere. Claude Code, VS Code, Windsurf, Cline, and the various CLI clients auto-connect after configuration.
+**Per-client gotchas:** Some clients (Cursor, Antigravity 2.0, Antigravity IDE, OpenClaw) still require enabling an MCP toggle or plugin in their own settings. The two Antigravity clients are listed separately because Antigravity 2.0 migrated its MCP config into `~/.gemini/config/` while Antigravity IDE still uses `~/.gemini/antigravity-ide/`; if you run both, configure each one. OpenClaw also needs the `openclaw-mcp-bridge` plugin enabled and follows the currently selected MCP for Unity transport (`HTTP` or `stdio`). Claude Desktop only supports stdio — MCP for Unity will silently configure it that way even if you've selected HTTP elsewhere. Claude Code, VS Code, Windsurf, Cline, and the various CLI clients auto-connect after configuration.
 
 **Updates handle themselves.** When you update the package, MCP for Unity rewrites the configs of every detected client on the next Editor open — no need to repeat the Configure step.
 
@@ -118,7 +118,7 @@ openupm add com.coplaydev.unity-mcp
 
 If auto-setup doesn't work, add this to your MCP client's config file:
 
-**HTTP (default — works with Cursor, Windsurf, Antigravity, VS Code, Cline; Claude Desktop is stdio-only, see below):**
+**HTTP (default — works with Cursor, Windsurf, Antigravity 2.0, Antigravity IDE, VS Code, Cline; Claude Desktop is stdio-only, see below):**
 ```json
 {
   "mcpServers": {
