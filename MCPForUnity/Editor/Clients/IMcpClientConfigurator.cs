@@ -48,8 +48,19 @@ namespace MCPForUnity.Editor.Clients
         /// <summary>Checks and updates status; returns current status.</summary>
         McpStatus CheckStatus(bool attemptAutoRewrite = true);
 
-        /// <summary>Runs auto-configuration (register/write file/CLI etc.).</summary>
+        /// <summary>Runs auto-configuration (register/write file/CLI etc.). Always idempotent
+        /// — calling twice with the same settings is safe and is what the bulk "Configure All"
+        /// path relies on to refresh transport / server-version drift across every detected
+        /// client.</summary>
         void Configure();
+
+        /// <summary>
+        /// Removes UnityMCP from this client's config (JSON entry, CLI registration, etc.).
+        /// Default is a no-op for client types that don't yet implement removal (Codex TOML);
+        /// callers should treat this as best-effort. The UI's per-client button routes here
+        /// when <see cref="Status"/> is <see cref="McpStatus.Configured"/>.
+        /// </summary>
+        void Unregister();
 
         /// <summary>Returns the manual configuration snippet (JSON/TOML/commands).</summary>
         string GetManualSnippet();

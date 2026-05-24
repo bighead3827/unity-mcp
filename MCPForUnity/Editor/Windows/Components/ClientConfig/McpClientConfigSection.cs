@@ -111,11 +111,15 @@ namespace MCPForUnity.Editor.Windows.Components.ClientConfig
                 manualConfigFoldout.value = false;
             }
 
-            // Restore the "Configure a single client" foldout state. Defaults to collapsed
-            // so the prominent "Configure All Detected Clients" path is what users see first.
+            // Default the per-client setup foldout to expanded. The Configure / Unregister
+            // button for the currently-selected client lives inside it, and the 9.7.0
+            // default-collapsed behavior made users believe the Unregister action had been
+            // removed (community report: "the Unregister button was removed in 9.7.0,
+            // something is stuck on stdio and I can't switch to local"). The state still
+            // persists per-user, so anyone who explicitly collapses it keeps that preference.
             if (clientDetailsFoldout != null)
             {
-                clientDetailsFoldout.value = EditorPrefs.GetBool(EditorPrefKeys.ClientDetailsFoldoutOpen, false);
+                clientDetailsFoldout.value = EditorPrefs.GetBool(EditorPrefKeys.ClientDetailsFoldoutOpen, true);
                 clientDetailsFoldout.RegisterValueChangedCallback(evt =>
                 {
                     EditorPrefs.SetBool(EditorPrefKeys.ClientDetailsFoldoutOpen, evt.newValue);
@@ -308,6 +312,13 @@ namespace MCPForUnity.Editor.Windows.Components.ClientConfig
 
                 EditorUtility.DisplayDialog("Configure Detected Clients", message, "OK");
 
+                // The bulk path mutated state for every detected client. Clear the per-client
+                // status cache so any subsequent dropdown switch (or the currently-selected
+                // client refresh below) reads fresh status from disk instead of the pre-bulk
+                // value — otherwise every other client in the dropdown looks like it still
+                // has Missing/IncorrectPath status until 45 s elapses on the throttle.
+                lastStatusChecks.Clear();
+
                 if (selectedClientIndex >= 0 && selectedClientIndex < configurators.Count)
                 {
                     UpdateClientStatus();
@@ -336,7 +347,18 @@ namespace MCPForUnity.Editor.Windows.Components.ClientConfig
 
             try
             {
-                MCPServiceLocator.Client.ConfigureClient(client);
+                // Per-client toggle: Configure→register, Unregister→remove. The Configure path
+                // on JsonFile / Codex configurators is always idempotent-write so the bulk
+                // "Configure All" can call it unconditionally; the toggle lives here in the UI
+                // handler so the manual button still does what its label says.
+                if (client.Status == McpStatus.Configured)
+                {
+                    client.Unregister();
+                }
+                else
+                {
+                    MCPServiceLocator.Client.ConfigureClient(client);
+                }
                 lastStatusChecks.Remove(client);
                 RefreshClientStatus(client, forceImmediate: true);
                 UpdateManualConfiguration();
