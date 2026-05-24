@@ -92,7 +92,21 @@ CI (`.github/workflows/docs-generate.yml`) fails the PR if the committed referen
 
 ## Deploy
 
-The live site at `https://coplaydev.github.io/unity-mcp/` deploys automatically on push to `beta`. No manual step.
+The live site at `https://coplaydev.github.io/unity-mcp/` deploys automatically on push to `beta`. No manual step per change.
+
+### First-time setup (maintainers only)
+
+The first deploy requires GitHub Pages to be enabled for the repo:
+
+1. **Settings → Pages → Source** → choose **GitHub Actions** (not "Deploy from a branch").
+2. Push to `beta` (or run the `Docs — Build & Deploy` workflow via **Actions → Run workflow**).
+3. After the deploy job succeeds, the URL appears under **Settings → Pages**.
+
+The workflow uses `actions/configure-pages@v5` + `actions/deploy-pages@v4`, so once Pages is set to "GitHub Actions" source, the deploy step provisions everything else automatically.
+
+### Custom domain
+
+When ready, add a `CNAME` file at `website/static/CNAME` containing the domain (e.g. `unitymcp.dev`), update `url` and `baseUrl` in `docusaurus.config.js`, and configure the DNS provider per [GitHub's custom-domain guide](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site).
 
 ## Markdown format
 
