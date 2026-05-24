@@ -22,7 +22,16 @@ const config = {
   trailingSlash: false,
 
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
+  markdown: {
+    // Parse .md as CommonMark (no JSX, no {expression} parsing) and .mdx
+    // as MDX. Auto-generated tool reference pages contain literals like
+    // `{name: value}` and `<T>` in descriptions — MDX would treat those
+    // as JS expressions / JSX tags and refuse to compile.
+    format: 'detect',
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
+  },
 
   i18n: {
     defaultLocale: 'en',
@@ -109,7 +118,7 @@ const config = {
           {
             title: 'Docs',
             items: [
-              { label: 'Getting Started', to: '/getting-started/' },
+              { label: 'Getting Started', to: '/' },
               { label: 'Guides', to: '/guides/cli' },
               { label: 'Reference', to: '/reference/tools/' },
             ],

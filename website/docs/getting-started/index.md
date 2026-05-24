@@ -1,6 +1,6 @@
 ---
 id: index
-slug: /getting-started
+slug: /
 title: MCP for Unity
 sidebar_label: Overview
 description: AI-driven game development for the Unity Editor via the Model Context Protocol.
