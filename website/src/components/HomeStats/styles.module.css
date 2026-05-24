@@ -1,5 +1,8 @@
-.statsSection {
-  padding: 2.5rem 1.5rem;
+/* HomeStats — "spec sheet" treatment. Hairline grid, mono numbers,
+ * Satoshi labels. Reads like an instrument readout. */
+
+.section {
+  padding: 4rem 1.5rem;
   border-bottom: 1px solid var(--ifm-color-emphasis-200);
 }
 
@@ -8,34 +11,76 @@
   margin: 0 auto;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 2rem;
-}
-
-.cell {
-  text-align: left;
-}
-
-.value {
-  font-size: 1.6rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--ifm-heading-color);
-  line-height: 1.1;
-  margin-bottom: 0.35rem;
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .label {
-  font-size: 0.85rem;
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+.sub {
+  color: var(--ifm-color-emphasis-500);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 0;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+  border-left: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.cell {
+  padding: 1.5rem 1.5rem 1.75rem;
+  border-right: 1px solid var(--ifm-color-emphasis-200);
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  background: var(--ifm-background-color);
+}
+
+.cellLabel {
+  display: block;
+  margin: 0 0 0.75rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ifm-color-emphasis-500);
+}
+
+.cellValue {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.num {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 1.85rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--ifm-heading-color);
+  line-height: 1;
+}
+
+.unit {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: lowercase;
   color: var(--ifm-color-emphasis-600);
-  letter-spacing: 0.01em;
 }
 
 @media (max-width: 768px) {
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
-  }
+  .grid { grid-template-columns: repeat(2, 1fr); }
+  .num  { font-size: 1.5rem; }
 }

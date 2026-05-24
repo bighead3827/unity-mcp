@@ -7,23 +7,30 @@ export default function HomeStats() {
   const clientCount = siteConfig.customFields?.supportedClientCount ?? 0;
 
   const stats = [
-    { value: '43', label: 'MCP tools' },
-    { value: '25', label: 'read-only resources' },
-    { value: String(clientCount), label: 'MCP clients supported' },
-    { value: 'Unity 2021.3+', label: 'through Unity 6.x' },
+    { value: '43',          unit: 'tools',     label: 'MCP tool surface' },
+    { value: '25',          unit: 'resources', label: 'read-only state' },
+    { value: String(clientCount), unit: 'clients',   label: 'auto-configured' },
+    { value: '2021.3 → 6.x', unit: 'lts',       label: 'Unity version range' },
   ];
 
   return (
-    <section className={styles.statsSection}>
+    <section className={styles.section}>
       <div className={styles.inner}>
-        <div className={styles.grid}>
+        <div className={styles.header}>
+          <span className={styles.label}>// SPEC</span>
+          <span className={styles.sub}>at a glance</span>
+        </div>
+        <dl className={styles.grid}>
           {stats.map((s) => (
             <div className={styles.cell} key={s.label}>
-              <div className={styles.value}>{s.value}</div>
-              <div className={styles.label}>{s.label}</div>
+              <dt className={styles.cellLabel}>{s.label}</dt>
+              <dd className={styles.cellValue}>
+                <span className={styles.num}>{s.value}</span>
+                <span className={styles.unit}>{s.unit}</span>
+              </dd>
             </div>
           ))}
-        </div>
+        </dl>
       </div>
     </section>
   );

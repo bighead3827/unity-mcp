@@ -134,7 +134,8 @@ const config = {
         title: 'MCP for Unity',
         logo: {
           alt: 'MCP for Unity logo',
-          src: 'img/logo.png',
+          src: 'img/logo-mark.svg',
+          srcDark: 'img/logo-mark-dark.svg',
         },
         items: [
           {
@@ -190,7 +191,6 @@ const config = {
             items: [
               { label: 'GitHub', href: 'https://github.com/CoplayDev/unity-mcp' },
               { label: 'PyPI', href: 'https://pypi.org/p/mcpforunityserver' },
-              { label: 'Asset Store', href: 'https://assetstore.unity.com/packages/tools/generative-ai/mcp-for-unity-ai-driven-development-329908' },
             ],
           },
         ],

@@ -1,5 +1,9 @@
-.features {
-  padding: 4rem 1.5rem 6rem;
+/* HomeFeatures — numbered "index card" treatment. Hairline borders only,
+ * no fills, mono kickers (01/02/03 + label). Cards feel like spec entries
+ * in a datasheet, not bouncy marketing cards. */
+
+.section {
+  padding: 5rem 1.5rem 7rem;
 }
 
 .inner {
@@ -7,71 +11,131 @@
   margin: 0 auto;
 }
 
-.sectionTitle {
-  font-size: 1.05rem;
-  font-weight: 500;
-  letter-spacing: 0.04em;
+.header {
+  margin-bottom: 2.5rem;
+}
+
+.eyebrow {
+  display: block;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--ifm-color-emphasis-600);
-  margin: 0 0 2rem;
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--ifm-heading-color);
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+  border-left: 1px solid var(--ifm-color-emphasis-200);
 }
 
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  padding: 1.75rem;
-  background: var(--ifm-color-emphasis-0);
-  border: 1px solid var(--ifm-color-emphasis-200);
-  border-radius: 12px;
+  padding: 1.75rem 1.6rem 1.6rem;
+  border-right: 1px solid var(--ifm-color-emphasis-200);
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  background: var(--ifm-background-color);
+  transition: background-color 0.18s ease;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid transparent;
+  pointer-events: none;
+  transition: border-color 0.18s ease;
 }
 
 .card:hover {
   text-decoration: none;
   color: inherit;
-  border-color: var(--ifm-color-emphasis-400);
-  transform: translateY(-1px);
+  background: var(--ifm-color-emphasis-100);
+}
+
+.card:hover::before {
+  border-color: var(--ifm-color-primary);
+}
+
+.cardHead {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cardNum {
+  color: var(--ifm-color-emphasis-500);
+  font-weight: 500;
+}
+
+.cardKicker {
+  color: var(--ifm-color-primary);
+  font-weight: 600;
 }
 
 .cardTitle {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.15rem;
+  font-weight: 700;
   letter-spacing: -0.01em;
   margin: 0 0 0.75rem;
   color: var(--ifm-heading-color);
+  line-height: 1.25;
 }
 
 .cardBody {
   font-size: 0.92rem;
   line-height: 1.55;
   color: var(--ifm-color-emphasis-700);
-  margin: 0 0 1.25rem;
+  margin: 0 0 1.5rem;
   flex: 1;
 }
 
 .cardCta {
-  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
   font-weight: 600;
+  color: var(--ifm-heading-color);
+  text-transform: uppercase;
+}
+
+.cardArrow {
+  transition: transform 0.18s ease;
+}
+
+.card:hover .cardArrow {
+  transform: translateX(3px);
   color: var(--ifm-color-primary);
-  letter-spacing: 0.005em;
 }
 
 @media (max-width: 996px) {
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 640px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
+  .grid { grid-template-columns: 1fr; }
 }
