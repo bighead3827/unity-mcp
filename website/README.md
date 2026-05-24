@@ -1,6 +1,6 @@
 # MCP for Unity — Documentation Site
 
-Docusaurus 3.x site for MCP for Unity. Deployed to https://coplaydev.github.io/unity-mcp/ by `.github/workflows/docs-deploy.yml` on every push to `beta` or `main` that touches `website/**`, `docs/**`, or the Python tool registry.
+Docusaurus 3.x site for MCP for Unity. Currently deployed to https://scriptwonder.github.io/unity-mcp/ (Scriptwonder fork preview) by `.github/workflows/docs-deploy.yml` on every push to `docs/v2-wiki-refresh` or `beta` that touches `website/**`, `docs/**`, or the Python tool registry. When upstream Pages is enabled, the canonical URL flips to `coplaydev.github.io/unity-mcp`.
 
 ## Local development
 

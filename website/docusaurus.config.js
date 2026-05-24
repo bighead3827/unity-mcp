@@ -26,12 +26,13 @@ const config = {
   tagline: 'AI-driven game development for the Unity Editor',
   favicon: 'img/favicon.png',
 
-  // Hosted on GitHub Pages under the CoplayDev org.
-  // Custom domain (CNAME) deferred — see plan Phase 2.
-  url: 'https://coplaydev.github.io',
+  // Currently hosted under the Scriptwonder fork until upstream Pages
+  // is enabled. Flip url + organizationName back to CoplayDev once a
+  // maintainer turns on Pages there.
+  url: 'https://scriptwonder.github.io',
   baseUrl: '/unity-mcp/',
 
-  organizationName: 'CoplayDev',
+  organizationName: 'Scriptwonder',
   projectName: 'unity-mcp',
   deploymentBranch: 'gh-pages',
   trailingSlash: false,

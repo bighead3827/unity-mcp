@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://coplaydev.github.io/unity-mcp/sitemap.xml
+Sitemap: https://scriptwonder.github.io/unity-mcp/sitemap.xml
