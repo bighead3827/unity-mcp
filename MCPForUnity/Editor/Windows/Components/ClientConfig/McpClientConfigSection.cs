@@ -111,11 +111,15 @@ namespace MCPForUnity.Editor.Windows.Components.ClientConfig
                 manualConfigFoldout.value = false;
             }
 
-            // Restore the "Configure a single client" foldout state. Defaults to collapsed
-            // so the prominent "Configure All Detected Clients" path is what users see first.
+            // Default the per-client setup foldout to expanded. The Configure / Unregister
+            // button for the currently-selected client lives inside it, and the 9.7.0
+            // default-collapsed behavior made users believe the Unregister action had been
+            // removed (community report: "the Unregister button was removed in 9.7.0,
+            // something is stuck on stdio and I can't switch to local"). The state still
+            // persists per-user, so anyone who explicitly collapses it keeps that preference.
             if (clientDetailsFoldout != null)
             {
-                clientDetailsFoldout.value = EditorPrefs.GetBool(EditorPrefKeys.ClientDetailsFoldoutOpen, false);
+                clientDetailsFoldout.value = EditorPrefs.GetBool(EditorPrefKeys.ClientDetailsFoldoutOpen, true);
                 clientDetailsFoldout.RegisterValueChangedCallback(evt =>
                 {
                     EditorPrefs.SetBool(EditorPrefKeys.ClientDetailsFoldoutOpen, evt.newValue);
