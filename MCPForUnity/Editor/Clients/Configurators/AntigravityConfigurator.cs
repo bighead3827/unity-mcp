@@ -18,7 +18,7 @@ namespace MCPForUnity.Editor.Clients.Configurators
         // fails to register UnityMCP on every modern install.
         public AntigravityConfigurator() : base(new McpClient
         {
-            name = "Antigravity",
+            name = "Antigravity 2.0",
             windowsConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".gemini", "config", "mcp_config.json"),
             macConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".gemini", "config", "mcp_config.json"),
             linuxConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".gemini", "config", "mcp_config.json"),
@@ -50,7 +50,7 @@ namespace MCPForUnity.Editor.Clients.Configurators
 
         public override IList<string> GetInstallationSteps() => new List<string>
         {
-            "Open Antigravity",
+            "Open Antigravity 2.0",
             "Click the more_horiz menu in the Agent pane > MCP Servers",
             "Select 'Install' for Unity MCP or use the Configure button above",
             "Restart Antigravity if necessary"
