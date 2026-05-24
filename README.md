@@ -6,7 +6,7 @@
 #### Proudly sponsored and maintained by [Aura](https://www.tryaura.dev/) — the AI assistant for Unreal & Unity.
 ##### And don't miss [Godot AI](https://github.com/hi-godot/godot-ai), the new open source MCP/AI project from the makers of MCP for Unity.
 
-[![Docs](https://img.shields.io/badge/Docs-coplaydev.github.io/unity--mcp-4f46e5)](https://coplaydev.github.io/unity-mcp/)
+[![Docs](https://img.shields.io/badge/Docs-unity--mcp-4f46e5)](https://coplaydev.github.io/unity-mcp/)
 [![Discord](https://img.shields.io/badge/discord-join-red.svg?logo=discord&logoColor=white)](https://discord.gg/y4p8KfzrN4)
 [![](https://img.shields.io/badge/Website-Visit-purple)](https://www.coplay.dev/?ref=unity-mcp)
 [![](https://img.shields.io/badge/Unity-000000?style=flat&logo=unity&logoColor=blue 'Unity')](https://unity.com/releases/editor/archive)
@@ -23,8 +23,6 @@
 ## Read the Docs
 
 ### **→ [coplaydev.github.io/unity-mcp](https://coplaydev.github.io/unity-mcp/)**
-
-Getting Started · Tool Reference (43 tools · 25 resources) · Architecture · Contributing
 
 ---
 
@@ -81,22 +79,28 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Branch off `beta`, not `main`. The full 
 - **Roslyn script validation** — [Roslyn Validation](https://coplaydev.github.io/unity-mcp/guides/roslyn)
 - **Remote-hosted server with auth** — [Remote Server Auth](https://coplaydev.github.io/unity-mcp/guides/remote-server-auth)
 
----
-
-**License:** MIT — see [LICENSE](LICENSE)
-
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=CoplayDev/unity-mcp&type=Date)](https://www.star-history.com/#CoplayDev/unity-mcp&Date)
 
 ## Citation
 
-Using MCP for Unity in research? Please cite our paper — *MCP-Unity: Protocol-Driven Framework for Interactive 3D Authoring* (Wu & Barnett, 2025), [SA Technical Communications '25, ACM](https://doi.org/10.1145/3757376.3771417).
+If MCP for Unity helped your research, teaching, or writing, please cite the paper that introduces the framework.
+
+**Paper.** *MCP-Unity: Protocol-Driven Framework for Interactive 3D Authoring* — Shutong Wu and Justin P. Barnett, 2025.
+Published in **SA Technical Communications '25** (ACM SIGGRAPH Asia), Association for Computing Machinery.
+DOI: [10.1145/3757376.3771417](https://doi.org/10.1145/3757376.3771417) · ISBN: 979-8-4007-2136-6.
+
+**APA**
+
+> Wu, S., & Barnett, J. P. (2025). MCP-Unity: Protocol-Driven Framework for Interactive 3D Authoring. In *SA Technical Communications '25*. Association for Computing Machinery. https://doi.org/10.1145/3757376.3771417
+
+**BibTeX**
 
 ```bibtex
-@inproceedings{10.1145/3757376.3771417,
+@inproceedings{wu2025mcpunity,
   author    = {Wu, Shutong and Barnett, Justin P.},
-  title     = {MCP-Unity: Protocol-Driven Framework for Interactive 3D Authoring},
+  title     = {{MCP-Unity}: {Protocol-Driven} Framework for Interactive {3D} Authoring},
   year      = {2025},
   isbn      = {9798400721366},
   publisher = {Association for Computing Machinery},
@@ -107,6 +111,8 @@ Using MCP for Unity in research? Please cite our paper — *MCP-Unity: Protocol-
 }
 ```
 
+If your work uses a particular subsystem (tool registry, transport, custom tools, etc.), a link back to this repository is appreciated alongside the citation.
+
 ## Unity AI Tools by Aura
 
 Aura offers 2 AI tools for Unity:
@@ -116,3 +122,7 @@ Aura offers 2 AI tools for Unity:
 ## Disclaimer
 
 This project is a free and open-source tool for the Unity Editor, and is not affiliated with Unity Technologies.
+
+---
+
+**License:** MIT — see [LICENSE](LICENSE).
