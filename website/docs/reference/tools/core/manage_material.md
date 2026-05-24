@@ -37,6 +37,65 @@ A `dict` containing the Unity response. The exact shape depends on the action.
 ## Examples
 
 <!-- examples:start -->
-*No examples yet. Add usage examples here — they will be preserved across regenerations.*
+### Create a red material from scratch
+
+> Create `Assets/Materials/Red.mat` using the Standard shader, base color red.
+
+```json
+{
+  "action": "create",
+  "material_path": "Materials/Red.mat",
+  "shader": "Standard",
+  "properties": { "_Color": [1, 0, 0, 1] }
+}
+```
+
+For URP, use `"shader": "Universal Render Pipeline/Lit"` and property `_BaseColor`.
+
+### Assign an existing material to a GameObject
+
+> Apply `Assets/Materials/Red.mat` to the `RedCube`.
+
+```json
+{
+  "action": "assign_material_to_renderer",
+  "target": "RedCube",
+  "search_method": "by_name",
+  "material_path": "Materials/Red.mat",
+  "slot": 0,
+  "mode": "shared"
+}
+```
+
+`mode: shared` reuses the asset. `mode: instance` clones it per-renderer (use sparingly — costs draw call batching).
+
+### Change just one shader property
+
+> Set `_Metallic` on `Materials/Red.mat` to 0.8.
+
+```json
+{
+  "action": "set_material_shader_property",
+  "material_path": "Materials/Red.mat",
+  "property": "_Metallic",
+  "value": 0.8
+}
+```
+
+### Tint a renderer without touching the shared material
+
+> Tint the cube's MeshRenderer blue using a MaterialPropertyBlock.
+
+```json
+{
+  "action": "set_renderer_color",
+  "target": "RedCube",
+  "search_method": "by_name",
+  "color": [0, 0, 1, 1],
+  "mode": "property_block"
+}
+```
+
+`property_block` mode avoids creating a per-instance material clone, preserving batching.
 <!-- examples:end -->
 

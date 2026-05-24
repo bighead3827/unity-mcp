@@ -53,6 +53,74 @@ A `dict` containing the Unity response. The exact shape depends on the action.
 ## Examples
 
 <!-- examples:start -->
-*No examples yet. Add usage examples here — they will be preserved across regenerations.*
+### Create a red cube at the world origin
+
+> Create a cube called `RedCube` at (0, 0, 0).
+
+```json
+{
+  "action": "create",
+  "name": "RedCube",
+  "primitive_type": "Cube",
+  "position": [0, 0, 0]
+}
+```
+
+Pair with [`manage_material`](./manage_material) to make it actually red.
+
+### Find a GameObject by name and move it
+
+> Move the `Player` 5 units up.
+
+```json
+{
+  "action": "modify",
+  "target": "Player",
+  "search_method": "by_name",
+  "position": [0, 5, 0]
+}
+```
+
+`search_method: by_name` matches the first GameObject whose name equals `Player`. Use `by_path` for `Parent/Child/Leaf` lookups or `by_id` for instance IDs.
+
+### Parent one GameObject under another
+
+> Make `Sword` a child of `Player/RightHand`.
+
+```json
+{
+  "action": "modify",
+  "target": "Sword",
+  "search_method": "by_name",
+  "parent": "Player/RightHand"
+}
+```
+
+### Delete every GameObject tagged `Cleanup`
+
+> Delete all objects tagged `Cleanup` in the current scene.
+
+```json
+{
+  "action": "delete",
+  "target": "Cleanup",
+  "search_method": "by_tag"
+}
+```
+
+### Multi-instance routing
+
+> In the `Editor2` instance, duplicate `MainCamera`.
+
+```json
+{
+  "action": "duplicate",
+  "target": "MainCamera",
+  "search_method": "by_name",
+  "unity_instance": "Editor2"
+}
+```
+
+See [Multi-Instance Routing](/guides/multi-instance) for the full routing model.
 <!-- examples:end -->
 

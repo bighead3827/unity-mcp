@@ -1,6 +1,7 @@
 ---
 title: Tool reference
 sidebar_label: Tools
+sidebar_class_name: sidebar-hidden
 slug: /reference/tools
 description: Auto-generated catalog of every MCP for Unity tool, grouped by domain.
 ---

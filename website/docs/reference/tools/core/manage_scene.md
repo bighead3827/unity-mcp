@@ -45,6 +45,66 @@ A `dict` containing the Unity response. The exact shape depends on the action.
 ## Examples
 
 <!-- examples:start -->
-*No examples yet. Add usage examples here — they will be preserved across regenerations.*
+### Load a scene from `Assets/Scenes/`
+
+> Open `Assets/Scenes/MainMenu.unity`.
+
+```json
+{
+  "action": "load",
+  "path": "Scenes/MainMenu.unity"
+}
+```
+
+Paths are relative to `Assets/`. Forward slashes only.
+
+### Get the scene hierarchy (paged)
+
+> List every GameObject in the active scene.
+
+```json
+{
+  "action": "get_hierarchy",
+  "page_size": 100
+}
+```
+
+Returns up to `page_size` entries plus a `next_cursor` for the remainder. Always page large hierarchies.
+
+### Save the active scene
+
+> Save the active scene under its existing path.
+
+```json
+{ "action": "save" }
+```
+
+### Create a scene from a template
+
+> Make a new 3D scene called `Lab`.
+
+```json
+{
+  "action": "create",
+  "path": "Scenes/Lab.unity",
+  "template": "3d_basic"
+}
+```
+
+Other templates: `2d_basic`, `default`, `empty`.
+
+### Additive multi-scene editing
+
+> Load `Scenes/Boss.unity` additively while keeping the current scene open.
+
+```json
+{
+  "action": "load",
+  "path": "Scenes/Boss.unity",
+  "additive": true
+}
+```
+
+Use `set_active_scene`, `close_scene`, and `move_to_scene` to compose multi-scene setups.
 <!-- examples:end -->
 
