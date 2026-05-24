@@ -312,6 +312,13 @@ namespace MCPForUnity.Editor.Windows.Components.ClientConfig
 
                 EditorUtility.DisplayDialog("Configure Detected Clients", message, "OK");
 
+                // The bulk path mutated state for every detected client. Clear the per-client
+                // status cache so any subsequent dropdown switch (or the currently-selected
+                // client refresh below) reads fresh status from disk instead of the pre-bulk
+                // value — otherwise every other client in the dropdown looks like it still
+                // has Missing/IncorrectPath status until 45 s elapses on the throttle.
+                lastStatusChecks.Clear();
+
                 if (selectedClientIndex >= 0 && selectedClientIndex < configurators.Count)
                 {
                     UpdateClientStatus();
@@ -340,7 +347,18 @@ namespace MCPForUnity.Editor.Windows.Components.ClientConfig
 
             try
             {
-                MCPServiceLocator.Client.ConfigureClient(client);
+                // Per-client toggle: Configure→register, Unregister→remove. The Configure path
+                // on JsonFile / Codex configurators is always idempotent-write so the bulk
+                // "Configure All" can call it unconditionally; the toggle lives here in the UI
+                // handler so the manual button still does what its label says.
+                if (client.Status == McpStatus.Configured)
+                {
+                    client.Unregister();
+                }
+                else
+                {
+                    MCPServiceLocator.Client.ConfigureClient(client);
+                }
                 lastStatusChecks.Remove(client);
                 RefreshClientStatus(client, forceImmediate: true);
                 UpdateManualConfiguration();
