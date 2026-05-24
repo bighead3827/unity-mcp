@@ -104,11 +104,14 @@ openupm add com.coplaydev.unity-mcp
 * **Automation** — Automate repetitive Unity workflows
 * **Extensible** — Works with various MCP Clients
 
-### Available Tools
-`apply_text_edits` • `batch_execute` • `create_script` • `debug_request_context` • `delete_script` • `execute_custom_tool` • `execute_menu_item` • `find_gameobjects` • `find_in_file` • `get_sha` • `get_test_job` • `manage_animation` • `manage_asset` • `manage_build` • `manage_camera` • `manage_components` • `manage_editor` • `manage_gameobject` • `manage_graphics` • `manage_material` • `manage_packages` • `manage_physics` • `manage_prefabs` • `manage_probuilder` • `manage_profiler` • `manage_scene` • `manage_script` • `manage_script_capabilities` • `manage_scriptable_object` • `manage_shader` • `manage_texture` • `manage_tools` • `manage_ui` • `manage_vfx` • `read_console` • `refresh_unity` • `run_tests` • `script_apply_edits` • `set_active_instance` • `unity_docs` • `unity_reflect` • `validate_script`
+### Available Tools & Resources
 
-### Available Resources
-`cameras` • `custom_tools` • `renderer_features` • `rendering_stats` • `volumes` • `editor_active_tool` • `editor_prefab_stage` • `editor_selection` • `editor_state` • `editor_windows` • `gameobject` • `gameobject_api` • `gameobject_component` • `gameobject_components` • `get_tests` • `get_tests_for_mode` • `menu_items` • `prefab_api` • `prefab_hierarchy` • `prefab_info` • `project_info` • `project_layers` • `project_tags` • `tool_groups` • `unity_instances`
+The full reference — every tool, every parameter, every resource — lives in the docs site:
+
+- **[Tool reference →](https://coplaydev.github.io/unity-mcp/reference/tools)** (43 tools across 9 groups: core, animation, ui, vfx, scripting_ext, testing, probuilder, profiling, docs)
+- **[Resource reference →](https://coplaydev.github.io/unity-mcp/reference/resources)** (25 resources)
+
+These pages are auto-generated from the Python tool registry and stay in sync with every release.
 
 **Performance Tip:** Use `batch_execute` for multiple operations — it's 10-100x faster than individual calls!
 </details>
