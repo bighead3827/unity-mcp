@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import styles from './styles.module.css';
 
 /**
@@ -9,6 +9,13 @@ import styles from './styles.module.css';
  */
 export default function CopyButton({ text, label = 'Copy', className }) {
   const [copied, setCopied] = useState(false);
+  // Timer ref so rapid repeated clicks don't stack pending resets and
+  // an unmount mid-cooldown doesn't fire setCopied on a dead component.
+  const timerRef = useRef(null);
+
+  useEffect(() => () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+  }, []);
 
   const onClick = async () => {
     try {
@@ -27,7 +34,8 @@ export default function CopyButton({ text, label = 'Copy', className }) {
         document.body.removeChild(ta);
       }
       setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setCopied(false), 1500);
     } catch {
       // swallow — the user can still select-and-copy the rendered text
     }

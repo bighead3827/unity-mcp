@@ -22,12 +22,21 @@ on:
   release:
     types: [published, edited, unpublished, deleted]
   workflow_dispatch: {}
+  pull_request:
+    paths:
+      - tools/sync_release_notes.py
+      - website/docs/releases.md
+      - README.md
+      - .github/workflows/sync-releases.yml
   schedule:
     # 11:00 UTC daily — picks up any out-of-band edits to release bodies.
     - cron: '0 11 * * *'
 
+# Least-privilege at the workflow level. The `sync` job below opts into
+# `contents: write` explicitly because it commits + pushes; `drift-check`
+# only reads so it stays read-only.
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: docs-sync-releases
@@ -36,7 +45,10 @@ concurrency:
 jobs:
   sync:
     name: Sync release notes
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout beta
         uses: actions/checkout@v4
@@ -44,6 +56,8 @@ jobs:
           ref: beta
           # Full history so the commit lands on a fresh ref tip.
           fetch-depth: 0
+          # `sync` needs to push back, so the token must persist here.
+          persist-credentials: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
@@ -76,6 +90,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

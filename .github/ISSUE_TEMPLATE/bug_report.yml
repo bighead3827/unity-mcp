@@ -10,7 +10,7 @@ body:
 
         **Before filing:**
         - Search [existing issues](https://github.com/CoplayDev/unity-mcp/issues?q=is%3Aissue) to avoid duplicates
-        - Check the [troubleshooting docs](https://coplaydev.github.io/unity-mcp/guides/cursor) and [setup wiki](https://github.com/CoplayDev/unity-mcp/wiki)
+        - Check the [troubleshooting docs](https://coplaydev.github.io/unity-mcp/guides/troubleshooting) and [setup wiki](https://github.com/CoplayDev/unity-mcp/wiki)
 
   - type: textarea
     id: what-happened

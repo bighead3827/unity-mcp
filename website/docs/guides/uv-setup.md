@@ -21,12 +21,12 @@ Clients like Claude Code or JetBrains Rider can get confused if you switch from 
 
 ## Requirements
 
-You need **Python 3.12+** and the **`uv`** package manager.
+You need **Python 3.10+** and the **`uv`** package manager.
 
 ### Verify
 
 ```bash
-python3 --version   # should be 3.12+
+python3 --version   # should be 3.10+
 uv --version        # should print a version like "uv 0.x"
 ```
 
@@ -38,7 +38,7 @@ uv --version        # should print a version like "uv 0.x"
 # Option A: Official installer (recommended)
 # Download from https://www.python.org/downloads/
 
-# Option B: Homebrew
+# Option B: Homebrew (3.12 is the latest LTS as of writing; 3.10 also works)
 brew install python@3.12
 ```
 

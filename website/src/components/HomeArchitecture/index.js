@@ -16,7 +16,11 @@ export default function HomeArchitecture() {
           </p>
         </div>
 
-        <div className={styles.diagram} aria-label="MCP for Unity architecture diagram">
+        <div
+          className={styles.diagram}
+          role="img"
+          aria-label="MCP for Unity architecture diagram: MCP client connects to the Python server over stdio or HTTP, which talks to the Unity Editor plugin over WebSocket."
+        >
           <Stage
             kicker="LAYER 01"
             title="MCP Client"

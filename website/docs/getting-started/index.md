@@ -30,9 +30,9 @@ MCP for Unity bridges AI assistants — Claude, Codex, VS Code, local LLMs, and 
 ## Next steps
 
 - **[Install](./install.md)** — Add the Unity package, install the Python server, and connect your first MCP client.
+- **[Your First Prompt](./first-prompt.md)** — End-to-end "build me a red cube" tutorial.
+- **[Choosing an MCP Client](./clients.md)** — A capability matrix across all supported clients.
 - **Setup Wizard** *(coming soon)* — Walk through the first-run experience.
-- **Your First Prompt** *(coming soon)* — End-to-end "build me a red cube" tutorial.
-- **Choosing an MCP Client** *(coming soon)* — A capability matrix across all supported clients.
 
 ---
 

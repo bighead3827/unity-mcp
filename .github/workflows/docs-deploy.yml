@@ -49,6 +49,9 @@ jobs:
           # can resolve real per-file commit metadata. Shallow clones make every
           # page report the latest commit instead.
           fetch-depth: 0
+          # No push back from this workflow — the deploy uses the Pages
+          # OIDC token issued by actions/deploy-pages, not the repo token.
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@v4
