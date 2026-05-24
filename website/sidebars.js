@@ -31,6 +31,7 @@ const sidebars = {
         'guides/custom-tools',
         'guides/multi-instance',
         'guides/tool-groups',
+        'guides/roslyn',
       ],
     },
     {
@@ -91,6 +92,7 @@ const sidebars = {
         'migrations/v8',
       ],
     },
+    'releases',
   ],
 };
 
