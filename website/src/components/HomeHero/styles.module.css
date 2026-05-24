@@ -95,3 +95,27 @@
 .installCode :global(pre) {
   margin: 0;
 }
+
+.demo {
+  margin: 3.5rem 0 0;
+  padding: 0;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--ifm-color-emphasis-100);
+}
+
+.demo img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.demoCaption {
+  font-size: 0.82rem;
+  color: var(--ifm-color-emphasis-600);
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+  background: var(--ifm-background-color);
+  text-align: center;
+}

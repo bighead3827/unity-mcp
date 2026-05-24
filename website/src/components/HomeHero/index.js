@@ -51,6 +51,19 @@ export default function HomeHero() {
             https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main
           </CodeBlock>
         </div>
+
+        <figure className={styles.demo}>
+          <img
+            src="/unity-mcp/img/building_scene.gif"
+            alt="An LLM building a Unity scene through MCP for Unity"
+            loading="lazy"
+            width="1200"
+            height="675"
+          />
+          <figcaption className={styles.demoCaption}>
+            An MCP client creating GameObjects, materials, and lights in the Unity Editor.
+          </figcaption>
+        </figure>
       </div>
     </header>
   );

@@ -55,8 +55,8 @@ const sidebars = {
           id: 'reference/resources/index',
           label: 'Resources',
         },
-        // 'reference/cli',      // M4
-        // 'reference/manifest', // M4
+        'reference/cli',
+        'reference/manifest',
       ],
     },
     {
