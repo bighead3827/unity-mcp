@@ -405,7 +405,7 @@ namespace MCPForUnity.Editor.Clients
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException($"Failed to unregister: {ex.Message}");
+                throw new InvalidOperationException($"Failed to unregister: {ex.Message}", ex);
             }
         }
 
@@ -1025,7 +1025,7 @@ namespace MCPForUnity.Editor.Clients
             client.configuredTransport = HttpEndpointUtility.GetCurrentServerTransport();
         }
 
-        private void Unregister()
+        public override void Unregister()
         {
             var pathService = MCPServiceLocator.Paths;
             string claudePath = pathService.GetClaudeCliPath();
