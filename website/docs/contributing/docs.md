@@ -98,14 +98,14 @@ CI (`.github/workflows/docs-generate.yml`) fails the PR if the committed referen
 - Renders the full release history into `releases.md`, grouped by minor version, with each release body in a collapsible `<details>` block.
 - Replaces the block between `<!-- recent-updates:start -->` and `<!-- recent-updates:end -->` in the root `README.md` with the latest five releases.
 
-CI keeps both in sync automatically via `.github/workflows/sync-releases.yml`:
+CI keeps both in sync automatically via `.github/workflows/sync-releases.yml`. Triggers are intentionally narrow so the workflow never blocks outsider PRs:
 
 | Trigger | What happens |
 |---|---|
-| `release.{published,edited,unpublished,deleted}` | Sync fires within ~30 seconds, commits directly to `beta` with `[skip ci]`. |
-| Daily 11:00 UTC schedule | Catches out-of-band edits to release bodies on the GitHub UI. |
-| `workflow_dispatch` | Manual one-shot. |
-| Pull request | Runs `--check`; fails the PR if the sync would change anything. |
+| `release.{published,edited,unpublished,deleted}` | Sync fires within ~30 seconds and commits directly to `beta` with `[skip ci]`. This is the canonical entry point — the only time the synced files can legitimately go stale. |
+| `workflow_dispatch` | Manual escape hatch (re-run after a one-off UI edit, or to backfill). |
+
+**Not triggered on `pull_request`.** A drift check at PR time would fail outsider PRs that edit README for unrelated reasons (typo fix, citation tweak), and the contributor wouldn't have push access to regenerate. The synced files are maintained by the release pipeline, not by PR authors.
 
 To sync manually:
 
