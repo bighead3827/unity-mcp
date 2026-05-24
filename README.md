@@ -46,17 +46,20 @@ Full walkthrough: [Your First Prompt](https://coplaydev.github.io/unity-mcp/gett
 
 ---
 
+<!-- recent-updates:start -->
 <details>
 <summary><strong>Recent Updates</strong></summary>
 
-* **v9.6.3 (beta)** — New `manage_profiler` tool (14 actions): Profiler session control, frame timing, counter reads, memory snapshots, Frame Debugger.
-* **v9.6.2** — New `manage_physics` tool (21 actions): physics settings, layer collision matrix, materials, joints, queries, force application. Full 3D and 2D support.
-* **v9.6.1** — `manage_editor` gains undo/redo. `manage_scene` gains multi-scene editing and templates. New `manage_build` tool for player builds across platforms.
-* **v9.5.4** — `unity_reflect` and `unity_docs` tools for API verification. New `manage_packages` tool for UPM operations.
+* **[v9.7.0](https://github.com/CoplayDev/unity-mcp/releases/tag/v9.7.0)** (2026-05-22)
+* **[v9.6.8](https://github.com/CoplayDev/unity-mcp/releases/tag/v9.6.8)** (2026-04-27)
+* **[v9.6.6](https://github.com/CoplayDev/unity-mcp/releases/tag/v9.6.6)** (2026-04-07)
+* **[v9.6.5](https://github.com/CoplayDev/unity-mcp/releases/tag/v9.6.5)** (2026-04-03)
+* **[v9.6.4](https://github.com/CoplayDev/unity-mcp/releases/tag/v9.6.4)** (2026-03-31)
 
 Full history: [Release Notes](https://coplaydev.github.io/unity-mcp/releases).
 
 </details>
+<!-- recent-updates:end -->
 
 ---
 

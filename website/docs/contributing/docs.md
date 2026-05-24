@@ -90,6 +90,32 @@ git add website/docs/reference/
 
 CI (`.github/workflows/docs-generate.yml`) fails the PR if the committed reference is stale.
 
+## Release notes sync
+
+`website/docs/releases.md` and the README's "Recent Updates" block are **both** generated from the GitHub Releases API by `tools/sync_release_notes.py`. The script:
+
+- Uses `gh api` when available, falls back to `urllib` (with `certifi` if installed) otherwise.
+- Renders the full release history into `releases.md`, grouped by minor version, with each release body in a collapsible `<details>` block.
+- Replaces the block between `<!-- recent-updates:start -->` and `<!-- recent-updates:end -->` in the root `README.md` with the latest five releases.
+
+CI keeps both in sync automatically via `.github/workflows/sync-releases.yml`:
+
+| Trigger | What happens |
+|---|---|
+| `release.{published,edited,unpublished,deleted}` | Sync fires within ~30 seconds, commits directly to `beta` with `[skip ci]`. |
+| Daily 11:00 UTC schedule | Catches out-of-band edits to release bodies on the GitHub UI. |
+| `workflow_dispatch` | Manual one-shot. |
+| Pull request | Runs `--check`; fails the PR if the sync would change anything. |
+
+To sync manually:
+
+```bash
+python tools/sync_release_notes.py            # write
+python tools/sync_release_notes.py --check    # exit non-zero on drift
+```
+
+Do not hand-edit `releases.md` or the `recent-updates` block in `README.md` — your change will be overwritten on the next sync.
+
 ## Deploy
 
 The live site at `https://coplaydev.github.io/unity-mcp/` deploys automatically on push to `beta`. No manual step per change.
