@@ -175,13 +175,13 @@ h3 {
 
 /* Navbar icon links — GitHub + Discord */
 .header-icon-link {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  margin: 0 0.15rem;
+  margin: 0 0.2rem;
   transition: background-color 0.15s ease;
 }
 .header-icon-link:hover {
@@ -189,8 +189,8 @@ h3 {
 }
 .header-icon-link::before {
   content: '';
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   display: block;
   background-repeat: no-repeat;
   background-position: center;
