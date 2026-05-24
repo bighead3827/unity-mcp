@@ -14,9 +14,8 @@ const sidebars = {
       collapsed: false,
       items: [
         'getting-started/install',
-        // 'getting-started/setup-wizard',   // M4
-        // 'getting-started/first-prompt',   // M4
-        // 'getting-started/clients',        // M4
+        'getting-started/first-prompt',
+        'getting-started/clients',
       ],
     },
     {
@@ -30,8 +29,8 @@ const sidebars = {
         'guides/cursor',
         'guides/remote-server-auth',
         'guides/custom-tools',
-        // 'guides/multi-instance',   // M4
-        // 'guides/tool-groups',      // M4
+        'guides/multi-instance',
+        'guides/tool-groups',
       ],
     },
     {
@@ -62,9 +61,9 @@ const sidebars = {
       label: 'Architecture',
       collapsed: true,
       items: [
-        // 'architecture/transports',     // M4
-        // 'architecture/python-layers',  // M4
-        // 'architecture/unity-compat',   // M4
+        'architecture/transports',
+        'architecture/python-layers',
+        'architecture/unity-compat',
         'architecture/remote-auth',
         'architecture/telemetry',
         'architecture/manage-physics',
@@ -77,9 +76,9 @@ const sidebars = {
       collapsed: true,
       items: [
         'contributing/dev-setup',
-        // 'contributing/testing',  // M4
+        'contributing/testing',
         'contributing/releases',
-        // 'contributing/docs',     // M4
+        'contributing/docs',
       ],
     },
     {
