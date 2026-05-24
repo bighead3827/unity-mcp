@@ -6,7 +6,7 @@ description: "Manage Unity player builds — trigger builds, switch platforms, c
 
 # `manage_build`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.manage_build`
 
@@ -18,7 +18,7 @@ Manage Unity player builds — trigger builds, switch platforms, configure setti
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `str` | ✅ | Action: build, status, platform, settings, scenes, profiles, batch, cancel |
+| `action` | `str` | yes | Action: build, status, platform, settings, scenes, profiles, batch, cancel |
 | `target` | `str \| None` | — | Build target: windows64, osx, linux64, android, ios, webgl, uwp, tvos, visionos |
 | `output_path` | `str \| None` | — | Output path for the build |
 | `scenes` | `str \| None` | — | JSON array of scene paths, or comma-separated paths |

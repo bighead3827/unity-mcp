@@ -6,7 +6,7 @@ description: "Manage cameras (Unity Camera + Cinemachine)"
 
 # `manage_camera`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.manage_camera`
 
@@ -48,7 +48,7 @@ CAPTURE:
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `str` | ✅ | The camera action to perform. |
+| `action` | `str` | yes | The camera action to perform. |
 | `target` | `str \| None` | — | Target camera (name, path, or instance ID). |
 | `search_method` | `Literal['by_id', 'by_name', 'by_path'] \| None` | — | How to find target. |
 | `properties` | `dict[str, Any] \| str \| None` | — | Action-specific parameters (dict or JSON string). |

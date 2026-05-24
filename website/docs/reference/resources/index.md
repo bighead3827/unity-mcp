@@ -7,7 +7,7 @@ description: Auto-generated catalog of every MCP for Unity resource.
 
 # Resource reference
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 Resources are read-only state surfaces exposed to MCP clients. Tools mutate; resources observe.
 

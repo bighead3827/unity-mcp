@@ -50,7 +50,7 @@ After import, MCP for Unity opens a **setup wizard** automatically.
 2. Click **Done**. Once dependencies are green, a list of MCP clients detected on your machine appears.
 3. Pick the clients you want to configure and click **Configure Selected**.
 
-You can return to this UI anytime via **Window → MCP for Unity** to start/stop the server, switch transport (HTTP vs stdio), or reconfigure clients. Connection status shows `🟢 Connected ✓` when everything is wired up.
+You can return to this UI anytime via **Window → MCP for Unity** to start/stop the server, switch transport (HTTP vs stdio), or reconfigure clients. The status panel reads `Connected` when everything is wired up.
 
 ### First prompt
 

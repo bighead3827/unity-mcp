@@ -6,7 +6,7 @@ description: "Performs asset operations (import, create, modify, delete, etc"
 
 # `manage_asset`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.manage_asset`
 
@@ -20,8 +20,8 @@ Tip (payload safety): for `action="search"`, prefer paging (`page_size`, `page_n
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `Literal['import', 'create', 'modify', 'delete', 'duplicate', 'move', 'rename', 'search', 'get_info', 'create_folder', 'get_components']` | ✅ | Perform CRUD operations on assets. |
-| `path` | `str` | ✅ | Asset path (e.g., 'Materials/MyMaterial.mat') or search scope (e.g., 'Assets'). |
+| `action` | `Literal['import', 'create', 'modify', 'delete', 'duplicate', 'move', 'rename', 'search', 'get_info', 'create_folder', 'get_components']` | yes | Perform CRUD operations on assets. |
+| `path` | `str` | yes | Asset path (e.g., 'Materials/MyMaterial.mat') or search scope (e.g., 'Assets'). |
 | `asset_type` | `str \| None` | — | Asset type (e.g., 'Material', 'Folder') - required for 'create'. Note: For ScriptableObjects, use manage_scriptable_object. |
 | `properties` | `dict[str, Any] \| str \| None` | — | Dictionary of properties for 'create'/'modify'. Keys are property names, values are property values. |
 | `destination` | `str \| None` | — | Target path for 'duplicate'/'move'. |

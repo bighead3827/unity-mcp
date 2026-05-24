@@ -22,6 +22,28 @@ const config = {
   trailingSlash: false,
 
   onBrokenLinks: 'throw',
+
+  // Typography: Satoshi (Fontshare) for body/headings, JetBrains Mono
+  // (Google Fonts) for code. Loaded via <link> in the document head.
+  headTags: [
+    {
+      tagName: 'link',
+      attributes: { rel: 'preconnect', href: 'https://api.fontshare.com' },
+    },
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'preconnect',
+        href: 'https://fonts.gstatic.com',
+        crossorigin: 'anonymous',
+      },
+    },
+  ],
+  stylesheets: [
+    'https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap',
+    'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap',
+  ],
+
   markdown: {
     // Parse .md as CommonMark (no JSX, no {expression} parsing) and .mdx
     // as MDX. Auto-generated tool reference pages contain literals like

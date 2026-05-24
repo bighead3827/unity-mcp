@@ -6,7 +6,7 @@ description: "Apply small text edits to a C# script identified by URI"
 
 # `apply_text_edits`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.manage_script`
 
@@ -29,8 +29,8 @@ Apply small text edits to a C# script identified by URI.
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `uri` | `str` | ✅ | URI of the script to edit under Assets/ directory, mcpforunity://path/Assets/... or file://... or Assets/... |
-| `edits` | `list[dict[str, Any]]` | ✅ | List of edits to apply to the script, i.e. a list of {startLine,startCol,endLine,endCol,newText} (1-indexed!) |
+| `uri` | `str` | yes | URI of the script to edit under Assets/ directory, mcpforunity://path/Assets/... or file://... or Assets/... |
+| `edits` | `list[dict[str, Any]]` | yes | List of edits to apply to the script, i.e. a list of {startLine,startCol,endLine,endCol,newText} (1-indexed!) |
 | `precondition_sha256` | `str \| None` | — | Optional SHA256 of the script to edit, used to prevent concurrent edits |
 | `strict` | `bool \| None` | — | Optional strict flag, used to enforce strict mode |
 | `options` | `dict[str, Any] \| None` | — | Optional options, used to pass additional options to the script editor |

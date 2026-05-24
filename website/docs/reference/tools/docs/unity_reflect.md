@@ -6,7 +6,7 @@ description: "Inspect Unity's live C# API via reflection"
 
 # `unity_reflect`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `docs` &nbsp;·&nbsp; **Module:** `services.tools.unity_reflect`
 
@@ -23,7 +23,7 @@ Actions:
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `str` | ✅ | The reflection action to perform. |
+| `action` | `str` | yes | The reflection action to perform. |
 | `class_name` | `str \| None` | — | Fully qualified or simple C# class name. |
 | `member_name` | `str \| None` | — | Method, property, or field name to inspect. |
 | `query` | `str \| None` | — | Search query for type name search. |

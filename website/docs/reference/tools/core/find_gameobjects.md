@@ -6,7 +6,7 @@ description: "Search for GameObjects in the scene by name, tag, layer, component
 
 # `find_gameobjects`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.find_gameobjects`
 
@@ -18,7 +18,7 @@ Search for GameObjects in the scene by name, tag, layer, component type, or path
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `search_term` | `str` | ✅ |  |
+| `search_term` | `str` | yes |  |
 | `search_method` | `Literal['by_name', 'by_tag', 'by_layer', 'by_component', 'by_path', 'by_id']` | — |  |
 | `include_inactive` | `bool \| str \| None` | — |  |
 | `page_size` | `int \| str \| None` | — |  |

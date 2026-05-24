@@ -6,7 +6,7 @@ description: "Manage Unity animation: Animator control and AnimationClip creatio
 
 # `manage_animation`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `animation` &nbsp;·&nbsp; **Module:** `services.tools.manage_animation`
 
@@ -18,7 +18,7 @@ Manage Unity animation: Animator control and AnimationClip creation. Action pref
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `str` | ✅ | Action to perform (prefix: animator_, controller_, clip_). |
+| `action` | `str` | yes | Action to perform (prefix: animator_, controller_, clip_). |
 | `target` | `str \| None` | — | Target GameObject (name/path/id). |
 | `search_method` | `Literal['by_id', 'by_name', 'by_path', 'by_tag', 'by_layer'] \| None` | — | How to find the target GameObject. |
 | `clip_path` | `str \| None` | — | Asset path for AnimationClip (e.g. 'Assets/Animations/Walk.anim'). |

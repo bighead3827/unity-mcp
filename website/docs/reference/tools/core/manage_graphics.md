@@ -6,7 +6,7 @@ description: "Manage rendering graphics: volumes, post-processing, light baking,
 
 # `manage_graphics`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.manage_graphics`
 
@@ -46,7 +46,7 @@ SKYBOX / ENVIRONMENT:
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `str` | ✅ | The graphics action to perform. |
+| `action` | `str` | yes | The graphics action to perform. |
 | `target` | `str \| None` | — | Target object name or instance ID. |
 | `effect` | `str \| None` | — | Effect type name (e.g., 'Bloom', 'Vignette'). |
 | `parameters` | `dict[str, Any] \| None` | — | Dict of parameter values. |

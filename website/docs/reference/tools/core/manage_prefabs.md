@@ -6,7 +6,7 @@ description: "Manages Unity Prefab assets"
 
 # `manage_prefabs`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.manage_prefabs`
 
@@ -18,7 +18,7 @@ Manages Unity Prefab assets. Actions: get_info, get_hierarchy, create_from_gameo
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `Literal['create_from_gameobject', 'get_info', 'get_hierarchy', 'modify_contents', 'open_prefab_stage', 'save_prefab_stage', 'close_prefab_stage']` | ✅ | Prefab operation to perform. |
+| `action` | `Literal['create_from_gameobject', 'get_info', 'get_hierarchy', 'modify_contents', 'open_prefab_stage', 'save_prefab_stage', 'close_prefab_stage']` | yes | Prefab operation to perform. |
 | `prefab_path` | `str \| None` | — | Prefab asset path (e.g., Assets/Prefabs/MyPrefab.prefab). |
 | `target` | `str \| None` | — | Target GameObject: scene object for create_from_gameobject, or object within prefab for modify_contents (name or path like 'Parent/Child'). |
 | `allow_overwrite` | `bool \| None` | — | Allow replacing existing prefab. |

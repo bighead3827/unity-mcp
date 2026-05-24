@@ -6,7 +6,7 @@ description: "Get SHA256 and basic metadata for a Unity C# script without return
 
 # `get_sha`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.manage_script`
 
@@ -18,7 +18,7 @@ Get SHA256 and basic metadata for a Unity C# script without returning file conte
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `uri` | `str` | ✅ | URI of the script to edit under Assets/ directory, mcpforunity://path/Assets/... or file://... or Assets/... |
+| `uri` | `str` | yes | URI of the script to edit under Assets/ directory, mcpforunity://path/Assets/... or file://... or Assets/... |
 
 ## Returns
 

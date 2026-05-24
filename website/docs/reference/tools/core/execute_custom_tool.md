@@ -6,7 +6,7 @@ description: "Execute a project-scoped custom tool registered by Unity"
 
 # `execute_custom_tool`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.execute_custom_tool`
 
@@ -18,7 +18,7 @@ Execute a project-scoped custom tool registered by Unity.
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `tool_name` | `str` | ✅ |  |
+| `tool_name` | `str` | yes |  |
 | `parameters` | `dict[str, Any] \| None` | — |  |
 
 ## Returns

@@ -6,7 +6,7 @@ description: "Structured C# edits (methods/classes) with safer boundaries - pref
 
 # `script_apply_edits`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.script_apply_edits`
 
@@ -63,9 +63,9 @@ Structured C# edits (methods/classes) with safer boundaries - prefer this over r
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `name` | `str` | ✅ | Name of the script to edit |
-| `path` | `str` | ✅ | Path to the script to edit under Assets/ directory |
-| `edits` | `list[dict[str, Any]] \| str` | ✅ | List of edits to apply to the script (JSON list or stringified JSON) |
+| `name` | `str` | yes | Name of the script to edit |
+| `path` | `str` | yes | Path to the script to edit under Assets/ directory |
+| `edits` | `list[dict[str, Any]] \| str` | yes | List of edits to apply to the script (JSON list or stringified JSON) |
 | `options` | `dict[str, Any] \| None` | — | Options for the script edit |
 | `script_type` | `str` | — | Type of the script to edit |
 | `namespace` | `str \| None` | — | Namespace of the script to edit |

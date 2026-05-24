@@ -6,7 +6,7 @@ description: "Manage Unity VFX components (ParticleSystem, VisualEffect, LineRen
 
 # `manage_vfx`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `vfx` &nbsp;·&nbsp; **Module:** `services.tools.manage_vfx`
 
@@ -18,7 +18,7 @@ Manage Unity VFX components (ParticleSystem, VisualEffect, LineRenderer, TrailRe
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `str` | ✅ | Action to perform (prefix: particle_, vfx_, line_, trail_). |
+| `action` | `str` | yes | Action to perform (prefix: particle_, vfx_, line_, trail_). |
 | `target` | `str \| None` | — | Target GameObject (name/path/id). |
 | `search_method` | `Literal['by_id', 'by_name', 'by_path', 'by_tag', 'by_layer'] \| None` | — | How to find the target GameObject. |
 | `properties` | `dict[str, Any] \| str \| None` | — | Action-specific parameters (dict or JSON string). |

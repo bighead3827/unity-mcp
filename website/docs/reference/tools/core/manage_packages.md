@@ -6,7 +6,7 @@ description: "Manage Unity packages: query, install, remove, embed, and configur
 
 # `manage_packages`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.manage_packages`
 
@@ -38,7 +38,7 @@ UTILITY:
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `str` | ✅ | The package action to perform. |
+| `action` | `str` | yes | The package action to perform. |
 | `package` | `str \| None` | — | Package identifier (name, name@version, git URL, or file: path). |
 | `force` | `bool \| None` | — | Force removal even if other packages depend on it. |
 | `query` | `str \| None` | — | Search query for search_packages. |

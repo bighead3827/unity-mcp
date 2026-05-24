@@ -18,9 +18,9 @@ We aim to acknowledge reports within **3 business days** and to share an initial
 
 | Version | Supported |
 |---------|-----------|
-| latest (`main`) | ✅ |
-| latest beta (`beta`) | ✅ |
-| older releases | ❌ — please upgrade |
+| latest (`main`) | Yes |
+| latest beta (`beta`) | Yes |
+| older releases | No — please upgrade |
 
 ## Network Defaults (Safe by Default)
 

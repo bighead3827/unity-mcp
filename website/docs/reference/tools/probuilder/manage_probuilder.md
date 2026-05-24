@@ -6,7 +6,7 @@ description: "Manage ProBuilder meshes for in-editor 3D modeling"
 
 # `manage_probuilder`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `probuilder` &nbsp;·&nbsp; **Module:** `services.tools.manage_probuilder`
 
@@ -71,7 +71,7 @@ WORKFLOW TIP: Call get_mesh_info with include='faces' to see face normals and di
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `str` | ✅ | Action to perform. |
+| `action` | `str` | yes | Action to perform. |
 | `target` | `str \| None` | — | Target GameObject (name/path/id). |
 | `search_method` | `Literal['by_id', 'by_name', 'by_path', 'by_tag', 'by_layer'] \| None` | — | How to find the target GameObject. |
 | `properties` | `dict[str, Any] \| str \| None` | — | Action-specific parameters (dict or JSON string). |

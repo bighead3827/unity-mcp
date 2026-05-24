@@ -6,7 +6,7 @@ description: "Starts a Unity test run asynchronously and returns a job_id immedi
 
 # `run_tests`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `testing` &nbsp;·&nbsp; **Module:** `services.tools.run_tests`
 

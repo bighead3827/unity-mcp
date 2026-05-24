@@ -6,7 +6,7 @@ description: "Creates and modifies ScriptableObject assets using Unity Serialize
 
 # `manage_scriptable_object`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `scripting_ext` &nbsp;·&nbsp; **Module:** `services.tools.manage_scriptable_object`
 
@@ -18,7 +18,7 @@ Creates and modifies ScriptableObject assets using Unity SerializedObject proper
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `Literal['create', 'modify']` | ✅ | Action to perform: create or modify. |
+| `action` | `Literal['create', 'modify']` | yes | Action to perform: create or modify. |
 | `type_name` | `str \| None` | — | Namespace-qualified ScriptableObject type name (for create). |
 | `folder_path` | `str \| None` | — | Target folder under Assets/... (for create). |
 | `asset_name` | `str \| None` | — | Asset file name without extension (for create). |

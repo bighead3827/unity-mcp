@@ -6,7 +6,7 @@ description: "Execute arbitrary C# code inside the Unity Editor"
 
 # `execute_code`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `scripting_ext` &nbsp;·&nbsp; **Module:** `services.tools.execute_code`
 
@@ -18,7 +18,7 @@ Execute arbitrary C# code inside the Unity Editor. The code runs as a method bod
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `Literal['execute', 'get_history', 'replay', 'clear_history']` | ✅ | Action to perform. |
+| `action` | `Literal['execute', 'get_history', 'replay', 'clear_history']` | yes | Action to perform. |
 | `code` | `str \| None` | — | C# code to execute (for 'execute' action). Must be a valid method body. Access UnityEngine and UnityEditor namespaces. Use 'return' to send data back. |
 | `safety_checks` | `bool` | — | Enable basic blocked-pattern checks (File.Delete, Process.Start, infinite loops, etc). Not a full sandbox — advanced bypass is possible. Default: true. |
 | `index` | `int \| None` | — | History entry index to replay (for 'replay' action). |

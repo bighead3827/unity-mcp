@@ -6,7 +6,7 @@ description: "Add, remove, or set properties on components attached to GameObjec
 
 # `manage_components`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.manage_components`
 
@@ -18,9 +18,9 @@ Add, remove, or set properties on components attached to GameObjects. Actions: a
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `Literal['add', 'remove', 'set_property']` | ✅ | Action to perform: add (add component), remove (remove component), set_property (set component property) |
-| `target` | `str \| int` | ✅ | Target GameObject - instance ID (preferred) or name/path |
-| `component_type` | `str` | ✅ | Component type name (e.g., 'Rigidbody', 'BoxCollider', 'MyScript') |
+| `action` | `Literal['add', 'remove', 'set_property']` | yes | Action to perform: add (add component), remove (remove component), set_property (set component property) |
+| `target` | `str \| int` | yes | Target GameObject - instance ID (preferred) or name/path |
+| `component_type` | `str` | yes | Component type name (e.g., 'Rigidbody', 'BoxCollider', 'MyScript') |
 | `search_method` | `Literal['by_id', 'by_name', 'by_path'] \| None` | — | How to find the target GameObject |
 | `property` | `str \| None` | — | Property name to set (for set_property action) |
 | `value` | `str \| int \| float \| bool \| dict[Any] \| list[Any] \| None` | — | Value to set (for set_property action). For object references: instance ID (int), asset path (string), or {"guid": "..."} / {"path": "..."}. For Sprite sub-assets: {"guid": "...", "spriteName": "<name>"} or {"guid": "...", "fileID": <id>}. Single-sprite textures auto-resolve. |

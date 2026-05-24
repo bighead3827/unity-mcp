@@ -6,7 +6,7 @@ description: "Manages Unity materials (set properties, colors, shaders, etc)"
 
 # `manage_material`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.manage_material`
 
@@ -18,7 +18,7 @@ Manages Unity materials (set properties, colors, shaders, etc). Read-only action
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `Literal['ping', 'create', 'set_material_shader_property', 'set_material_color', 'assign_material_to_renderer', 'set_renderer_color', 'get_material_info']` | ✅ | Action to perform. |
+| `action` | `Literal['ping', 'create', 'set_material_shader_property', 'set_material_color', 'assign_material_to_renderer', 'set_renderer_color', 'get_material_info']` | yes | Action to perform. |
 | `material_path` | `str \| None` | — | Path to material asset (Assets/...) |
 | `property` | `str \| None` | — | Shader property name (e.g., _BaseColor, _MainTex) |
 | `shader` | `str \| None` | — | Shader name (default: Standard) |

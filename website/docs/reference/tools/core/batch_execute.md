@@ -6,7 +6,7 @@ description: "Executes multiple MCP commands in a single batch for dramatically 
 
 # `batch_execute`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.batch_execute`
 
@@ -18,7 +18,7 @@ Executes multiple MCP commands in a single batch for dramatically better perform
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `commands` | `list[dict[str, Any]]` | ✅ | List of commands with 'tool' and 'params' keys. |
+| `commands` | `list[dict[str, Any]]` | yes | List of commands with 'tool' and 'params' keys. |
 | `parallel` | `bool \| None` | — | Attempt to run read-only commands in parallel |
 | `fail_fast` | `bool \| None` | — | Stop processing after the first failure |
 | `max_parallelism` | `int \| None` | — | Hint for the maximum number of parallel workers |

@@ -6,7 +6,7 @@ description: "Delete a C# script by URI or Assets-relative path"
 
 # `delete_script`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.manage_script`
 
@@ -18,7 +18,7 @@ Delete a C# script by URI or Assets-relative path.
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `uri` | `str` | ✅ | URI of the script to delete under Assets/ directory, mcpforunity://path/Assets/... or file://... or Assets/... |
+| `uri` | `str` | yes | URI of the script to delete under Assets/ directory, mcpforunity://path/Assets/... or file://... or Assets/... |
 
 ## Returns
 

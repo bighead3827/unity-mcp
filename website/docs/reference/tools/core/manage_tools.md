@@ -6,7 +6,7 @@ description: "Manage which tool groups are visible in this session"
 
 # `manage_tools`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.manage_tools`
 
@@ -18,7 +18,7 @@ Manage which tool groups are visible in this session. Actions: list_groups (show
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `Literal['list_groups', 'activate', 'deactivate', 'sync', 'reset']` | ✅ | Action to perform. |
+| `action` | `Literal['list_groups', 'activate', 'deactivate', 'sync', 'reset']` | yes | Action to perform. |
 | `group` | `str \| None` | — | Group name (required for activate / deactivate). Valid groups: animation, core, docs, probuilder, profiling, scripting_ext, testing, ui, vfx |
 
 ## Returns

@@ -51,7 +51,7 @@ TOOLS_OUT = WEBSITE_DOCS / "reference" / "tools"
 RESOURCES_OUT = WEBSITE_DOCS / "reference" / "resources"
 
 GENERATED_BANNER = (
-    "> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit "
+    "> **Auto-generated** from the Python tool registry. Do not hand-edit "
     "outside `<!-- examples:start --><!-- examples:end -->` blocks — the "
     "generator (`tools/generate_docs_reference.py`) will overwrite them."
 )
@@ -271,7 +271,7 @@ def render_tool_page(tool: dict[str, Any], existing_examples: str) -> str:
     if params:
         rows = ["| Name | Type | Required | Description |", "|------|------|----------|-------------|"]
         for p in params:
-            req = "✅" if p.required else "—"
+            req = "yes" if p.required else "—"
             desc = _escape_table_cell(p.description or "")
             type_cell = _escape_table_cell(f"`{p.type_str}`")
             rows.append(f"| `{p.name}` | {type_cell} | {req} | {desc} |")

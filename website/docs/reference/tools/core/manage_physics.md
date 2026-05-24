@@ -6,7 +6,7 @@ description: "Manage physics settings, collision matrix, materials, joints, quer
 
 # `manage_physics`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.manage_physics`
 
@@ -28,7 +28,7 @@ SIMULATION: simulate_step
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `Literal['ping', 'get_settings', 'set_settings', 'get_collision_matrix', 'set_collision_matrix', 'create_physics_material', 'configure_physics_material', 'assign_physics_material', 'add_joint', 'configure_joint', 'remove_joint', 'raycast', 'raycast_all', 'linecast', 'shapecast', 'overlap', 'validate', 'simulate_step', 'apply_force', 'get_rigidbody', 'configure_rigidbody']` | ✅ | The physics action to perform. |
+| `action` | `Literal['ping', 'get_settings', 'set_settings', 'get_collision_matrix', 'set_collision_matrix', 'create_physics_material', 'configure_physics_material', 'assign_physics_material', 'add_joint', 'configure_joint', 'remove_joint', 'raycast', 'raycast_all', 'linecast', 'shapecast', 'overlap', 'validate', 'simulate_step', 'apply_force', 'get_rigidbody', 'configure_rigidbody']` | yes | The physics action to perform. |
 | `dimension` | `str \| None` | — | Physics dimension: '3d' (default) or '2d'. |
 | `settings` | `dict[str, Any] \| None` | — | Key-value settings for set_settings. |
 | `layer_a` | `str \| None` | — | Layer name or index for collision matrix. |

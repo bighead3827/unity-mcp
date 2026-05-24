@@ -6,7 +6,7 @@ description: "Manages Unity UI Toolkit elements (UXML documents, USS stylesheets
 
 # `manage_ui`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `ui` &nbsp;·&nbsp; **Module:** `services.tools.manage_ui`
 
@@ -37,7 +37,7 @@ Important: Always use <ui:Style> (with the ui: namespace prefix) in UXML, not ba
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `Literal['ping', 'create', 'read', 'update', 'delete', 'attach_ui_document', 'detach_ui_document', 'create_panel_settings', 'update_panel_settings', 'get_visual_tree', 'render_ui', 'link_stylesheet', 'list', 'modify_visual_element']` | ✅ | Action to perform. |
+| `action` | `Literal['ping', 'create', 'read', 'update', 'delete', 'attach_ui_document', 'detach_ui_document', 'create_panel_settings', 'update_panel_settings', 'get_visual_tree', 'render_ui', 'link_stylesheet', 'list', 'modify_visual_element']` | yes | Action to perform. |
 | `path` | `str \| None` | — | Assets-relative path (e.g., 'Assets/UI/MainMenu.uxml' or 'Assets/UI/Styles.uss'). For render_ui: optional UXML path to render directly without a scene GameObject. |
 | `contents` | `str \| None` | — | File content (UXML or USS markup). Plain text - encoding handled automatically. |
 | `target` | `str \| None` | — | Target GameObject name or path for attach_ui_document / get_visual_tree / render_ui. |

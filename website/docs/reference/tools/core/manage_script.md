@@ -6,7 +6,7 @@ description: "Compatibility router for legacy script operations"
 
 # `manage_script`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.manage_script`
 
@@ -18,9 +18,9 @@ Compatibility router for legacy script operations. Prefer apply_text_edits (rang
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `Literal['create', 'read', 'delete']` | ✅ | Perform CRUD operations on C# scripts. |
-| `name` | `str` | ✅ | Script name (no .cs extension) |
-| `path` | `str` | ✅ | Asset path (default: 'Assets/') |
+| `action` | `Literal['create', 'read', 'delete']` | yes | Perform CRUD operations on C# scripts. |
+| `name` | `str` | yes | Script name (no .cs extension) |
+| `path` | `str` | yes | Asset path (default: 'Assets/') |
 | `contents` | `str \| None` | — | Contents of the script to create |
 | `script_type` | `str \| None` | — | Script type (e.g., 'C#') |
 | `namespace` | `str \| None` | — | Namespace for the script |

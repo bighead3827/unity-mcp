@@ -6,7 +6,7 @@ description: "Unity Profiler session control, counter reads, memory snapshots, a
 
 # `manage_profiler`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `profiling` &nbsp;·&nbsp; **Module:** `services.tools.manage_profiler`
 
@@ -39,7 +39,7 @@ FRAME DEBUGGER:
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `str` | ✅ | The profiler action to perform. |
+| `action` | `str` | yes | The profiler action to perform. |
 | `category` | `str \| None` | — | Profiler category name for get_counters (e.g. Render, Scripts, Memory, Physics). |
 | `counters` | `list[str] \| None` | — | Specific counter names for get_counters. Omit to read all in category. |
 | `object_path` | `str \| None` | — | Scene hierarchy or asset path for get_object_memory. |

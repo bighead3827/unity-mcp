@@ -6,7 +6,7 @@ description: "Performs CRUD operations on Unity scenes"
 
 # `manage_scene`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.manage_scene`
 
@@ -18,7 +18,7 @@ Performs CRUD operations on Unity scenes. Read-only actions: get_hierarchy, get_
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `action` | `Literal['create', 'load', 'save', 'get_hierarchy', 'get_active', 'get_build_settings', 'scene_view_frame', 'close_scene', 'set_active_scene', 'get_loaded_scenes', 'move_to_scene', 'validate']` | ✅ | Perform CRUD operations on Unity scenes and control the Scene View camera. |
+| `action` | `Literal['create', 'load', 'save', 'get_hierarchy', 'get_active', 'get_build_settings', 'scene_view_frame', 'close_scene', 'set_active_scene', 'get_loaded_scenes', 'move_to_scene', 'validate']` | yes | Perform CRUD operations on Unity scenes and control the Scene View camera. |
 | `name` | `str \| None` | — | Scene name. |
 | `path` | `str \| None` | — | Scene path. |
 | `build_index` | `int \| str \| None` | — | Unity build index (quote as string, e.g., '0'). |

@@ -6,7 +6,7 @@ description: "Searches a file with a regex pattern and returns line numbers and 
 
 # `find_in_file`
 
-> ⚙️ **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
+> **Auto-generated** from the Python tool registry. Do not hand-edit outside `<!-- examples:start --><!-- examples:end -->` blocks — the generator (`tools/generate_docs_reference.py`) will overwrite them.
 
 **Group:** `core` &nbsp;·&nbsp; **Module:** `services.tools.find_in_file`
 
@@ -18,8 +18,8 @@ Searches a file with a regex pattern and returns line numbers and excerpts.
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `uri` | `str` | ✅ | The resource URI to search under Assets/ or file path form supported by read_resource |
-| `pattern` | `str` | ✅ | The regex pattern to search for |
+| `uri` | `str` | yes | The resource URI to search under Assets/ or file path form supported by read_resource |
+| `pattern` | `str` | yes | The regex pattern to search for |
 | `project_root` | `str \| None` | — | Optional project root path |
 | `max_results` | `int` | — | Cap results to avoid huge payloads |
 | `ignore_case` | `bool \| str \| None` | — | Case insensitive search |
