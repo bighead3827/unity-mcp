@@ -8,7 +8,7 @@ description: AI-driven game development for the Unity Editor via the Model Conte
 
 # Overview
 
-MCP for Unity bridges AI assistants — Claude, Claude Code, Cursor, VS Code, Windsurf, Copilot CLI, and more — with the Unity Editor via the [Model Context Protocol](https://modelcontextprotocol.io/introduction). Give your LLM the tools to manage assets, control scenes, edit scripts, run tests, and automate workflows.
+MCP for Unity bridges AI assistants — Claude, Codex, VS Code, local LLMs, and more — with the Unity Editor via the [Model Context Protocol](https://modelcontextprotocol.io/introduction). Give your LLM the tools to manage assets, control scenes, edit scripts, run tests, and automate workflows.
 
 ![MCP for Unity building a scene](https://raw.githubusercontent.com/CoplayDev/unity-mcp/beta/docs/images/building_scene.gif)
 

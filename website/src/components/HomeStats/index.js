@@ -1,14 +1,18 @@
 import React from 'react';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import styles from './styles.module.css';
 
-const stats = [
-  { value: '43', label: 'MCP tools' },
-  { value: '25', label: 'read-only resources' },
-  { value: '12+', label: 'MCP clients supported' },
-  { value: 'Unity 2021.3+', label: 'through Unity 6.x' },
-];
-
 export default function HomeStats() {
+  const { siteConfig } = useDocusaurusContext();
+  const clientCount = siteConfig.customFields?.supportedClientCount ?? 0;
+
+  const stats = [
+    { value: '43', label: 'MCP tools' },
+    { value: '25', label: 'read-only resources' },
+    { value: String(clientCount), label: 'MCP clients supported' },
+    { value: 'Unity 2021.3+', label: 'through Unity 6.x' },
+  ];
+
   return (
     <section className={styles.statsSection}>
       <div className={styles.inner}>

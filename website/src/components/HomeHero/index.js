@@ -14,8 +14,8 @@ export default function HomeHero() {
         </h1>
 
         <p className={styles.tagline}>
-          MCP for Unity bridges AI assistants — Claude, Cursor, VS Code,
-          Windsurf, and more — with your Unity Editor via the
+          MCP for Unity bridges AI assistants — Claude, Codex, VS Code,
+          local LLMs, and more — with your Unity Editor via the
           {' '}
           <a
             href="https://modelcontextprotocol.io/introduction"

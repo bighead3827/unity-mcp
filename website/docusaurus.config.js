@@ -4,6 +4,21 @@
 // or "unity-mcp" into sidebar slugs, file paths, or docs URLs.
 
 import { themes as prismThemes } from 'prism-react-renderer';
+import { readdirSync, existsSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Count MCP client configurators at build time so the homepage stats
+// row stays accurate forever. Falls back to 0 if the directory moves
+// (build still succeeds; the component renders the literal number).
+function countConfigurators() {
+  const dir = resolve(__dirname, '..', 'MCPForUnity', 'Editor', 'Clients', 'Configurators');
+  if (!existsSync(dir)) return 0;
+  return readdirSync(dir).filter((f) => f.endsWith('Configurator.cs')).length;
+}
+const supportedClientCount = countConfigurators();
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -20,6 +35,12 @@ const config = {
   projectName: 'unity-mcp',
   deploymentBranch: 'gh-pages',
   trailingSlash: false,
+
+  // Build-time data the homepage components read via siteConfig.customFields.
+  // Keeps stats accurate without a hand-maintained constant.
+  customFields: {
+    supportedClientCount,
+  },
 
   onBrokenLinks: 'throw',
 
