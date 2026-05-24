@@ -1,0 +1,41 @@
+.statsSection {
+  padding: 2.5rem 1.5rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.inner {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+}
+
+.cell {
+  text-align: left;
+}
+
+.value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ifm-heading-color);
+  line-height: 1.1;
+  margin-bottom: 0.35rem;
+}
+
+.label {
+  font-size: 0.85rem;
+  color: var(--ifm-color-emphasis-600);
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}

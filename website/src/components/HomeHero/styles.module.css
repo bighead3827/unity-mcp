@@ -1,0 +1,97 @@
+.hero {
+  padding: 6rem 1.5rem 4rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.inner {
+  max-width: 880px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ifm-color-emphasis-600);
+  margin-bottom: 1.5rem;
+}
+
+.headline {
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  margin: 0 0 1.5rem;
+  color: var(--ifm-heading-color);
+}
+
+.tagline {
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: var(--ifm-color-emphasis-700);
+  margin: 0 0 2.5rem;
+  max-width: 720px;
+}
+
+.ctaRow {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 3rem;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.7rem 1.4rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.cta:hover {
+  text-decoration: none;
+}
+
+.ctaPrimary {
+  background: var(--ifm-color-primary);
+  color: white;
+}
+.ctaPrimary:hover {
+  background: var(--ifm-color-primary-dark);
+  color: white;
+}
+
+.ctaSecondary {
+  background: transparent;
+  color: var(--ifm-font-color-base);
+  border: 1px solid var(--ifm-color-emphasis-300);
+}
+.ctaSecondary:hover {
+  background: var(--ifm-color-emphasis-100);
+  color: var(--ifm-font-color-base);
+  border-color: var(--ifm-color-emphasis-400);
+}
+
+.installBlock {
+  max-width: 720px;
+}
+
+.installLabel {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ifm-color-emphasis-600);
+  margin-bottom: 0.5rem;
+}
+
+.installCode :global(pre) {
+  margin: 0;
+}

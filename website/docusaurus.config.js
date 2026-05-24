@@ -123,14 +123,26 @@ const config = {
             label: 'Docs',
           },
           {
+            to: '/reference/tools',
+            label: 'Reference',
+            position: 'left',
+          },
+          {
+            to: '/releases',
+            label: 'Releases',
+            position: 'left',
+          },
+          {
             href: 'https://github.com/CoplayDev/unity-mcp',
-            label: 'GitHub',
             position: 'right',
+            className: 'header-icon-link header-github-link',
+            'aria-label': 'GitHub repository',
           },
           {
             href: 'https://discord.gg/y4p8KfzrN4',
-            label: 'Discord',
             position: 'right',
+            className: 'header-icon-link header-discord-link',
+            'aria-label': 'Discord',
           },
         ],
       },
@@ -140,7 +152,7 @@ const config = {
           {
             title: 'Docs',
             items: [
-              { label: 'Getting Started', to: '/' },
+              { label: 'Getting Started', to: '/getting-started' },
               { label: 'Guides', to: '/guides/cli' },
               { label: 'Reference', to: '/reference/tools/' },
             ],
