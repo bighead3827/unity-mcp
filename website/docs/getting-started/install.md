@@ -69,7 +69,7 @@ Try one of these in your MCP client:
 - **OpenClaw** also needs the `openclaw-mcp-bridge` plugin enabled and follows the currently selected MCP for Unity transport.
 - **Claude Code, VS Code, Windsurf, Cline, and the CLI clients** auto-connect after configuration.
 
-Detailed per-client setup lives in the [MCP Client Configurators guide](https://github.com/CoplayDev/unity-mcp/blob/beta/docs/guides/MCP_CLIENT_CONFIGURATORS.md) *(migrating to this site in M2)*.
+Detailed per-client setup lives in the [MCP Client Configurators guide](/guides/client-configurators).
 
 ## Manual MCP client configuration
 

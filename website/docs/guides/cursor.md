@@ -1,6 +1,12 @@
-### Cursor/VSCode/Windsurf: UV path issue on Windows (diagnosis and fix)
+---
+title: Cursor / VS Code / Windsurf Troubleshooting
+sidebar_label: Cursor / VS Code / Windsurf
+description: UV path issues on Windows — diagnosis and fix.
+---
 
-#### The issue
+# Cursor / VS Code / Windsurf: UV path issue on Windows
+
+## The issue
 - Some Windows machines have multiple `uv.exe` locations. Our auto-config sometimes picked a less stable path, causing the MCP client to fail to launch the MCP for Unity Server or for the path to be auto-rewritten on repaint/restart.
 
 #### Typical symptoms

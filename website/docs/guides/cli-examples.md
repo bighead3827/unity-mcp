@@ -1,4 +1,10 @@
-## Unity MCP (CLI Mode)
+---
+title: CLI Examples
+sidebar_label: CLI Examples
+description: Worked examples of using MCP for Unity in CLI mode.
+---
+
+# Unity MCP (CLI Mode)
 
 We use Unity MCP via **CLI commands** instead of MCP server connection. This avoids the reconnection issues that occur when Unity restarts.
 

@@ -1,6 +1,6 @@
 # MCP for Unity - Developer Guide
 
-| [English](README-DEV.md) | [简体中文](README-DEV-zh.md) |
+| English | [简体中文](https://github.com/CoplayDev/unity-mcp/blob/beta/docs/development/README-DEV-zh.md) |
 |---------------------------|------------------------------|
 
 ## Contributing
