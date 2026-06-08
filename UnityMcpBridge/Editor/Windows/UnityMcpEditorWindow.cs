@@ -241,7 +241,7 @@ namespace UnityMcpBridge.Editor.Windows
             EditorGUILayout.LabelField($"Unity Port: {unityPort}");
             EditorGUILayout.LabelField($"MCP Port: {mcpPort}");
             EditorGUILayout.HelpBox(
-                "Your MCP client (e.g. Cursor or Claude Desktop) will start the server automatically when you start it.",
+                "Your MCP client (e.g. Cursor or Claude Desktop) will start the server automatically when you start it.这个是python启动的mcp server端口号",
                 MessageType.Info
             );
             EditorGUILayout.EndVertical();
